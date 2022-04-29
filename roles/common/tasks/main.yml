@@ -1,0 +1,67 @@
+---
+- block:
+
+  - name: Add time servers
+    lineinfile:
+      path: /etc/systemd/timesyncd.conf
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+      insertafter: "{{ item.insertafter }}"
+    loop:
+      - { regexp: '^NTP=', insertafter: '^#\s*NTP=', line: NTP=0.arch.pool.ntp.org 1.arch.pool.ntp.org 2.arch.pool.ntp.org 3.arch.pool.ntp.org }
+      - { regexp: '^FallbackNTP=', insertafter: '^#\s*FallbackNTP=', line: FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.fr.pool.ntp.org }
+
+  - name: Enable and start the network time synchronization
+    ansible.builtin.systemd: name=systemd-timesyncd state=started enabled=yes
+
+  - name: Disable bell sound
+    lineinfile:
+      path: "{{ item.path }}"
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+      insertafter: "{{ item.insertafter }}"
+    loop:
+      - { path: /etc/inputrc, regexp: '^set bell-style', insertafter: '^#\s*set bell-style', line: set bell-style none }
+      - { path: /etc/vimrc, regexp: '^set belloff=', insertafter: '^"\s*set belloff=', line: set belloff=all }
+      - { path: /etc/profile, regexp: '^export LESS', insertafter: '#*\s*export LESS', line: 'export LESS="$LESS -Q"' }
+
+  - name: Set default editor
+    lineinfile:
+      path: /etc/profile
+      regexp: '^export EDITOR'
+      line: "export EDITOR{{'='}}/usr/bin/vim"
+      insertafter: '^#*\s*export EDITOR'
+
+  - name: Enable pacman parallel downloads
+    lineinfile:
+      path: /etc/pacman.conf
+      regexp: '^ParallelDownloads ='
+      line: ParallelDownloads = 5
+      insertafter: '^#*\s*ParallelDownloads = 5'
+
+  - name: pacman -S reflector
+    community.general.pacman: name=reflector state=present
+
+  - name: Configure reflector
+    lineinfile:
+      path: /etc/xdg/reflector/reflector.conf
+      regexp: '^--country'
+      line: --country us 
+      insertafter: '^#*\s*--country'
+
+  - name: Enable reflector.service
+    ansible.builtin.systemd: name=reflector enabled=yes
+
+  - name: Enable reflector.timer to update mirrorlist every week
+    ansible.builtin.systemd: name=reflector.timer enabled=yes
+
+  - name: pacman -S pacman-contrib for paccache
+    community.general.pacman: name=pacman-contrib state=present
+
+  - name: Enable paccache.timer to discard unused packages weekly
+    ansible.builtin.systemd: name=paccache.timer enabled=yes
+
+  - name: Enable fstrim.timer to periodic TRIM SSD
+    ansible.builtin.systemd: name=fstrim.timer enabled=yes
+
+  become: yes

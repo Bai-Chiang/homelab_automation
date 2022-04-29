@@ -1,0 +1,6 @@
+---
+- name: pacman -Syu
+  community.general.pacman:
+    update_cache: yes
+    upgrade: yes
+  become: yes
