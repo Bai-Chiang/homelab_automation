@@ -6,6 +6,7 @@
       regexp: '^AllowUsers'
       line: AllowUsers {{ ssh_allowusers }}
       insertafter: '#\s*AllowUsers'
+      validate: /usr/sbin/sshd -T -f %s
     notify: restart sshd
     when: ssh_allowusers is defined
 
@@ -15,6 +16,7 @@
       regexp: '^HostKey'
       line: "HostKey /etc/ssh/ssh_host_{{ ssh_hostkey }}_key"
       insertafter: '#\s*HostKey'
+      validate: /usr/sbin/sshd -T -f %s
     notify: restart sshd
 
   - name: Set ssh port
@@ -25,6 +27,19 @@
       insertafter: '#\s*Port'
       validate: /usr/sbin/sshd -T -f %s
     notify: restart sshd
+
+  - name: Force public key authentication
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+      insertafter: "{{ item.insertafter }}"
+      validate: /usr/sbin/sshd -T -f %s
+    loop:
+      - { regexp: '^PasswordAuthentication', line: PasswordAuthentication no, insertafter: '#\s*PasswordAuthentication' }
+      - { regexp: '^AuthenticationMethods', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication' }
+    notify: restart sshd
+
 
   - name: Set ufw rule for ssh
     community.general.ufw:
