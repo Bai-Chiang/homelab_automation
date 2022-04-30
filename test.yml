@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  user: tux
+  connection: local
+
+  vars_files:
+    - vars/test.yml
+
+  pre_tasks:
+    - import_tasks: tasks/update.yml
+
+  roles:
+    - common
+    - openssh
+    - gui
+
+  post_tasks:
+    - import_tasks: tasks/ufw.yml

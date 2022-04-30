@@ -2,11 +2,11 @@
 
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 
-BASE_PKGS="base linux-firmware sudo vim man-db man-pages texinfo"
 KERNEL_PKGS="linux linux-zen"
-FS_PKGS="btrfs-progs dosfstools e2fsprogs"
+FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 UCODE_PKG="intel-ucode"
-OTHER_PKGS="base-devel git python"
+BASE_PKGS="base linux-firmware sudo python"
+OTHER_PKGS="man-db man-pages texinfo vim base-devel git"
 
 TIMEZONE="US/Eastern"
 
@@ -514,7 +514,7 @@ EOF
         arch-chroot /mnt bash <<'EOF'
 cd /etc/efi-keys
 echo "Downloading MS cert ..."
-curl -o MicCorUEFCA2011_2011-06-27.crt https://www.microsoft.com/pkiops/certs/MicCorUEFCA2011_2011-06-27.crt
+curl -O https://www.microsoft.com/pkiops/certs/MicCorUEFCA2011_2011-06-27.crt
 sbsiglist --owner 77fa9abd-0359-4d32-bd60-28f4e78f784b --type x509 --output MS_UEFI_db.esl MicCorUEFCA2011_2011-06-27.crt
 sign-efi-sig-list -a -g 77fa9abd-0359-4d32-bd60-28f4e78f784b -k KEK.key -c KEK.crt db MS_UEFI_db.esl add_MS_UEFI_db.auth
 echo "Adding MS UEFI cert to firmware ..."

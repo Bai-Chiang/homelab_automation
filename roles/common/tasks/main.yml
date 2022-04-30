@@ -23,21 +23,21 @@
     loop:
       - { path: /etc/inputrc, regexp: '^set bell-style', insertafter: '^#\s*set bell-style', line: set bell-style none }
       - { path: /etc/vimrc, regexp: '^set belloff=', insertafter: '^"\s*set belloff=', line: set belloff=all }
-      - { path: /etc/profile, regexp: '^export LESS', insertafter: '#*\s*export LESS', line: 'export LESS="$LESS -Q"' }
+      - { path: /etc/profile, regexp: '^export LESS', insertafter: '#\s*export LESS', line: 'export LESS="$LESS -Q"' }
 
   - name: Set default editor
     lineinfile:
       path: /etc/profile
       regexp: '^export EDITOR'
       line: "export EDITOR{{'='}}/usr/bin/vim"
-      insertafter: '^#*\s*export EDITOR'
+      insertafter: '^#\s*export EDITOR'
 
   - name: Enable pacman parallel downloads
     lineinfile:
       path: /etc/pacman.conf
       regexp: '^ParallelDownloads ='
       line: ParallelDownloads = 5
-      insertafter: '^#*\s*ParallelDownloads = 5'
+      insertafter: '^#\s*ParallelDownloads = 5'
 
   - name: pacman -S reflector
     community.general.pacman: name=reflector state=present
@@ -47,7 +47,7 @@
       path: /etc/xdg/reflector/reflector.conf
       regexp: '^--country'
       line: --country us 
-      insertafter: '^#*\s*--country'
+      insertafter: '^#\s*--country'
 
   - name: Enable reflector.service
     ansible.builtin.systemd: name=reflector enabled=yes
@@ -63,5 +63,18 @@
 
   - name: Enable fstrim.timer to periodic TRIM SSD
     ansible.builtin.systemd: name=fstrim.timer enabled=yes
+
+  - name: pacman -S ufw
+    community.general.pacman: name=ufw state=present
+
+  - name: Enable and start ufw.service
+    ansible.builtin.systemd: name=reflector.timer enabled=yes state=started 
+
+  - name: ufw default incoming rule
+    community.general.ufw: default=deny direction=incoming
+
+  - name: ufw default routed rule
+    community.general.ufw: default=deny direction=routed
+
 
   become: yes

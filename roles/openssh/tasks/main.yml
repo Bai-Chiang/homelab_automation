@@ -1,0 +1,41 @@
+---
+- block:
+  - name: Allow access only for some users
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^AllowUsers'
+      line: AllowUsers {{ ssh_allowusers }}
+      insertafter: '#\s*AllowUsers'
+    notify: restart sshd
+    when: ssh_allowusers is defined
+
+  - name: Set host key
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^HostKey'
+      line: "HostKey /etc/ssh/ssh_host_{{ ssh_hostkey }}_key"
+      insertafter: '#\s*HostKey'
+    notify: restart sshd
+
+  - name: Set ssh port
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^Port'
+      line: "Port {{ ssh_port }}"
+      insertafter: '#\s*Port'
+      validate: /usr/sbin/sshd -T -f %s
+    notify: restart sshd
+
+  - name: Set ufw rule for ssh
+    community.general.ufw:
+      rule: limit
+      direction: in
+      proto: tcp
+      from: "{{ item }}"
+      port: "{{ ssh_port }}"
+      comment: "Limit ssh incoming from {{ item }}"
+    loop: "{{ ssh_allow_ip }}"
+
+  become: yes
+
+

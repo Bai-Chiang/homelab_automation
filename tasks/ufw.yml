@@ -1,0 +1,5 @@
+---
+- name: Enable ufw on boot and reload rules
+  community.general.ufw: state=enabled
+  become: yes
+      

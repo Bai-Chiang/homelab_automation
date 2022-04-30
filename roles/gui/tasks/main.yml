@@ -1,0 +1,27 @@
+---
+- block:
+  - name: Install GPU driver
+    community.general.pacman: name={{ item }} state=present
+    loop: "{{ gpu_drivers }}"
+
+  - name: Install shell packages
+    community.general.pacman: name={{ item }} state=present
+    loop: "{{ shell_pkgs }}"
+
+  - name: Install WM packages
+    community.general.pacman: name={{ item }} state=present
+    loop: "{{ wm_pkgs }}"
+
+  - name: Install audio packages
+    community.general.pacman: name={{ item }} state=present
+    loop: "{{ audio_pkgs }}"
+
+  - name: Install font packages
+    community.general.pacman: name={{ item }} state=present
+    loop: "{{ fonts_pkgs }}"
+
+  - name: Install applications
+    community.general.pacman: name={{ item }} state=present
+    loop: "{{ app_pkgs }}"
+
+  become: yes
