@@ -1,7 +1,7 @@
 ---
 - block:
   - name: Allow access only for some users
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/ssh/sshd_config
       regexp: '^AllowUsers'
       line: AllowUsers {{ ssh_allowusers }}
@@ -11,7 +11,7 @@
     when: ssh_allowusers is defined
 
   - name: Set host key
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/ssh/sshd_config
       regexp: '^HostKey'
       line: "HostKey /etc/ssh/ssh_host_{{ ssh_hostkey }}_key"
@@ -20,7 +20,7 @@
     notify: restart sshd
 
   - name: Set ssh port
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/ssh/sshd_config
       regexp: '^Port'
       line: "Port {{ ssh_port }}"
@@ -29,7 +29,7 @@
     notify: restart sshd
 
   - name: Force public key authentication
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/ssh/sshd_config
       regexp: "{{ item.regexp }}"
       line: "{{ item.line }}"

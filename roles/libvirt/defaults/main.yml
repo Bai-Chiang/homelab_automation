@@ -1,0 +1,6 @@
+---
+libvirt_pkgs:
+  - qemu-headless    # qemu without GUI
+  - libvirt
+  - bridge-utils    # for bridged networking
+  - edk2-ovmf    # UEFI support

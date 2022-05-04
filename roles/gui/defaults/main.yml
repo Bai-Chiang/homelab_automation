@@ -1,0 +1,40 @@
+---
+gpu_drivers:
+  - mesa
+
+shell_pkgs:
+  - fish
+  - zsh
+  - zsh-completions
+  - zsh-syntax-highlighting
+  - zsh-autosuggestions
+  - grml-zsh-config
+
+default_shell: /usr/bin/fish
+
+wm_pkgs:
+  - sway
+  - swaylock
+  - swayidle
+  - dmenu
+  - waybar
+  - xdg-utils
+  - xdg-desktop-portal
+  - xdg-desktop-portal-wlr
+
+audio_pkgs:
+  - pipewire
+  - pipewire-alsa
+  - pipewire-pulse
+  - pipewire-jack
+  - pavucontrol
+
+fonts_pkgs:
+  - ttf-dejavu
+  - ttf-font-awesome
+
+app_pkgs:
+  - kitty
+
+flatpak_pkgs:
+  - com.github.tchx84.Flatseal

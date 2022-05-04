@@ -2,7 +2,7 @@
 - block:
 
   - name: Add time servers
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/systemd/timesyncd.conf
       regexp: "{{ item.regexp }}"
       line: "{{ item.line }}"
@@ -11,11 +11,11 @@
       - { regexp: '^NTP=', insertafter: '^#\s*NTP=', line: NTP=0.arch.pool.ntp.org 1.arch.pool.ntp.org 2.arch.pool.ntp.org 3.arch.pool.ntp.org }
       - { regexp: '^FallbackNTP=', insertafter: '^#\s*FallbackNTP=', line: FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.fr.pool.ntp.org }
 
-  - name: Enable and start the network time synchronization
+  - name: systemctl enable --now systemd-timesyncd.service
     ansible.builtin.systemd: name=systemd-timesyncd state=started enabled=yes
 
   - name: Disable bell sound
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: "{{ item.path }}"
       regexp: "{{ item.regexp }}"
       line: "{{ item.line }}"
@@ -26,14 +26,14 @@
       - { path: /etc/profile, regexp: '^export LESS', insertafter: '#\s*export LESS', line: 'export LESS="$LESS -Q"' }
 
   - name: Set default editor
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/profile
       regexp: '^export EDITOR'
       line: "export EDITOR{{'='}}/usr/bin/vim"
       insertafter: '^#\s*export EDITOR'
 
   - name: Enable pacman parallel downloads
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/pacman.conf
       regexp: '^ParallelDownloads ='
       line: ParallelDownloads = 5
@@ -43,32 +43,33 @@
     community.general.pacman: name=reflector state=present
 
   - name: Configure reflector
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/xdg/reflector/reflector.conf
       regexp: '^--country'
       line: --country us 
       insertafter: '^#\s*--country'
 
-  - name: Enable reflector.service
+  - name: systemctl enable reflector.service
     ansible.builtin.systemd: name=reflector enabled=yes
 
-  - name: Enable reflector.timer to update mirrorlist every week
-    ansible.builtin.systemd: name=reflector.timer enabled=yes
+  - name: systemctl enable --now reflector.timer
+    ansible.builtin.systemd: name=reflector.timer enabled=yes state=started
 
   - name: pacman -S pacman-contrib for paccache
     community.general.pacman: name=pacman-contrib state=present
 
-  - name: Enable paccache.timer to discard unused packages weekly
-    ansible.builtin.systemd: name=paccache.timer enabled=yes
+  - name: systemctl enable --now paccache.timer
+    ansible.builtin.systemd: name=paccache.timer enabled=yes state=started
 
-  - name: Enable fstrim.timer to periodic TRIM SSD
-    ansible.builtin.systemd: name=fstrim.timer enabled=yes
+  - name: systemctl enable --now fstrim.timer
+    ansible.builtin.systemd: name=fstrim.timer enabled=yes state=started
 
-  - name: pacman -S ufw
-    community.general.pacman: name=ufw state=present
-
-  - name: Enable and start ufw.service
-    ansible.builtin.systemd: name=reflector.timer enabled=yes state=started 
+  - name: pacman -S ufw iptables-nft
+    community.general.pacman:
+      name: 
+        - ufw
+        - iptables-nft
+      state: present
 
   - name: ufw default incoming rule
     community.general.ufw: default=deny direction=incoming
@@ -76,5 +77,7 @@
   - name: ufw default routed rule
     community.general.ufw: default=deny direction=routed
 
+  - name: systemctl enable --now ufw.service
+    ansible.builtin.systemd: name=reflector.timer enabled=yes state=started 
 
   become: yes

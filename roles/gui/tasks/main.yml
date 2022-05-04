@@ -1,27 +1,89 @@
 ---
 - block:
   - name: Install GPU driver
-    community.general.pacman: name={{ item }} state=present
-    loop: "{{ gpu_drivers }}"
+    community.general.pacman: name={{ gpu_drivers }} state=present
 
   - name: Install shell packages
-    community.general.pacman: name={{ item }} state=present
-    loop: "{{ shell_pkgs }}"
+    community.general.pacman: name={{ shell_pkgs }} state=present
+
+  - name: change shell (non systemd-homed)
+    ansible.builtin.user:
+      name: "{{ ansible_user_id }}"
+      shell: "{{ default_shell }}"
+    when: not homed
+
+  - name: change shell (systemd-homed)
+    community.general.homectl:
+      name: "{{ ansible_user_id }}"
+      password: "{{ ansible_become_password }}"
+      shell: "{{ default_shell }}"
+    when: homed
 
   - name: Install WM packages
-    community.general.pacman: name={{ item }} state=present
-    loop: "{{ wm_pkgs }}"
+    community.general.pacman: name={{ wm_pkgs }} state=present
 
   - name: Install audio packages
-    community.general.pacman: name={{ item }} state=present
-    loop: "{{ audio_pkgs }}"
+    community.general.pacman: name={{ audio_pkgs }} state=present
 
   - name: Install font packages
-    community.general.pacman: name={{ item }} state=present
-    loop: "{{ fonts_pkgs }}"
+    community.general.pacman: name={{ fonts_pkgs }} state=present
 
-  - name: Install applications
-    community.general.pacman: name={{ item }} state=present
-    loop: "{{ app_pkgs }}"
+  - name: Install other packages
+    community.general.pacman: name={{ other_pkgs }} state=present
 
   become: yes
+  
+- name: Get stats of .dotfiles directory
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/.dotfiles"
+  register: dotfiles
+
+- name: Restore my dotfiles
+  ansible.builtin.script:
+    cmd: restore_dotfiles.sh
+    chdir: "{{ ansible_user_dir }}"
+    executable: /usr/bin/bash
+  when: not dotfiles.stat.exists
+
+- name: Edit .dotfiles/config
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.dotfiles/config"
+    regexp: '^\surl ='
+    insertafter: '^\[remote'
+    line: "\turl = git@github.com:Bai-Chiang/dotfiles.git"
+
+- name: Install flatpak
+  community.general.pacman: name=flatpak state=present
+  become: yes
+
+- name: Add flathub repo
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+    method: user
+
+- name: Install flatpak packages
+  community.general.flatpak:
+    name: "{{ flatpak_pkgs }}"
+    state: present
+    remote: flathub
+    method: user
+
+- name: Install notification server
+  community.general.pacman: name=mako state=present
+  become: yes
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    scope: user
+  when: not dotfiles.stat.exists
+
+- name: systemctl enable --now --user flatpak-update.timer
+  ansible.builtin.systemd:
+    name: flatpak-update.timer
+    state: started
+    enabled: yes
+    scope: user
+

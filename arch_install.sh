@@ -6,7 +6,8 @@ KERNEL_PKGS="linux linux-zen"
 FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 UCODE_PKG="intel-ucode"
 BASE_PKGS="base linux-firmware sudo python"
-OTHER_PKGS="man-db man-pages texinfo vim base-devel git"
+OTHER_PKGS="man-db man-pages texinfo vim"
+OTHER_PKGS="$OTHER_PKGS git base-devel"
 
 TIMEZONE="US/Eastern"
 
@@ -386,6 +387,24 @@ fi
 #    KERNEL_CMD="$KERNEL_CMD lsm=landlock,lockdown,yama,selinux,bpf"
 #fi
 #
+
+######################################################
+# VFIO kernel parameters
+# https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#Enabling_IOMMU
+######################################################
+echo -e "\n\n"
+read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " IS_VFIO
+: "${IS_VFIO:=n}"
+if [ "$IS_VFIO" = y ] ; then
+    if [ $(echo "$UCODE_PKG" | grep "intel" | wc -l ) -ge 1 ] ; then
+        # for intel cpu
+        KERNEL_CMD="$KERNEL_CMD intel_iommu=on iommu=pt"
+    else
+        # amd cpu
+        KERNEL_CMD="$KERNEL_CMD iommu=pt"
+    fi
+fi
+
 
 ######################################################
 # boot loader (systemd-boot)

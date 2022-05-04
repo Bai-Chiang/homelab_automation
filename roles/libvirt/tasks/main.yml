@@ -1,0 +1,41 @@
+---
+- block:
+  - name: Install libvirt packages
+    community.general.pacman: name={{ libvirt_pkgs }} state=present
+
+  - name: Get file system type of /var/lib/libvirt/images
+    ansible.builtin.command: stat --file-system --format=%T /var/lib/libvirt/images
+    register: libvirt_images_fstype
+    changed_when: false
+
+  - name: Disable copy-on-write for /var/lib/libvirt/images
+    ansible.builtin.file:
+      path: /var/lib/libvirt/images
+      attributes: '+C'
+      state: directory
+    when: libvirt_images_fstype.stdout == 'btrfs'
+
+  - name: Add user to libvirt group (non systemd-homed)
+    ansible.builtin.user:
+      name: "{{ ansible_user_id }}"
+      groups: libvirt
+      append: yes
+    when: not homed
+
+  - name: Add user to libvirt group (systemd-homed)
+    community.general.homectl:
+      name: "{{ ansible_user_id }}"
+      password: "{{ ansible_become_password }}"
+      memberof: wheel,libvirt
+    when: homed
+
+  - name: systemctl enable libvirtd.service --now
+    ansible.builtin.systemd: name=libvirtd.service enabled=yes
+
+  #- name: systemctl start virtlogd.service
+  #  ansible.builtin.systemd: name=virtlogd.service enabled=yes state=started 
+
+  become: yes
+
+
+
