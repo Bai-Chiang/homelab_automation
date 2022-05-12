@@ -14,12 +14,14 @@ TIMEZONE="US/Eastern"
 
 ######################################################
 
-echo -e "\n\n"
-echo "This is an Arch Linux installation script."
-echo "To activate it, press Enter, otherwise, press any other key."
-echo "If you activate it, you will be given a chance to install the glorious Arch Linux automatically."
-echo "However, there is no guarantee of success."
-echo "There is also no guarantee of your existing data safety."
+echo "
+
+This is an Arch Linux installation script.
+To activate it, press Enter, otherwise, press any other key.
+If you activate it, you will be given a chance to install the glorious Arch Linux automatically.
+However, there is no guarantee of success.
+There is also no guarantee of your existing data safety.
+"
 read -p "Ready? " READY
 
 if [ -n "$READY" ] ; then
@@ -27,11 +29,12 @@ if [ -n "$READY" ] ; then
 fi
 
 
+echo "
 ######################################################
 # Verify the boot mode
 # https://wiki.archlinux.org/title/Installation_guide#Verify_the_boot_mode
 ######################################################
-echo -e "\n"
+"
 if [ -e /sys/firmware/efi/efivars ] ; then
     echo "UEFI mode OK."
 else
@@ -59,11 +62,12 @@ if [ "$IS_SECURE_BOOT" = y ] ; then
 fi
             
 
+echo "
 ######################################################
 # Check internet connection
 # https://wiki.archlinux.org/title/Installation_guide#Connect_to_the_internet
 ######################################################
-echo -e "\n"
+"
 ping -c 1 archlinux.org > /dev/null
 if [ $? -ne 0 ] ; then
     echo "Please check the internet connection."
@@ -73,17 +77,21 @@ else
 fi
 
 
+echo "
 ######################################################
 # Update the system clock
 # https://wiki.archlinux.org/title/Installation_guide#Update_the_system_clock
 ######################################################
+"
 timedatectl set-ntp true
 
 
+echo "
 ######################################################
 # Partition disks
 # https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks
 ######################################################
+"
 DEVICES=$(lsblk --nodeps --paths --list --noheadings --sort=size --output=name,size,model | grep --invert-match "loop" | cat --number)
 
 DEVICE_ID=" "
@@ -117,11 +125,12 @@ read -p "Enter a number (empty to skip): " SWAP_ID
 [ -n "$SWAP_ID" ] && SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
 
 
+echo "
 ######################################################
 # Format the partitions
 # https://wiki.archlinux.org/title/Installation_guide#Format_the_partitions
 ######################################################
-echo -e "\n\n"
+"
 # EFI partition
 echo "Formatting EFI partition ..."
 echo "Running command: mkfs.fat -n boot -F 32 $BOOT_PART"
@@ -140,16 +149,18 @@ echo -e "\n\nWhat filesystem would you like for the root partition:\nbtrfs\next4
 read -p "Enter root file system (default is btrfs): " ROOT_FS
 : "${ROOT_FS:=btrfs}"
 
+
+echo "
 ######################################################
 # Encrypt the root partion
 # https://wiki.archlinux.org/title/Dm-crypt/Device_encryption
 ######################################################
-echo -e "\n\n"
+"
 read -p "Do you want to encrypt the root partition? [Y/n] " IS_ENCRYPT
 : "${IS_ENCRYPT:=y}"
 IS_ENCRYPT="${IS_ENCRYPT,,}"
 if [ "$IS_ENCRYPT" = y ] ; then
-    echo -e "\nDo you want to setup a key file on the boot partition to automatically unlock the root partition on boot?\nThis could be used with a boot partition on a flash drive, such that the system could autounlock on boot and without the flash drive the system cannot boot and root partition is encrypted.It's not recommended if the boot and root partition on the same device, it would make the encryption meanless, since the key file is on the unencrypted boot partition anyone could easily decrypt your root partition.\nIf choose n then it will ask you for a encryption password."
+    echo -e "\nDo you want to create a key file on the boot partition to automatically unlock the root partition on boot?\nThis could be used with the setup that the boot partition on an external flash drive, such that the system could autounlock on boot. But without the flash drive the system cannot boot and root partition is encrypted. It's not recommended if both boot and root partition on the same device, it would make the encryption meanless. Since the key file is on the unencrypted boot partition, anyone could easily the key file and decrypt the root partition.\nIf choose n then it will ask you for a encryption password."
     read -p "[y/N] " IS_CRYPTKEY
     : "${IS_CRYPTKEY:=n}"
     IS_CRYPTKEY="${IS_CRYPTKEY,,}"
@@ -263,45 +274,55 @@ fi
 
 
 
+echo "
 ######################################################
-# Install essential packages
+# Install packages
 # https://wiki.archlinux.org/title/Installation_guide#Install_essential_packages
 ######################################################
-echo -e "\nInstalling packages ..."
+"
 pacstrap /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS
 
+
+echo "
 ######################################################
 # Generate fstab
 # https://wiki.archlinux.org/title/Installation_guide#Fstab
 ######################################################
-echo -e "\nGenerating fstab ..."
+"
+echo -e "Generating fstab ..."
 genfstab -U /mnt >> /mnt/etc/fstab
 echo "Removing subvolid entry in fstab ..."
 sed -i 's/subvolid=[0-9]*,//g' /mnt/etc/fstab
 
+echo "
 ######################################################
 # Set time zone
 # https://wiki.archlinux.org/title/Installation_guide#Time_zone
 ######################################################
-echo -e "\nSetting time zone ..."
+"
+echo -e "Setting time zone ..."
 arch-chroot /mnt ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 arch-chroot /mnt hwclock --systohc
 
+echo "
 ######################################################
 # Set locale
 # https://wiki.archlinux.org/title/Installation_guide#Localization
 ######################################################
-echo -e "\nSetting locale ..."
+"
+echo -e "Setting locale ..."
 arch-chroot /mnt sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 arch-chroot /mnt locale-gen
 echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
 echo "KEYMAP=us" > /mnt/etc/vconsole.conf
 
+echo "
 ######################################################
 # Set network
 # https://wiki.archlinux.org/title/Installation_guide#Network_configuration
 ######################################################
-echo -e "\nSetting network ..."
+"
+echo -e "Setting network ..."
 echo -e "\n\nPlease tell me the hostname:"
 read HOSTNAME
 echo "$HOSTNAME" > /mnt/etc/hostname
@@ -327,11 +348,13 @@ fi
 
 
 
+echo "
 ######################################################
 # Disk encryption
 # https://wiki.archlinux.org/title/Dm-crypt
 ######################################################
-partprobe    # reload partition table
+"
+partprobe &> /dev/null    # reload partition table
 ROOT_UUID=$(lsblk -dno UUID $ROOT_DEV)
 BOOT_UUID=$(lsblk -dno UUID $BOOT_PART)
 if [ "$IS_ENCRYPT" = y ] ; then
@@ -353,7 +376,7 @@ if [ "$IS_ENCRYPT" = y ] ; then
         # create a persistent partition name for swap
         # read [this](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption#UUID_and_LABEL) for reason creating a 1MiB size ext2 filesystem
         mkfs.ext2 -F -F -L cryptswap $SWAP_PART 1M
-        partprobe    # reload partition table
+        partprobe &> /dev/null    # reload partition table
         SWAP_UUID=$(lsblk -dno UUID $SWAP_PART)
         echo "cryptswap  UUID=$SWAP_UUID  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
         # change /etc/fstab swap entry
@@ -388,11 +411,13 @@ fi
 #fi
 #
 
+echo "
 ######################################################
 # VFIO kernel parameters
 # https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#Enabling_IOMMU
 ######################################################
-echo -e "\n\n"
+"
+echo -e "\n"
 read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " IS_VFIO
 : "${IS_VFIO:=n}"
 if [ "$IS_VFIO" = y ] ; then
@@ -406,18 +431,22 @@ if [ "$IS_VFIO" = y ] ; then
 fi
 
 
+echo "
 ######################################################
 # boot loader (systemd-boot)
 # https://wiki.archlinux.org/title/Arch_boot_process#Boot_loader
 # If enabled secure boot use unified kernel image with systemd-boot,
 # otherwise use normal systemd-boot
 ######################################################
+"
 arch-chroot /mnt bootctl install
 if [ "$IS_SECURE_BOOT" = y ] ; then
+    echo "
 ######################################################
 # Secure boot setup
 # https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot
 ######################################################
+"
     echo "Configuring secure boot ..."
     arch-chroot /mnt bash <<'EOF'
 # preparation
@@ -544,10 +573,12 @@ EOF
     fi
     
 else
+    echo "
 ######################################################
 # Configure systemd-boot for non-secure boot
 # https://wiki.archlinux.org/title/Systemd-boot
 ######################################################
+"
     echo "Configuring systemd-boot ..."
     arch-chroot /mnt systemctl enable systemd-boot-update.service
 
@@ -578,12 +609,14 @@ done
 fi
 
 
+echo "
 ######################################################
 # User account
 # https://wiki.archlinux.org/title/Users_and_groups
 ######################################################
-echo -e "\n\n"
+"
 arch-chroot /mnt sed -i '/^# %wheel ALL=(ALL:ALL) ALL/ s/# //' /etc/sudoers
+echo -e "\n\n"
 read -p "Do you want to add an administration account (user in group wheel) now? [Y/n] " IS_USER
 : "${IS_USER:=y}"
 if [ "$IS_USER" = y ] ; then
@@ -632,6 +665,13 @@ fi
 #    cat /mnt/etc/pam.d/system-login
 #fi
 
+
+echo "
+######################################################
+# OpenSSH server
+# https://wiki.archlinux.org/title/OpenSSH#Server_usage
+######################################################
+"
 echo -e "\n\n"
 read -p "Do you want to enable ssh? [y/N] " IS_SSH
 : "${IS_SSH:=n}"

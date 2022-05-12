@@ -29,11 +29,8 @@
       memberof: wheel,libvirt
     when: homed
 
-  - name: systemctl enable libvirtd.service --now
+  - name: systemctl enable libvirtd.service
     ansible.builtin.systemd: name=libvirtd.service enabled=yes
-
-  #- name: systemctl start virtlogd.service
-  #  ansible.builtin.systemd: name=virtlogd.service enabled=yes state=started 
 
   become: yes
 

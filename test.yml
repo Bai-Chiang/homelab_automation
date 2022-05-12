@@ -2,12 +2,9 @@
 - hosts: localhost
   connection: local
 
-  vars_prompt:
-    - name: ansible_become_password
-      private: yes
-
   vars_files:
     - vars/test.yml
+    - vars/credentials.yml
 
   pre_tasks:
     #- name: Enable multilib repo
@@ -28,21 +25,40 @@
     - gui
     - libvirt
     - pip
+    #- nas
 
   tasks:
-    #- name: Enable DRM kernel mode setting for nvidia driver
+    #- name: Copy monitor EDID
+    #  copy:
+    #    src: edid.bin
+    #    dest: /usr/lib/firmware/edid/
+    #    owner: root
+    #    group: root
+    #    mode: '0644'
+    #  become: yes
+
+    #- name: Enable DRM kernel mode setting for nvidia driver, set EDID and force video output on HDMI-A-1
     #  lineinfile:
     #    path: /etc/kernel/cmdline
     #    regexp: '^(.* rw)'
-    #    line: \g<1> nvidia-drm.modeset=1
+    #    line: \g<1> nvidia-drm.modeset=1 nvidia.NVreg_RegistryDwords=EnableBrightnessControl=1 video=HDMI-A-1:e drm.edid_firmware=HDMI-A-1:edid/edid.bin
     #    backrefs: yes
-    #  register: nvidia_KMS
+    #  register: kernel_cmdline
     #  become: yes
+
     #- name: regenerate initramfs if kernel parameter changed
     #  command: pacman --noconfirm -S systemd
     #  become: yes
-    #  when: nvidia_KMS is changed
-       
+    #  when: kernel_cmdline is changed
+
+    - name: UFW allow scream audio
+      community.general.ufw:
+        rule: allow
+        interface_in: virbr0
+        from_ip: 192.168.122.0/24
+        port: 4010
+      become: yes
+
 
   post_tasks:
-    - import_tasks: tasks/ufw.yml
+     - import_tasks: tasks/ufw.yml

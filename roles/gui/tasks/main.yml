@@ -80,10 +80,9 @@
     scope: user
   when: not dotfiles.stat.exists
 
-- name: systemctl enable --now --user flatpak-update.timer
+- name: systemctl enable --user flatpak-update.timer
   ansible.builtin.systemd:
     name: flatpak-update.timer
-    state: started
     enabled: yes
     scope: user
 
