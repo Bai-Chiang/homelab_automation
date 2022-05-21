@@ -2,14 +2,17 @@
 
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 
-KERNEL_PKGS="linux linux-zen"
+#KERNEL_PKGS="linux linux-zen"
+KERNEL_PKGS="linux-hardened"
 FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 UCODE_PKG="intel-ucode"
 BASE_PKGS="base linux-firmware sudo python"
-OTHER_PKGS="man-db man-pages texinfo vim"
-OTHER_PKGS="$OTHER_PKGS git base-devel"
+#OTHER_PKGS="man-db man-pages texinfo vim"
+#OTHER_PKGS="$OTHER_PKGS git base-devel"
 
 TIMEZONE="US/Eastern"
+
+OTHER_KERNEL_CMD="console=ttyS0"
 
 
 ######################################################
@@ -119,10 +122,12 @@ read -p "Enter a number: " ROOT_ID
 ROOT_PART=$(echo "$PARTITIONS" | awk "\$1 == $ROOT_ID { print \$2}")
 
 # swap partition
+# swap is important, see [In defence of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html)
 echo -e "\n\nTell me the swap partition number:"
 echo "$PARTITIONS"
 read -p "Enter a number (empty to skip): " SWAP_ID
-[ -n "$SWAP_ID" ] && SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
+#[ -n "$SWAP_ID" ] && SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
+SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
 
 
 echo "
@@ -138,16 +143,16 @@ mkfs.fat -n boot -F 32 "$BOOT_PART"
 
 echo -e "\n"
 # swap partition
-if [ -n "$SWAP_PART" ] ; then
-    echo "Formatting swap partition ..."
-    echo "Running command: mkswap -L swap $SWAP_PART"
-    mkswap -L swap "$SWAP_PART"
-fi
+#if [ -n "$SWAP_PART" ] ; then
+echo "Formatting swap partition ..."
+echo "Running command: mkswap -L swap $SWAP_PART"
+mkswap -L swap "$SWAP_PART"
+#fi
 
-# root filesystem
-echo -e "\n\nWhat filesystem would you like for the root partition:\nbtrfs\next4"
-read -p "Enter root file system (default is btrfs): " ROOT_FS
-: "${ROOT_FS:=btrfs}"
+## root filesystem
+#echo -e "\n\nWhat filesystem would you like for the root partition:\nbtrfs\next4"
+#read -p "Enter root file system (default is btrfs): " ROOT_FS
+#: "${ROOT_FS:=btrfs}"
 
 
 echo "
@@ -189,66 +194,67 @@ fi
 
 # format root partition
 echo -e "\n\nFormatting root partition ..."
-if [ "$ROOT_FS" = ext4 ] ; then
-    echo "Running command: mkfs.ext4 -L ArchLinux $ROOT_PART"
-    mkfs.ext4 -L ArchLinux "$ROOT_PART"
-
-elif [ "$ROOT_FS" = btrfs ] ; then
-    echo "Running command: mkfs.btrfs -L ArchLinux -f $ROOT_PART"
-    mkfs.btrfs -L ArchLinux -f "$ROOT_PART"
-    # create subvlumes
-    echo "Creating btrfs subvolumes ..."
-    mount "$ROOT_PART" /mnt
-    btrfs subvolume create /mnt/@
-    btrfs subvolume create /mnt/@home
-    btrfs subvolume create /mnt/@snapshots
-    btrfs subvolume create /mnt/@var_log
-    btrfs subvolume create /mnt/@pacman_pkgs
-    mkdir /mnt/@/{boot,home,.snapshots}
-    mkdir -p /mnt/@/var/log
-    mkdir -p /mnt/@/var/cache/pacman/pkg
-    if [ -z "$SWAP_PART" ] ; then
-        btrfs subvolume create /mnt/@swapfiles
-        mkdir /mnt/@/swapfiles
-    fi
-    umount "$ROOT_PART"
-fi
+#if [ "$ROOT_FS" = ext4 ] ; then
+#    echo "Running command: mkfs.ext4 -L ArchLinux $ROOT_PART"
+#    mkfs.ext4 -L ArchLinux "$ROOT_PART"
+#
+#elif [ "$ROOT_FS" = btrfs ] ; then
+echo "Running command: mkfs.btrfs -L ArchLinux -f $ROOT_PART"
+mkfs.btrfs -L ArchLinux -f "$ROOT_PART"
+# create subvlumes
+echo "Creating btrfs subvolumes ..."
+mount "$ROOT_PART" /mnt
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@snapshots
+btrfs subvolume create /mnt/@var_log
+btrfs subvolume create /mnt/@pacman_pkgs
+mkdir /mnt/@/{boot,home,.snapshots}
+mkdir -p /mnt/@/var/log
+mkdir -p /mnt/@/var/cache/pacman/pkg
+#if [ -z "$SWAP_PART" ] ; then
+#    btrfs subvolume create /mnt/@swapfiles
+#    mkdir /mnt/@/swapfiles
+#fi
+umount "$ROOT_PART"
+#fi
 
 # mount all partitions
 echo -e "\nMounting all partitions ..."
-if [ "$ROOT_FS" = ext4 ] ; then
-    mount "$ROOT_PART" /mnt
-    mkdir /mnt/boot
-elif [ "$ROOT_FS" = btrfs ] ; then
-    mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$ROOT_PART" /mnt
-    mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$ROOT_PART" /mnt/home
-    mount -o "$BTRFS_MOUNT_OPTS",subvol=@snapshots "$ROOT_PART" /mnt/.snapshots
-    mount -o "$BTRFS_MOUNT_OPTS",subvol=@var_log "$ROOT_PART" /mnt/var/log
-    mount -o "$BTRFS_MOUNT_OPTS",subvol=@pacman_pkgs "$ROOT_PART" /mnt/var/cache/pacman/pkg
-fi
+#if [ "$ROOT_FS" = ext4 ] ; then
+#    mount "$ROOT_PART" /mnt
+#    mkdir /mnt/boot
+#elif [ "$ROOT_FS" = btrfs ] ; then
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$ROOT_PART" /mnt
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$ROOT_PART" /mnt/home
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@snapshots "$ROOT_PART" /mnt/.snapshots
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@var_log "$ROOT_PART" /mnt/var/log
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@pacman_pkgs "$ROOT_PART" /mnt/var/cache/pacman/pkg
+#fi
 mount "$BOOT_PART" /mnt/boot
 
-if [ -n "$SWAP_PART" ] ; then
-    swapon "$SWAP_PART"
-elif [ "$ROOT_FS" = ext4 ] ; then
-    # https://wiki.archlinux.org/title/Swap#Swap_file
-    mkdir /mnt/swapfiles
-    dd if=/dev/zero of=/mnt/swapfiles/swapfile_4G bs=1M count=4096 status=progress
-    chmod 0600 /mnt/swapfiles/swapfile_4G
-    mkswap -U clear /mnt/swapfiles/swapfile_4G
-    swapon /mnt/swapfiles/swapfile_4G
-elif [ "$ROOT_FS" = btrfs ] ; then
-    # create swapfile
-    # https://wiki.archlinux.org/title/Btrfs#Swap_file
-    mount -o ssd,space_cache=v2,subvol=@swapfiles "$ROOT_PART" /mnt/swapfiles
-    truncate -s 0 /mnt/swapfiles/swapfile_4G
-    chattr +C /mnt/swapfiles/swapfile_4G
-    btrfs property set /mnt/swapfiles/swapfile_4G compression none
-    dd if=/dev/zero of=/mnt/swapfiles/swapfile_4G bs=1M count=4096 status=progress
-    chmod 0600 /mnt/swapfiles/swapfile_4G
-    mkswap -U clear /mnt/swapfiles/swapfile_4G
-    swapon /mnt/swapfiles/swapfile_4G
-fi
+swapon "$SWAP_PART"
+#if [ -n "$SWAP_PART" ] ; then
+#    swapon "$SWAP_PART"
+#elif [ "$ROOT_FS" = ext4 ] ; then
+#    # https://wiki.archlinux.org/title/Swap#Swap_file
+#    mkdir /mnt/swapfiles
+#    dd if=/dev/zero of=/mnt/swapfiles/swapfile_4G bs=1M count=4096 status=progress
+#    chmod 0600 /mnt/swapfiles/swapfile_4G
+#    mkswap -U clear /mnt/swapfiles/swapfile_4G
+#    swapon /mnt/swapfiles/swapfile_4G
+#elif [ "$ROOT_FS" = btrfs ] ; then
+#    # create swapfile
+#    # https://wiki.archlinux.org/title/Btrfs#Swap_file
+#    mount -o ssd,space_cache=v2,subvol=@swapfiles "$ROOT_PART" /mnt/swapfiles
+#    truncate -s 0 /mnt/swapfiles/swapfile_4G
+#    chattr +C /mnt/swapfiles/swapfile_4G
+#    btrfs property set /mnt/swapfiles/swapfile_4G compression none
+#    dd if=/dev/zero of=/mnt/swapfiles/swapfile_4G bs=1M count=4096 status=progress
+#    chmod 0600 /mnt/swapfiles/swapfile_4G
+#    mkswap -U clear /mnt/swapfiles/swapfile_4G
+#    swapon /mnt/swapfiles/swapfile_4G
+#fi
 
 #######################################################
 ## Enable SELinux
@@ -326,7 +332,7 @@ echo -e "Setting network ..."
 echo -e "\n\nPlease tell me the hostname:"
 read HOSTNAME
 echo "$HOSTNAME" > /mnt/etc/hostname
-echo -e "Which network manager do you want to use?\n\t1\tsystemd-networkd\n\t2\tNetworkManger"
+echo -e "\nWhich network manager do you want to use?\n\t1\tsystemd-networkd\n\t2\tNetworkManger"
 read -p "Please enter a number: " NETWORKMANAGER
 if [ "$NETWORKMANAGER" -eq 1 ] ; then
     echo -e "Copying iso network configuration ..."
@@ -370,18 +376,18 @@ if [ "$IS_ENCRYPT" = y ] ; then
     fi
 
     # /etc/crypttab for swap
-    if [ -n "$SWAP_PART" ] ; then
-        echo -e "Configuring /etc/crypttab.iniramfs for encrypted swap ..."
-        swapoff $SWAP_PART
-        # create a persistent partition name for swap
-        # read [this](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption#UUID_and_LABEL) for reason creating a 1MiB size ext2 filesystem
-        mkfs.ext2 -F -F -L cryptswap $SWAP_PART 1M
-        partprobe &> /dev/null    # reload partition table
-        SWAP_UUID=$(lsblk -dno UUID $SWAP_PART)
-        echo "cryptswap  UUID=$SWAP_UUID  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
-        # change /etc/fstab swap entry
-        sed -i "/swap/ s:^UUID=[a-zA-Z0-9-]*\s:/dev/mapper/cryptswap  :" /mnt/etc/fstab
-    fi
+    #if [ -n "$SWAP_PART" ] ; then
+    echo -e "Configuring /etc/crypttab.iniramfs for encrypted swap ..."
+    swapoff $SWAP_PART
+    # create a persistent partition name for swap
+    # read [this](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption#UUID_and_LABEL) for reason creating a 1MiB size ext2 filesystem
+    mkfs.ext2 -F -F -L cryptswap $SWAP_PART 1M
+    partprobe &> /dev/null    # reload partition table
+    SWAP_UUID=$(lsblk -dno UUID $SWAP_PART)
+    echo "cryptswap  UUID=$SWAP_UUID  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
+    # change /etc/fstab swap entry
+    sed -i "/swap/ s:^UUID=[a-zA-Z0-9-]*\s:/dev/mapper/cryptswap  :" /mnt/etc/fstab
+    #fi
 
     # mkinitcpio
     # https://wiki.archlinux.org/title/Dm-crypt/System_configuration#mkinitcpio
@@ -398,18 +404,20 @@ if [ "$IS_ENCRYPT" = y ] ; then
 else
     KERNEL_CMD="root=UUID=$ROOT_UUID"
 fi
-if [ "$ROOT_FS" = btrfs ] ; then
-    # btrfs as root 
-    # https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
-    KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
-else
-    KERNEL_CMD="$KERNEL_CMD rootfstype=ext4 rw"
-fi
+#if [ "$ROOT_FS" = btrfs ] ; then
+# btrfs as root 
+# https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
+KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
+#else
+#    KERNEL_CMD="$KERNEL_CMD rootfstype=ext4 rw"
+#fi
 
 #if [ "$IS_SELINUX" = y ] ; then
 #    KERNEL_CMD="$KERNEL_CMD lsm=landlock,lockdown,yama,selinux,bpf"
 #fi
 #
+
+KERNEL_CMD="$KERNEL_CMD $OTHER_KERNEL_CMD"
 
 echo "
 ######################################################

@@ -27,10 +27,14 @@
 
   - name: Set default editor
     ansible.builtin.lineinfile:
-      path: /etc/profile
+      path: "{{ item.path }}"
       regexp: '^export EDITOR'
       line: "export EDITOR{{'='}}/usr/bin/vim"
       insertafter: '^#\s*export EDITOR'
+      create: yes
+    loop:
+      - { path: /etc/inputrc }
+      - { path: "{{ ansible_user_dir }}/.bash_profile" }
 
   - name: Enable pacman parallel downloads
     ansible.builtin.lineinfile:
