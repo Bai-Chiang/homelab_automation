@@ -14,7 +14,6 @@ TIMEZONE="US/Eastern"
 
 #OTHER_KERNEL_CMD="console=ttyS0"
 
-
 ######################################################
 
 echo "
@@ -125,7 +124,11 @@ ROOT_PART=$(echo "$PARTITIONS" | awk "\$1 == $ROOT_ID { print \$2}")
 # swap is important, see [In defence of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html)
 echo -e "\n\nTell me the swap partition number:"
 echo "$PARTITIONS"
+<<<<<<< HEAD
 read -p "Enter a number: " SWAP_ID
+=======
+read -p "Enter a number (empty to skip): " SWAP_ID
+>>>>>>> c23b15d1072eb3da3850bd732fa34f8d148492e3
 #[ -n "$SWAP_ID" ] && SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
 SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
 
