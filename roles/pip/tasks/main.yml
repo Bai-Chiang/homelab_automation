@@ -11,4 +11,5 @@
   ansible.builtin.pip:
     name: "{{ pip_pkgs }}"
     extra_args: --user
+    state: latest
 

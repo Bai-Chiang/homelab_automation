@@ -1,2 +1,10 @@
-credentials.yml
-vars/
+*.yml
+!example.yml
+
+host_vars/*
+!host_vars/example.yml
+
+src/
+
+roles/networkd*
+roles/vm*

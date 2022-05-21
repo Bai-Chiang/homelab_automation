@@ -1,0 +1,19 @@
+---
+- hosts: example
+
+  vars_files:
+    - host_vars/example.yml
+
+  pre_tasks:
+    - import_tasks: tasks/update.yml
+
+  roles:
+    - common
+    - openssh
+    - libvirt
+    - nas
+    - gui
+    - pip
+
+  post_tasks:
+     - import_tasks: tasks/ufw.yml

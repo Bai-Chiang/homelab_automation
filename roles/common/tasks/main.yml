@@ -22,15 +22,18 @@
       insertafter: "{{ item.insertafter }}"
     loop:
       - { path: /etc/inputrc, regexp: '^set bell-style', insertafter: '^#\s*set bell-style', line: set bell-style none }
-      - { path: /etc/vimrc, regexp: '^set belloff=', insertafter: '^"\s*set belloff=', line: set belloff=all }
       - { path: /etc/profile, regexp: '^export LESS', insertafter: '#\s*export LESS', line: 'export LESS="$LESS -Q"' }
 
   - name: Set default editor
     ansible.builtin.lineinfile:
-      path: /etc/profile
+      path: "{{ item.path }}"
       regexp: '^export EDITOR'
       line: "export EDITOR{{'='}}/usr/bin/vim"
       insertafter: '^#\s*export EDITOR'
+      create: yes
+    loop:
+      - { path: /etc/inputrc }
+      - { path: "{{ ansible_user_dir }}/.bash_profile" }
 
   - name: Enable pacman parallel downloads
     ansible.builtin.lineinfile:
@@ -63,6 +66,11 @@
 
   - name: systemctl enable --now fstrim.timer
     ansible.builtin.systemd: name=fstrim.timer enabled=yes state=started
+
+  - name: pacman -R iptables
+    community.general.pacman:
+      name: iptables
+      state: absent
 
   - name: pacman -S ufw iptables-nft
     community.general.pacman:
