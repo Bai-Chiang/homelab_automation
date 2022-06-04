@@ -24,17 +24,6 @@
       - { path: /etc/inputrc, regexp: '^set bell-style', insertafter: '^#\s*set bell-style', line: set bell-style none }
       - { path: /etc/profile, regexp: '^export LESS', insertafter: '#\s*export LESS', line: 'export LESS="$LESS -Q"' }
 
-  - name: Set default editor
-    ansible.builtin.lineinfile:
-      path: "{{ item.path }}"
-      regexp: '^export EDITOR'
-      line: "export EDITOR{{'='}}/usr/bin/vim"
-      insertafter: '^#\s*export EDITOR'
-      create: yes
-    loop:
-      - { path: /etc/inputrc }
-      - { path: "{{ ansible_user_dir }}/.bash_profile" }
-
   - name: Enable pacman parallel downloads
     ansible.builtin.lineinfile:
       path: /etc/pacman.conf
@@ -67,16 +56,9 @@
   - name: systemctl enable --now fstrim.timer
     ansible.builtin.systemd: name=fstrim.timer enabled=yes state=started
 
-  - name: pacman -R iptables
+  - name: pacman -S ufw
     community.general.pacman:
-      name: iptables
-      state: absent
-
-  - name: pacman -S ufw iptables-nft
-    community.general.pacman:
-      name: 
-        - ufw
-        - iptables-nft
+      name: ufw
       state: present
 
   - name: ufw default incoming rule
@@ -87,5 +69,6 @@
 
   - name: systemctl enable --now ufw.service
     ansible.builtin.systemd: name=reflector.timer enabled=yes state=started 
-
+  
   become: yes
+

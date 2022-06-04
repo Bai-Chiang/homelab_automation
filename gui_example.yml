@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars_prompt:
+    - name: ansible_become_password
+      private: yes
+
+  vars_files:
+    - host_vars/gui_example.yml
+
+  pre_tasks:
+    - import_tasks: tasks/update.yml
+
+  roles:
+    - common
+    - gui
+    - libvirt
+    - pip
+
+  post_tasks:
+    - import_tasks: tasks/ufw.yml

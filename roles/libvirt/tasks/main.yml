@@ -1,7 +1,30 @@
 ---
 - block:
-  - name: Install libvirt packages
-    community.general.pacman: name={{ libvirt_pkgs }} state=present
+  - name: Install headless libvirt packages
+    community.general.pacman:
+      name:
+        - qemu-base
+        - libvirt
+        - virt-install
+        - edk2-ovmf    # UEFI support
+        #- bridge-utils    # bridged network support
+      state: present
+    when: libvirt_headless
+
+  - name: Install GUI libvirt packages
+    community.general.pacman:
+      name:
+        - qemu
+        - libvirt
+        - virt-manager
+        - edk2-ovmf    # UEFI support
+        - bridge-utils    # bridged network support
+        # The following three packages are for the default NAT/DHCP networking
+        - iptables-nft
+        - dnsmasq
+        - dmidecode
+      state: present
+    when: not libvirt_headless
 
   - name: Get file system type of /var/lib/libvirt/images
     ansible.builtin.command: stat --file-system --format=%T /var/lib/libvirt/images
@@ -31,6 +54,10 @@
 
   - name: systemctl enable libvirtd.service
     ansible.builtin.systemd: name=libvirtd.service enabled=yes
+
+  - name: Auto-start VMs for headless install
+    include_tasks: auto-start_VMs.yml
+    when: libvirt_headless
 
   become: yes
 

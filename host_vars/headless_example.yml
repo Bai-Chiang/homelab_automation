@@ -1,0 +1,98 @@
+---
+# This file contains credentials, should be encrypted using ansible-vault
+# Whether the home directory is mounted using systemd-homed
+homed: false
+
+ansible_user: tux
+ansible_port: 22
+ansible_become_password: sudopassword
+
+
+# networkd_static
+static_nic: eth0
+static_ip: 192.168.122.2/24
+static_gateway: 192.168.122.1
+static_dns: 192.168.122.1
+
+
+# openssh
+ssh_allowusers: 'tux user1 user2'
+ssh_hostkey: ed25519
+ssh_port: 22
+ssh_allow_ip: 
+  - 192.168.122.1
+
+
+# libvirt
+libvirt_headless: true
+auto_start_vm_list:
+  - vm0
+  - vm1
+
+
+# msmtp
+msmtp_provider: gmail
+msmtp_host: smtp.gmail.com
+msmtp_port: 587
+msmtp_from: username@gmail.com
+msmtp_to: account@domain.com
+msmtp_user: username
+# Create an app password for Gamil https://myaccount.google.com/apppasswords
+msmtp_password: GmailAppPasswd
+
+
+# auto-update
+auto_update_time: '*-*-* 01:00:00'
+# If NFS client is online don't update 
+nfs_client_ip: '192.168.122.1 192.168.122.3'
+
+
+# nas
+
+# RAID
+## here UUID are the UUID of luks volume /dev/sda1
+crypttab_entries:
+  - { device_mapper_name: cryptdisk0, UUID: 0a659df5-5f33-4fc9-bd20-9f32bc945f19, keyfile: /path/to/keyfile }
+  - { device_mapper_name: cryptdisk1, UUID: 3195bd48-c9c5-4523-98f5-f2b14ba481aa, keyfile: /path/to/keyfile }
+# here UUID are the uuid of decrypted volume /dev/mapper/cryptdisk
+fstab_entries:
+  - { device: UUID=f55c9ddb-e245-430a-a902-13f8dd688458, mount_point: /path/to/mount/point, fs: btrfs, mount_opts: "noatime,compress=zstd:3,space_cache=v2,autodefrag,subvol=@data", owner: tux, group: tux, mode: '0700' }
+
+# Schedule btrfs scrub. Use systemd-escape -p /path/to/mountpoint to escape the path
+btrfs_scrub_path:
+  - { path: '/', escape: '-' }
+  - { path: '/home', escape: 'home' }
+btrfs_scrub_time: 'Sun *-*-* 01:00:00'
+
+# S.M.A.R.T.
+smartd_time: '(S/../.././00)'
+
+# NFS
+nfs_root: /srv/nfs
+nfs_mount_point:
+  - { target: /home/tux/data, bind: /srv/nfs/data, ip: 192.168.122.1, opt: '(rw,sync,all_squash,anonuid=1000,anongid=1000)' }
+nfs_allow_ip:
+  - 192.168.122.1
+
+# SMB/CIFS
+smb_hosts_allow: 192.168.122.1 192.168.122.3
+CIFS_allow_ip:
+  - 192.168.122.1
+  - 192.168.122.3
+smb_passwd: sambapassword
+
+
+# Network UPS
+ups_vender_id: '0764'
+ups_product_id: '0423'
+ups_password: upspassword
+
+
+# podman
+container_configs_dir:
+  path: /opt/container-configs
+  owner: root
+  group: root
+  mode: '0700'
+containers:
+  - syncthing

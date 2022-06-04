@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+echo -e "Subject:btrfs scrub report\n\n$(btrfs scrub status $1)" | msmtp -a default {{ msmtp_to }}

@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+echo -e "Subject:S.M.A.R.T Error ${SMARTD_FAILTYPE}\n\n${SMARTD_FULLMESSAGE}" | msmtp -a default {{ msmtp_to }}

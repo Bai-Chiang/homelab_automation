@@ -1,32 +1,10 @@
 ---
 - block:
-  
-  - name: pacman -S samba
-    community.general.pacman: name=samba state=present
 
-  - name: Create /etc/samba/smb.conf
-    ansible.builtin.template:
-      src: smb.conf.j2
-      dest: /etc/samba/smb.conf
-      validate: testparm -s %s
-    notify: restart samba
-
-  - name: Configure firewall
-    community.general.ufw:
-      rule: allow
-      direction: in
-      name: CIFS
-      from: "{{ item }}"
-      comment: "Allow SMB/CIFS from {{ item }}"
-    loop: "{{ CIFS_allow_ip }}"
-
-  - name: Add samba user
-    shell: (echo {{ smb_passwd }}; echo {{ smb_passwd }}) | smbpasswd -s -a {{ ansible_user_id }}
-    register: samba_user
-    changed_when: "'Added user' in samba_user.stdout"
-    notify: restart samba
-
-  - name: systemctl enable smb.service
-    ansible.builtin.systemd: name=smb enabled=yes
+  - import_tasks: raid.yml
+  - import_tasks: btrfs_scrub.yml
+  - import_tasks: smartd.yml
+  - import_tasks: nfs.yml
+  - import_tasks: samba.yml
 
   become: yes

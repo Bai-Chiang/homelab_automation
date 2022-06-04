@@ -50,7 +50,7 @@
     path: "{{ ansible_user_dir }}/.dotfiles/config"
     regexp: '^\surl ='
     insertafter: '^\[remote'
-    line: "\turl = git@github.com:Bai-Chiang/dotfiles.git"
+    line: "\turl = {{ dotfiles_repo }}"
 
 - name: Install flatpak
   community.general.pacman: name=flatpak state=present

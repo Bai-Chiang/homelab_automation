@@ -1,0 +1,68 @@
+#!/usr/bin/bash
+
+SUBJECT="Auto-update $HOSTNAME $(/usr/bin/date '+%F %T')"
+
+{% if nfs_client_ip is defined %}
+PING_EXIT=1
+# Check NFS clients status, if anyone of them is online (ping exit 0) then don't update
+for IP in {{ nfs_client_ip }}
+do
+    ping -c 1 $IP > /dev/null
+    let PING_EXIT=${PING_EXIT}*$?
+done
+
+if [ $PING_EXIT -eq 0 ] ; then
+    UPDATE_MSG="NFS client is online. Skipped update.\n"
+fi
+
+{% endif %}
+{% if btrfs_scrub_time is defined %}
+# systemctl is-active return 0 if at least one is active
+/usr/bin/systemctl is-active --quiet --all "btrfs-scrub@*.service"
+BTRFS_SCRUB_EXIT=$?
+if [ $BTRFS_SCRUB_EXIT -eq 0 ] ; then
+    UPDATE_MSG="${UPDATE_MSG}btrfs-scrub is running. Skipped update.\n"
+fi
+
+{% endif %}
+{% if nfs_client_ip is defined or btrfs_scrub_time is defined %}
+{% if nfs_client_ip is defined and btrfs_scrub_time is defined %}
+if [ $PING_EXIT -ne 0 ] && [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
+{% elif nfs_client_ip is defined and btrfs_scrub_time is undefined %}
+if [ $PING_EXIT -ne 0 ] ; then
+{% elif nfs_client_ip is undefined and btrfs_scrub_time is defined %}
+if [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
+{% endif %}
+    # Update system
+    UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
+fi
+{% else %}
+# Update system
+UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
+{% endif %}
+
+echo -e "Subject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -a default {{ msmtp_to }}
+
+sleep 5
+
+{% if ansible_virtualization_role == 'host' and auto_start_vm_list is defined %}
+{% if nfs_client_ip is defined and btrfs_scrub_time is defined %}
+if [ $PING_EXIT -ne 0 ] && [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
+{% elif nfs_client_ip is defined and btrfs_scrub_time is undefined %}
+if [ $PING_EXIT -ne 0 ] ; then
+{% elif nfs_client_ip is undefined and btrfs_scrub_time is defined %}
+if [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
+{% endif %}
+    # Reboot after update
+    systemctl stop 'libvirt_start@*' --all
+    systemctl reboot
+else
+    # Reboot all VMs
+    systemctl restart 'libvirt_start@*' --all
+fi
+
+{% elif ansible_virtualization_role == 'host' and auto_start_vm_list is undefined %}
+systemctl reboot
+
+{% endif %}
+exit 0

@@ -1,6 +1,6 @@
 ---
-- name: systemctl enable --now ufw.service
-  ansible.builtin.systemd: name=ufw enabled=yes state=started
+- name: systemctl enable ufw.service
+  ansible.builtin.systemd: name=ufw enabled=yes
   become: yes
       
 - name: Enable ufw on boot and reload rules

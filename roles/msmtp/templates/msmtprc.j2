@@ -1,0 +1,17 @@
+# Set default values for all following accounts.
+defaults
+auth           on
+tls            on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile        /var/log/msmtp.log
+
+account        {{ msmtp_provider }}
+host           {{ msmtp_host }}
+port           {{ msmtp_port }}
+from           {{ msmtp_from }}
+user           {{ msmtp_user }}
+password       {{ msmtp_password }}
+
+
+# Set a default account
+account default : {{ msmtp_provider }}

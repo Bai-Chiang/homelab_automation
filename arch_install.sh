@@ -1,18 +1,21 @@
 #!/usr/bin/bash
 
-BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
-
-#KERNEL_PKGS="linux linux-zen"
-KERNEL_PKGS="linux-hardened"
-FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 UCODE_PKG="intel-ucode"
 BASE_PKGS="base linux-firmware sudo python"
-#OTHER_PKGS="man-db man-pages texinfo vim"
-#OTHER_PKGS="$OTHER_PKGS git base-devel"
-
+BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
-#OTHER_KERNEL_CMD="console=ttyS0"
+# server example
+KERNEL_PKGS="linux-hardened"
+FS_PKGS="dosfstools btrfs-progs"
+#OTHER_KERNEL_CMD="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
+
+# desktop example
+#KERNEL_PKGS="linux linux-zen"
+#FS_PKGS="dosfstools e2fsprogs btrfs-progs"
+#OTHER_PKGS="man-db man-pages texinfo vim"
+#OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
+
 
 ######################################################
 
@@ -98,7 +101,7 @@ DEVICES=$(lsblk --nodeps --paths --list --noheadings --sort=size --output=name,s
 
 DEVICE_ID=" "
 while [ -n "$DEVICE_ID" ]; do
-    echo -e "\n\nChoose device to format:"
+    echo -e "Choose device to format:"
     echo "$DEVICES"
     read -p "Enter a number (empty to skip): " DEVICE_ID
     if [ -n "$DEVICE_ID" ] ; then
@@ -119,18 +122,21 @@ echo -e "\n\nTell me the root partition number:"
 echo "$PARTITIONS"
 read -p "Enter a number: " ROOT_ID
 ROOT_PART=$(echo "$PARTITIONS" | awk "\$1 == $ROOT_ID { print \$2}")
+# Wipe existing LUKS header
+cryptsetup erase $ROOT_PART 2> /dev/null
+cryptsetup luksDump $ROOT_PART 2> /dev/null
+wipefs --all $ROOT_PART 2> /dev/null
 
 # swap partition
 # swap is important, see [In defence of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html)
 echo -e "\n\nTell me the swap partition number:"
 echo "$PARTITIONS"
-<<<<<<< HEAD
 read -p "Enter a number: " SWAP_ID
-=======
-read -p "Enter a number (empty to skip): " SWAP_ID
->>>>>>> c23b15d1072eb3da3850bd732fa34f8d148492e3
-#[ -n "$SWAP_ID" ] && SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
 SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
+# Wipe existing LUKS header
+cryptsetup erase $SWAP_PART 2> /dev/null
+cryptsetup luksDump $SWAP_PART 2> /dev/null
+wipefs --all $SWAP_PART 2> /dev/null
 
 
 echo "
@@ -144,18 +150,10 @@ echo "Formatting EFI partition ..."
 echo "Running command: mkfs.fat -n boot -F 32 $BOOT_PART"
 mkfs.fat -n boot -F 32 "$BOOT_PART"
 
-echo -e "\n"
 # swap partition
-#if [ -n "$SWAP_PART" ] ; then
 echo "Formatting swap partition ..."
 echo "Running command: mkswap -L swap $SWAP_PART"
 mkswap -L swap "$SWAP_PART"
-#fi
-
-## root filesystem
-#echo -e "\n\nWhat filesystem would you like for the root partition:\nbtrfs\next4"
-#read -p "Enter root file system (default is btrfs): " ROOT_FS
-#: "${ROOT_FS:=btrfs}"
 
 
 echo "
@@ -197,11 +195,6 @@ fi
 
 # format root partition
 echo -e "\n\nFormatting root partition ..."
-#if [ "$ROOT_FS" = ext4 ] ; then
-#    echo "Running command: mkfs.ext4 -L ArchLinux $ROOT_PART"
-#    mkfs.ext4 -L ArchLinux "$ROOT_PART"
-#
-#elif [ "$ROOT_FS" = btrfs ] ; then
 echo "Running command: mkfs.btrfs -L ArchLinux -f $ROOT_PART"
 mkfs.btrfs -L ArchLinux -f "$ROOT_PART"
 # create subvlumes
@@ -215,73 +208,18 @@ btrfs subvolume create /mnt/@pacman_pkgs
 mkdir /mnt/@/{boot,home,.snapshots}
 mkdir -p /mnt/@/var/log
 mkdir -p /mnt/@/var/cache/pacman/pkg
-#if [ -z "$SWAP_PART" ] ; then
-#    btrfs subvolume create /mnt/@swapfiles
-#    mkdir /mnt/@/swapfiles
-#fi
 umount "$ROOT_PART"
-#fi
 
 # mount all partitions
 echo -e "\nMounting all partitions ..."
-#if [ "$ROOT_FS" = ext4 ] ; then
-#    mount "$ROOT_PART" /mnt
-#    mkdir /mnt/boot
-#elif [ "$ROOT_FS" = btrfs ] ; then
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$ROOT_PART" /mnt
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$ROOT_PART" /mnt/home
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@snapshots "$ROOT_PART" /mnt/.snapshots
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@var_log "$ROOT_PART" /mnt/var/log
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@pacman_pkgs "$ROOT_PART" /mnt/var/cache/pacman/pkg
-#fi
 mount "$BOOT_PART" /mnt/boot
 
 swapon "$SWAP_PART"
-#if [ -n "$SWAP_PART" ] ; then
-#    swapon "$SWAP_PART"
-#elif [ "$ROOT_FS" = ext4 ] ; then
-#    # https://wiki.archlinux.org/title/Swap#Swap_file
-#    mkdir /mnt/swapfiles
-#    dd if=/dev/zero of=/mnt/swapfiles/swapfile_4G bs=1M count=4096 status=progress
-#    chmod 0600 /mnt/swapfiles/swapfile_4G
-#    mkswap -U clear /mnt/swapfiles/swapfile_4G
-#    swapon /mnt/swapfiles/swapfile_4G
-#elif [ "$ROOT_FS" = btrfs ] ; then
-#    # create swapfile
-#    # https://wiki.archlinux.org/title/Btrfs#Swap_file
-#    mount -o ssd,space_cache=v2,subvol=@swapfiles "$ROOT_PART" /mnt/swapfiles
-#    truncate -s 0 /mnt/swapfiles/swapfile_4G
-#    chattr +C /mnt/swapfiles/swapfile_4G
-#    btrfs property set /mnt/swapfiles/swapfile_4G compression none
-#    dd if=/dev/zero of=/mnt/swapfiles/swapfile_4G bs=1M count=4096 status=progress
-#    chmod 0600 /mnt/swapfiles/swapfile_4G
-#    mkswap -U clear /mnt/swapfiles/swapfile_4G
-#    swapon /mnt/swapfiles/swapfile_4G
-#fi
-
-#######################################################
-## Enable SELinux
-## https://wiki.archlinux.org/title/SELinux
-#######################################################
-#echo -e "\n\n"
-#read -p "Do you want to enable SELinux? [y/N] " IS_SELINUX
-#: "${IS_SELINUX:=n}"
-#IS_SELINUX="${IS_SELINUX,,}"
-#if [ "$IS_SELINUX" = y ] ; then
-#    # add SELinux repo to pacman.conf
-#    cat >> /etc/pacman.conf << 'EOF'
-#[selinux]
-#Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux
-#SigLevel = Never
-#EOF
-#    # change base to base-selinux
-#    BASE_PKGS=$(echo "$BASE_PKGS" | sed 's/base /base-selinux /' )
-#    BASE_PKGS=$(echo "$BASE_PKGS" | sed 's/sudo /sudo-selinux /' )
-#    BASE_PKGS=$(echo "$OTHER_PKGS" | sed 's/python /selinux-python /' )
-#    BASE_PKGS="$BASE_PKGS"" selinux-alpm-hook selinux-refpolicy-arch"
-#fi
-
-
 
 echo "
 ######################################################
@@ -302,6 +240,32 @@ echo -e "Generating fstab ..."
 genfstab -U /mnt >> /mnt/etc/fstab
 echo "Removing subvolid entry in fstab ..."
 sed -i 's/subvolid=[0-9]*,//g' /mnt/etc/fstab
+
+echo "
+######################################################
+# 9p shared directories
+# https://wiki.archlinux.org/title/libvirt#9p
+######################################################
+"
+MOUNT_TAG_9P=" "
+while [ -n "$MOUNT_TAG_9P" ]; do
+    echo -e "\n"
+    read -p "Enter the mount tag for 9p shared directory. (empty to skipll): " MOUNT_TAG_9P
+    if [ -n "$MOUNT_TAG_9P" ] ; then
+        read -p "Enter the destination point : " DEST_9P
+        arch-chroot /mnt mkdir ${DEST_9P}
+        echo "$MOUNT_TAG_9P  $DEST_9P  9p  trans=virtio,version=9p2000.L  0 0"  >> /mnt/etc/fstab
+        read -p "owner : " OWNER_9P
+        read -p "group : " GROUP_9P
+        arch-chroot /mnt chown ${OWNER_9P}:${GROUP_9P} ${DEST_9P}
+        read -p "mode : " MODE_9P
+        arch-chroot /mnt chmod ${MODE_9P} ${DEST_9P}
+    fi
+done
+
+if [ -n "$MOUNT_TAG_9P" ] ; then
+    echo '9pnet_virtio' > /mnt/etc/modules-load.d/9pnet_virtio.conf
+fi
 
 echo "
 ######################################################
@@ -379,13 +343,14 @@ if [ "$IS_ENCRYPT" = y ] ; then
     fi
 
     # /etc/crypttab for swap
-    #if [ -n "$SWAP_PART" ] ; then
     echo -e "Configuring /etc/crypttab.iniramfs for encrypted swap ..."
     swapoff $SWAP_PART
     # create a persistent partition name for swap
     # read [this](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption#UUID_and_LABEL) for reason creating a 1MiB size ext2 filesystem
     mkfs.ext2 -F -F -L cryptswap $SWAP_PART 1M
+    sleep 1
     partprobe &> /dev/null    # reload partition table
+    sleep 1
     SWAP_UUID=$(lsblk -dno UUID $SWAP_PART)
     echo "cryptswap  UUID=$SWAP_UUID  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
     # change /etc/fstab swap entry
@@ -407,18 +372,9 @@ if [ "$IS_ENCRYPT" = y ] ; then
 else
     KERNEL_CMD="root=UUID=$ROOT_UUID"
 fi
-#if [ "$ROOT_FS" = btrfs ] ; then
 # btrfs as root 
 # https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
 KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
-#else
-#    KERNEL_CMD="$KERNEL_CMD rootfstype=ext4 rw"
-#fi
-
-#if [ "$IS_SELINUX" = y ] ; then
-#    KERNEL_CMD="$KERNEL_CMD lsm=landlock,lockdown,yama,selinux,bpf"
-#fi
-#
 
 KERNEL_CMD="$KERNEL_CMD $OTHER_KERNEL_CMD"
 
@@ -428,7 +384,6 @@ echo "
 # https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#Enabling_IOMMU
 ######################################################
 "
-echo -e "\n"
 read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " IS_VFIO
 : "${IS_VFIO:=n}"
 if [ "$IS_VFIO" = y ] ; then
@@ -439,6 +394,7 @@ if [ "$IS_VFIO" = y ] ; then
         # amd cpu
         KERNEL_CMD="$KERNEL_CMD iommu=pt"
     fi
+    sed -i '/^MODULES=/ s/)/ vfio_pci vfio vfio_iommu_type1 vfio_virqfd)/' /mnt/etc/mkinitcpio.conf
 fi
 
 
@@ -619,6 +575,25 @@ done
 
 fi
 
+echo "
+######################################################
+# OpenSSH server
+# https://wiki.archlinux.org/title/OpenSSH#Server_usage
+######################################################
+"
+read -p "Do you want to enable ssh? [y/N] " IS_SSH
+: "${IS_SSH:=n}"
+IS_SSH="${IS_SSH,,}"
+if [ "$IS_SSH" = y ] ; then
+    arch-chroot /mnt pacman --noconfirm -S openssh
+    arch-chroot /mnt systemctl enable sshd.service
+    echo " Enabled sshd.service"
+    echo "ssh port? (22)"
+    read SSH_PORT
+    : "${SSH_PORT:=22}"
+    sed -i "s/^#Port.*/Port ${SSH_PORT}/" /mnt/etc/ssh/sshd_config
+fi
+
 
 echo "
 ######################################################
@@ -627,7 +602,6 @@ echo "
 ######################################################
 "
 arch-chroot /mnt sed -i '/^# %wheel ALL=(ALL:ALL) ALL/ s/# //' /etc/sudoers
-echo -e "\n\n"
 read -p "Do you want to add an administration account (user in group wheel) now? [Y/n] " IS_USER
 : "${IS_USER:=y}"
 if [ "$IS_USER" = y ] ; then
@@ -637,7 +611,7 @@ if [ "$IS_USER" = y ] ; then
     echo "Please enter your password: "
     arch-chroot /mnt passwd "$USERNAME"
     read -p "Do you want to disable root account? [Y/n] " IS_ROOT_DISABLE
-    : "${IS_ROOT_DISABLE:=n}"
+    : "${IS_ROOT_DISABLE:=y}"
     if [ "$IS_ROOT_DISABLE" = y ] ; then
         # https://wiki.archlinux.org/title/Sudo#Disable_root_login
         echo "Disabling root ..."
@@ -666,29 +640,5 @@ EOF
     echo "Created a homed.sh script in the /root directory to help set up systemd-homed user account."
 fi
 
-#echo -e "\n\n"
-#if [ "$IS_SELINUX" = y ] ; then
-#    # https://wiki.archlinux.org/title/SELinux#Checking_PAM
-#    echo -e "Please Check following lines in /etc/pam.d/system-login\n"
-#    echo -e "# pam_selinux.so close should be the first session rule\nsession         required        pam_selinux.so close\n"
-#    echo -e "# pam_selinux.so open should only be followed by sessions to be executed in the user context\nsession         required        pam_selinux.so open\n"
-#    echo -e "\ncat /etc/pam.d/system-login"
-#    cat /mnt/etc/pam.d/system-login
-#fi
 
-
-echo "
-######################################################
-# OpenSSH server
-# https://wiki.archlinux.org/title/OpenSSH#Server_usage
-######################################################
-"
-echo -e "\n\n"
-read -p "Do you want to enable ssh? [y/N] " IS_SSH
-: "${IS_SSH:=n}"
-if [ "$IS_SSH" = y ] ; then
-    arch-chroot /mnt pacman --noconfirm -S openssh
-    arch-chroot /mnt systemctl enable sshd.service
-    echo " Enabled sshd.service"
-fi
 

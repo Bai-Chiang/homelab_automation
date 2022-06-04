@@ -1,0 +1,7 @@
+[Unit]
+Description=upgrade system
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/auto-update.sh
+

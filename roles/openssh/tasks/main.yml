@@ -7,7 +7,7 @@
       line: AllowUsers {{ ssh_allowusers }}
       insertafter: '#\s*AllowUsers'
       validate: /usr/sbin/sshd -T -f %s
-    notify: restart sshd
+    #notify: restart sshd
     when: ssh_allowusers is defined
 
   - name: Set host key
@@ -17,7 +17,6 @@
       line: "HostKey /etc/ssh/ssh_host_{{ ssh_hostkey }}_key"
       insertafter: '#\s*HostKey'
       validate: /usr/sbin/sshd -T -f %s
-    notify: restart sshd
 
   - name: Set ssh port
     ansible.builtin.lineinfile:
@@ -26,7 +25,7 @@
       line: "Port {{ ssh_port }}"
       insertafter: '#\s*Port'
       validate: /usr/sbin/sshd -T -f %s
-    notify: restart sshd
+    #notify: restart sshd
 
   - name: Force public key authentication
     ansible.builtin.lineinfile:
@@ -38,16 +37,24 @@
     loop:
       - { regexp: '^PasswordAuthentication', line: PasswordAuthentication no, insertafter: '#\s*PasswordAuthentication' }
       - { regexp: '^AuthenticationMethods', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication' }
-    notify: restart sshd
 
+  - name: Add custom ssh rule to UFW
+    ansible.builtin.blockinfile:
+      path: /etc/ufw/applications.d/ufw-custom
+      block: | 
+        [SSH-custom]
+        title=SSH server
+        description=SSH server
+        ports={{ ssh_port }}/tcp
+      create: yes
+      marker: "; SSH {mark} ANSIBLE MANAGED BLOCK"
 
   - name: Set ufw rule for ssh
     community.general.ufw:
       rule: limit
       direction: in
-      proto: tcp
       from: "{{ item }}"
-      port: "{{ ssh_port }}"
+      name: SSH-custom
       comment: "Limit ssh incoming from {{ item }}"
     loop: "{{ ssh_allow_ip }}"
 

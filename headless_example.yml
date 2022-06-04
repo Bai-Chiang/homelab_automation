@@ -1,0 +1,22 @@
+---
+- hosts: headless_example
+
+  vars_files:
+    - host_vars/headless_example.yml
+
+  pre_tasks:
+    - import_tasks: tasks/update.yml
+
+  roles:
+    - common
+    - networkd_static
+    - openssh
+    - libvirt
+    - msmtp
+    - auto-update
+    - nas
+    - ups
+    - podman
+
+  post_tasks:
+    - import_tasks: tasks/ufw.yml

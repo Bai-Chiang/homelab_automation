@@ -1,10 +1,9 @@
+inventory
 *.yml
-!example.yml
+!*example.yml
+create_*.sh
+!create_vm.sh
 
 host_vars/*
-!host_vars/example.yml
+!host_vars/*example.yml
 
-src/
-
-roles/networkd*
-roles/vm*

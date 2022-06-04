@@ -1,0 +1,14 @@
+[Unit]
+Description=Start VM %I
+Requires=libvirtd.service
+After=libvirtd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 /usr/local/bin/libvirt_vm.py %i start
+ExecStop=/usr/bin/python3 /usr/local/bin/libvirt_vm.py %i stop
+
+[Install]
+WantedBy=multi-user.target
+
