@@ -2,27 +2,22 @@
 # Whether the home directory is mounted using systemd-homed
 homed: true
 
-libvirt_pkgs:
-  - qemu
-  - libvirt
-  - virt-manager
-  - edk2-ovmf    # UEFI support
-  - bridge-utils    # for bridged networking
-  - iptables-nft
-  - dnsmasq
-  - dmidecode
+libvirt_headless: false
+libvirt_bridge: true
+libvirt_NAT: true
 
 gpu_drivers:
   - mesa
 
 shell_pkgs:
+  - fish
   - zsh
   - zsh-completions
   - zsh-syntax-highlighting
   - zsh-autosuggestions
   - grml-zsh-config
 
-default_shell: /usr/bin/zsh
+default_shell: /usr/bin/fish
 
 wm_pkgs:
   - sway
@@ -35,6 +30,10 @@ wm_pkgs:
   - xdg-desktop-portal-wlr
   - xorg-xwayland
   - python-i3ipc
+
+  - plasma-meta
+  - plasma-wayland-session
+  - xdg-desktop-portal-kde
 
 dotfiles_repo: 'git@github.com:username/dotfiles.git'
 
@@ -55,15 +54,18 @@ fonts_pkgs:
   - ttf-indic-otf
 
 other_pkgs:
-  - brightnessctl   # screen brightness
   - kitty
   - htop
+  - pass
   - neofetch
+
+  - rsync
+  - usbutils
+  - brightnessctl   # screen brightness
+
   - nm-connection-editor
   - system-config-printer
   - gscan2pdf
-  - usbutils
-  - rsync
 
 flatpak_pkgs:
   - com.github.tchx84.Flatseal
@@ -78,6 +80,12 @@ flatpak_pkgs:
   - org.videolan.VLC
   - com.github.johnfactotum.Foliate
   - org.libreoffice.LibreOffice
+
+  - org.keepassxc.KeePassXC
+  - org.kde.konversation
+
+  - com.valvesoftware.Steam
+  - com.usebottles.bottles
 
 pip_pkgs:
   - numpy

@@ -10,6 +10,15 @@
     - host_vars/gui_example.yml
 
   pre_tasks:
+    #- name: Enable multilib repo
+    #  blockinfile:
+    #    path: /etc/pacman.conf
+    #    insertafter: '^#\s*[multilib]'
+    #    block: |
+    #      [multilib]
+    #      Include = /etc/pacman.d/mirrorlist
+    #  become: yes
+
     - import_tasks: tasks/update.yml
 
   roles:
@@ -17,6 +26,8 @@
     - gui
     - libvirt
     - pip
+
+  #tasks:
 
   post_tasks:
     - import_tasks: tasks/ufw.yml
