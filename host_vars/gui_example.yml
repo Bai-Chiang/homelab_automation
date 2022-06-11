@@ -82,6 +82,7 @@ flatpak_pkgs:
   - org.videolan.VLC
   - com.github.johnfactotum.Foliate
   - org.libreoffice.LibreOffice
+  - com.github.iwalton3.jellyfin-media-player
 
   - org.keepassxc.KeePassXC
   - org.kde.konversation

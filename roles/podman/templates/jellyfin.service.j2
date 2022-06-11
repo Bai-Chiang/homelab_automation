@@ -1,0 +1,33 @@
+# https://github.com/linuxserver/docker-jellyfin
+
+[Unit]
+Description=jellyfin container
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/podman kill jellyfin
+ExecStartPre=-/usr/bin/podman rm jellyfin
+ExecStartPre=-/usr/bin/podman network create {{ jellyfin_bridge_name }}
+ExecStartPre=/usr/bin/podman pull lscr.io/linuxserver/jellyfin:latest
+ExecStart=/usr/bin/podman run \
+        --name=jellyfin \
+        --network {{ jellyfin_bridge_name }} \
+        --replace \
+        --restart unless-stopped \
+        -e PUID=1000 \
+        -e PGID=1000 \
+        -p 8096:8096 \
+        -v /opt/container-configs/jellyfin:/config \
+{% for item in jellyfin_media_dir %}
+        -v {{ item.src }}:/data/{{ item.name }}:ro \
+{% endfor %}
+        lscr.io/linuxserver/jellyfin:latest
+ExecStop=/usr/bin/podman stop jellyfin
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
