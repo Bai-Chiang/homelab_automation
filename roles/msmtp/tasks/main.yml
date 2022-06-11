@@ -1,0 +1,31 @@
+---
+- block:
+  - name: pacman -S msmtp
+    community.general.pacman:
+      name: msmtp
+      state: present
+  
+  #- name: Check .msmtp.gpg
+  #  ansible.builtin.stat:
+  #    path: /root/.msmtp.gpg
+  #  register: msmtp_gpg
+  #
+  #- name: Create .msmtp.gpg
+  #  ansible.builtin.shell: |
+  #    mkdir /tmp/msmtp
+  #    chmod -R 700 /tmp/msmtp
+  #    echo {{ msmtp_password }} > /tmp/msmtp/msmtp_passwd
+  #    gpg --recipient root --encrypt /tmp/msmtp/msmtp_passwd
+  #    mv /tmp/msmtp/msmtp_passwd.gpg /root/.msmtp.gpg
+  #    rm -r /tmp/msmtp
+  #  when: not msmtp_gpg.stat.exists
+  
+  - name: msmtp user config
+    ansible.builtin.template:
+      src: msmtprc.j2
+      dest: /root/.msmtprc
+      owner: root
+      group: root
+      mode: '0600'
+
+  become: yes

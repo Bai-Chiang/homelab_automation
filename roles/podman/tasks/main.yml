@@ -1,0 +1,21 @@
+---
+- block:
+  - name: pacman -S podman
+    community.general.pacman:
+      name: podman
+      state: present
+
+  - name: container configs directory permision
+    ansible.builtin.file:
+      path: "{{ container_configs_dir.path }}"
+      owner: "{{ container_configs_dir.owner }}"
+      group: "{{ container_configs_dir.group }}"
+      mode: "{{ container_configs_dir.mode }}"
+
+
+  - include_tasks: "{{ container_name }}.yml"
+    loop: "{{ containers }}"
+    loop_control:
+      loop_var: container_name
+
+  become: yes

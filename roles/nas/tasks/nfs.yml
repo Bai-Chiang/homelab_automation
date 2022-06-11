@@ -1,0 +1,59 @@
+---
+- name: pacman -S nfs-utils
+  community.general.pacman:
+    name: nfs-utils
+    state: present
+
+- name: Create NFS directories
+  ansible.builtin.file:
+    path: "{{ item.bind }}"
+    state: directory
+  loop: "{{ nfs_mount_point }}"
+
+- name: Add bind mount to /etc/fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ item.target }}  {{item.bind }}"
+    line: "{{ item.target }}  {{item.bind }}  none  bind  0 0"
+    state: present
+  loop: "{{ nfs_mount_point }}"
+
+- name: add root mount to /etc/exports
+  ansible.builtin.lineinfile:
+    path: /etc/exports
+    regexp: "^{{ nfs_root }}  127.0.0.1"
+    line: "{{ nfs_root }}  127.0.0.1(ro,sync,nocrossmnt,fsid=0)"
+    state: present
+
+- name: add other mount points to /etc/exports
+  ansible.builtin.lineinfile:
+    path: /etc/exports
+    regexp: "^{{ item.bind }}  {{ item.ip }}"
+    line: "{{ item.bind }}  {{ item.ip }}{{ item.opt }}"
+    state: present
+  loop: "{{ nfs_mount_point }}"
+
+- name: Add custom NFS rule to UFW
+  ansible.builtin.blockinfile:
+    path: /etc/ufw/applications.d/ufw-custom
+    block: | 
+      [NFS-custom]
+      title=NFS server
+      description=NFS server
+      ports=2049/tcp
+    create: yes
+    marker: "; NFS {mark} ANSIBLE MANAGED BLOCK"
+
+- name: Configure firewall for NFS
+  community.general.ufw:
+    rule: allow
+    direction: in
+    name: NFS-custom
+    from: "{{ item }}"
+    comment: "Allow NFS from {{ item }}"
+  loop: "{{ nfs_allow_ip }}"
+
+- name: systemctl enable nfs-server.service
+  ansible.builtin.systemd:
+    name: nfs-server
+    enabled: yes

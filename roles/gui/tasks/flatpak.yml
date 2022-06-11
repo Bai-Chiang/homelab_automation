@@ -1,0 +1,25 @@
+---
+- name: Install flatpak
+  community.general.pacman: name=flatpak state=present
+  become: yes
+
+- name: Add flathub repo
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+    method: user
+
+- name: Install flatpak packages
+  community.general.flatpak:
+    name: "{{ flatpak_pkgs }}"
+    state: present
+    remote: flathub
+    method: user
+
+- name: systemctl enable --user flatpak-update.timer
+  ansible.builtin.systemd:
+    name: flatpak-update.timer
+    enabled: yes
+    scope: user
+

@@ -1,0 +1,26 @@
+---
+- name: Edit /etc/crypttab
+  ansible.builtin.lineinfile:
+    path: /etc/crypttab
+    regexp: "^{{ item.device_mapper_name }}"
+    line: "{{ item.device_mapper_name}}    UUID={{ item.UUID }}    {{ item.keyfile }}"
+    state: present
+  loop: "{{ crypttab_entries }}"
+
+- name: Create mount points
+  ansible.builtin.file:
+    path: "{{ item.mount_point }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop: "{{ fstab_entries }}"
+
+- name: Edit /etc/fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ item.device }}\\s*{{ item.mount_point }}"
+    line: "{{ item.device }}    {{ item.mount_point }}    {{ item.fs }}    {{ item.mount_opts }}    0 0 "
+    state: present
+  loop: "{{ fstab_entries }}"
+

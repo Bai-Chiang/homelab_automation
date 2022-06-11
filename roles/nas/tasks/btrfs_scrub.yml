@@ -1,0 +1,50 @@
+---
+- name: btrfs_scrub_report.sh
+  ansible.builtin.template:
+    src: btrfs_scrub_report.sh.j2
+    dest: /usr/local/bin/btrfs_scrub_report.sh
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Create btrfs-scrub@.service.d
+  ansible.builtin.file:
+    path: "/etc/systemd/system/btrfs-scrub@{{ item.escape }}.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ btrfs_scrub_path }}"
+
+- name: Create btrfs-scrub@.timer.d
+  ansible.builtin.file:
+    path: "/etc/systemd/system/btrfs-scrub@{{ item.escape }}.timer.d"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ btrfs_scrub_path }}"
+
+- name: Modify btrfs-scrub service to send email when finished
+  ansible.builtin.template:
+    src: btrfs_scrub_service_override.conf.j2
+    dest: /etc/systemd/system/btrfs-scrub@{{ item.escape }}.service.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ btrfs_scrub_path }}"
+  
+- name: Modify btrfs-scrub timer
+  ansible.builtin.template:
+    src: btrfs_scrub_timer_override.conf.j2
+    dest: /etc/systemd/system/btrfs-scrub@{{ item.escape }}.timer.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ btrfs_scrub_path }}"
+
+- name: systemctl enable btrfs-scrub@.timer
+  ansible.builtin.systemd:
+    name: btrfs-scrub@{{ item.escape }}.timer
+    enabled: yes
+  loop: "{{ btrfs_scrub_path }}"

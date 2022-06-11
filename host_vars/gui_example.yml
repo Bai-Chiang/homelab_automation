@@ -35,7 +35,8 @@ wm_pkgs:
   - plasma-wayland-session
   - xdg-desktop-portal-kde
 
-dotfiles_repo: 'git@github.com:username/dotfiles.git'
+dotfiles_repo:
+  - {https: 'https://github.com/username/dotfiles.git', ssh: 'git@github.com:username/dotfiles.git' }
 
 audio_pkgs:
   - pipewire

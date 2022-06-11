@@ -1,0 +1,17 @@
+---
+- block:
+
+  - name: Delete default network configuration
+    ansible.builtin.file:
+      path: /etc/systemd/network/20-ethernet.network
+      state: absent
+
+  - name: Configure network
+    ansible.builtin.template:
+      src: en0.network.j2
+      dest: /etc/systemd/network/{{ static_nic }}.network
+      owner: root
+      group: root
+      mode: '0644'
+
+  become: yes

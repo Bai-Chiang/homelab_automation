@@ -32,43 +32,9 @@
     community.general.pacman: name={{ other_pkgs }} state=present
 
   become: yes
-  
-- name: Get stats of .dotfiles directory
-  ansible.builtin.stat:
-    path: "{{ ansible_user_dir }}/.dotfiles"
-  register: dotfiles
 
-- name: Restore my dotfiles
-  ansible.builtin.script:
-    cmd: restore_dotfiles.sh
-    chdir: "{{ ansible_user_dir }}"
-    executable: /usr/bin/bash
-  when: not dotfiles.stat.exists
-
-- name: Edit .dotfiles/config
-  ansible.builtin.lineinfile:
-    path: "{{ ansible_user_dir }}/.dotfiles/config"
-    regexp: '^\surl ='
-    insertafter: '^\[remote'
-    line: "\turl = {{ dotfiles_repo }}"
-
-- name: Install flatpak
-  community.general.pacman: name=flatpak state=present
-  become: yes
-
-- name: Add flathub repo
-  community.general.flatpak_remote:
-    name: flathub
-    state: present
-    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
-    method: user
-
-- name: Install flatpak packages
-  community.general.flatpak:
-    name: "{{ flatpak_pkgs }}"
-    state: present
-    remote: flathub
-    method: user
+- import_tasks: dotfiles.yml  
+- import_tasks: flatpak.yml
 
 - name: Install notification server
   community.general.pacman: name=mako state=present
@@ -77,12 +43,5 @@
 - name: systemctl --user daemon-reload
   ansible.builtin.systemd:
     daemon_reload: yes
-    scope: user
-  when: not dotfiles.stat.exists
-
-- name: systemctl enable --user flatpak-update.timer
-  ansible.builtin.systemd:
-    name: flatpak-update.timer
-    enabled: yes
     scope: user
 

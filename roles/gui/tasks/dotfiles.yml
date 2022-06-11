@@ -1,0 +1,23 @@
+---
+- name: Restore my dotfiles
+  ansible.builtin.shell: |
+    #!/usr/bin/bash
+    git clone --bare {{ dotfiles_repo.https }} $HOME/.dotfiles
+    function dotfiles {
+       /usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME $@
+    }
+    # delete conflicted files
+    dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} rm {}
+    dotfiles checkout
+    dotfiles config --local status.showUntrackedFiles no
+  args:
+    chdir: "{{ ansible_user_dir }}"
+    executable: /usr/bin/bash
+    creates: "{{ ansible_user_dir }}/.dotfiles/config"
+
+- name: Edit .dotfiles/config
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.dotfiles/config"
+    regexp: '^\surl ='
+    insertafter: '^\[remote'
+    line: "\turl = {{ dotfiles_repo.ssh }}"
