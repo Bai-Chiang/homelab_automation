@@ -9,7 +9,7 @@ ansible_become_password: sudopassword
 
 
 # networkd_static
-static_nic: eth0
+static_nic: enp1s0
 static_ip: 192.168.122.2/24
 static_gateway: 192.168.122.1
 static_dns: 192.168.122.1
