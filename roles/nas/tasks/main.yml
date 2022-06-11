@@ -5,7 +5,7 @@
   - import_tasks: btrfs_scrub.yml
   - import_tasks: smartd.yml
   - import_tasks: nfs.yml
-  - inclde_tasks: samba.yml
+  - include_tasks: samba.yml
     when: smb_passwd is defined
 
   become: yes
