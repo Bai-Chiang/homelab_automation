@@ -32,6 +32,6 @@
     to_ip: any
     proto: tcp
     port: 8096
-    comment: "Allow access Jellyfin web interface (http) from {{ jellyfin_allow_web_from }}"
-  loop: "{{ jellyfin_allow_web_from }}"
+    comment: "Allow access Jellyfin web interface (http) from {{ jellyfin_allow_from }}"
+  loop: "{{ jellyfin_allow_from }}"
 
