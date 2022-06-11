@@ -8,6 +8,7 @@
   - name: container configs directory permision
     ansible.builtin.file:
       path: "{{ container_configs_dir.path }}"
+      state: directory
       owner: "{{ container_configs_dir.owner }}"
       group: "{{ container_configs_dir.group }}"
       mode: "{{ container_configs_dir.mode }}"
