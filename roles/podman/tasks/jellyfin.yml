@@ -28,7 +28,7 @@
     route: yes
     rule: allow
     interface_in: "{{ static_nic }}"
-    from_ip: "{{ jellyfin_allow_web_from }}"
+    from_ip: "{{ item }}"
     to_ip: any
     proto: tcp
     port: 8096
