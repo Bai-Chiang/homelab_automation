@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 UCODE_PKG="intel-ucode"
-BASE_PKGS="base linux-firmware sudo python"
+BASE_PKGS="base linux-firmware sudo python efibootmgr"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
@@ -47,11 +47,11 @@ else
     exit 1
 fi
 echo -e "\n"
-read -p "Do you want to set up secure boot using your own key? [Y/n] " IS_SECURE_BOOT
-: "${IS_SECURE_BOOT:=y}"
-IS_SECURE_BOOT="${IS_SECURE_BOOT,,}"
+read -p "Do you want to set up secure boot with your own key and encrypt root partition? [Y/n] " HARDENED
+: "${HARDENED:=y}"
+HARDENED="${HARDENED,,}"
 # check the firmware is in the setup mode
-if [ "$IS_SECURE_BOOT" = y ] ; then
+if [ "$HARDENED" = y ] ; then
     SETUP_MODE=$(bootctl status | grep -E "Secure Boot.*setup" | wc -l)
     if [ "$SETUP_MODE" -ne 1 ] ; then
         echo "The firmware is not in the setup mode. Please check BIOS."
@@ -59,7 +59,7 @@ if [ "$IS_SECURE_BOOT" = y ] ; then
         : "${CONTINUE:=n}"
         CONTINUE="${CONTINUE,,}"
         if [ "$CONTINUE" = y ] ; then
-            IS_SECURE_BOOT="n"
+            HARDENED="n"
         else
             exit 1
         fi
@@ -90,6 +90,21 @@ echo "
 "
 timedatectl set-ntp true
 
+echo "
+######################################################
+# EFI boot settings
+# https://man.archlinux.org/man/efibootmgr.8
+######################################################
+"
+efibootmgr
+EFI_BOOT_ID=" "
+while [ -n "$EFI_BOOT_ID" ]; do
+    echo -e "\nDo you want to delete any boot entries?: "
+    read -p "Enter boot number (empty to skip): " EFI_BOOT_ID
+    if [ -n "$EFI_BOOT_ID" ] ; then
+        efibootmgr -b $EFI_BOOT_ID -B
+    fi
+done
 
 echo "
 ######################################################
@@ -111,11 +126,11 @@ while [ -n "$DEVICE_ID" ]; do
 done
 PARTITIONS=$(lsblk --paths --list --noheadings --output=name,size,model | cat --number)
 
-# boot partition
-echo -e "\n\nTell me the boot partition number:"
+# EFI partition
+echo -e "\n\nTell me the EFI partition number:"
 echo "$PARTITIONS"
-read -p "Enter a number: " BOOT_ID
-BOOT_PART=$(echo "$PARTITIONS" | awk "\$1 == $BOOT_ID { print \$2}")
+read -p "Enter a number: " EFI_ID
+EFI_PART=$(echo "$PARTITIONS" | awk "\$1 == $EFI_ID { print \$2}")
 
 # root partition
 echo -e "\n\nTell me the root partition number:"
@@ -147,8 +162,8 @@ echo "
 "
 # EFI partition
 echo "Formatting EFI partition ..."
-echo "Running command: mkfs.fat -n boot -F 32 $BOOT_PART"
-mkfs.fat -n boot -F 32 "$BOOT_PART"
+echo "Running command: mkfs.fat -n boot -F 32 $EFI_PART"
+mkfs.fat -n boot -F 32 "$EFI_PART"
 
 # swap partition
 echo "Formatting swap partition ..."
@@ -156,21 +171,18 @@ echo "Running command: mkswap -L swap $SWAP_PART"
 mkswap -L swap "$SWAP_PART"
 
 
-echo "
+if [ "$HARDENED" = y ] ; then
+    echo "
 ######################################################
 # Encrypt the root partion
 # https://wiki.archlinux.org/title/Dm-crypt/Device_encryption
 ######################################################
 "
-read -p "Do you want to encrypt the root partition? [Y/n] " IS_ENCRYPT
-: "${IS_ENCRYPT:=y}"
-IS_ENCRYPT="${IS_ENCRYPT,,}"
-if [ "$IS_ENCRYPT" = y ] ; then
-    echo -e "\nDo you want to create a key file on the boot partition to automatically unlock the root partition on boot?\nThis could be used with the setup that the boot partition on an external flash drive, such that the system could autounlock on boot. But without the flash drive the system cannot boot and root partition is encrypted. It's not recommended if both boot and root partition on the same device, it would make the encryption meanless. Since the key file is on the unencrypted boot partition, anyone could easily the key file and decrypt the root partition.\nIf choose n then it will ask you for a encryption password."
-    read -p "[y/N] " IS_CRYPTKEY
-    : "${IS_CRYPTKEY:=n}"
-    IS_CRYPTKEY="${IS_CRYPTKEY,,}"
-    if [ "$IS_CRYPTKEY" != y ] ; then
+    echo -e "Do you want to create a key file on the efi partition to automatically unlock the root partition on boot?\nThis could be used with the setup that the boot partition on an external flash drive, such that the system could autounlock on boot. But without the flash drive the system cannot boot and root partition is encrypted. It's not recommended if both efi and root partition on the same device, it would make the encryption meanless. Since the key file is on the unencrypted efi partition, anyone could easily the key file and decrypt the root partition.\nIf choose n then it will ask you for a encryption password."
+    read -p "[y/N] " CRYPTKEY
+    : "${CRYPTKEY:=n}"
+    CRYPTKEY="${CRYPTKEY,,}"
+    if [ "$CRYPTKEY" != y ] ; then
         # passphrase
         echo -e "\nRunning cryptsetup ..."
         cryptsetup --type luks2 --verify-passphrase --sector-size 4096 --verbose luksFormat "$ROOT_PART"
@@ -178,18 +190,18 @@ if [ "$IS_ENCRYPT" = y ] ; then
     else
         # create keyfile
         echo -e "\nCreating keyfile ..."
-        mount "$BOOT_PART" /mnt
+        mount "$EFI_PART" /mnt
         dd bs=512 count=4 if=/dev/random of=/mnt/rootkeyfile iflag=fullblock
         chmod 600 /mnt/rootkeyfile
         echo -e "\nRunning cryptsetup ..."
         cryptsetup --type luks2 --verify-passphrase --sector-size=4096 --key-file=/mnt/rootkeyfile --verbose luksFormat "$ROOT_PART"
         cryptsetup open "$ROOT_PART" cryptroot --key-file /mnt/rootkeyfile
-        umount "$BOOT_PART"
+        umount "$EFI_PART"
     fi
-    ROOT_DEV=$ROOT_PART
+    ROOT_BLOCK=$ROOT_PART
     ROOT_PART=/dev/mapper/cryptroot
 else
-    ROOT_DEV=$ROOT_PART
+    ROOT_BLOCK=$ROOT_PART
 fi
 
 
@@ -208,6 +220,9 @@ btrfs subvolume create /mnt/@pacman_pkgs
 mkdir /mnt/@/{boot,home,.snapshots}
 mkdir -p /mnt/@/var/log
 mkdir -p /mnt/@/var/cache/pacman/pkg
+if [ "$HARDENED" = y ] ; then
+    mkdir /mnt/@/efi
+fi
 umount "$ROOT_PART"
 
 # mount all partitions
@@ -217,9 +232,13 @@ mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$ROOT_PART" /mnt/home
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@snapshots "$ROOT_PART" /mnt/.snapshots
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@var_log "$ROOT_PART" /mnt/var/log
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@pacman_pkgs "$ROOT_PART" /mnt/var/cache/pacman/pkg
-mount "$BOOT_PART" /mnt/boot
-
+if [ "$HARDENED" = y ] ; then
+    mount "$EFI_PART" /mnt/efi
+else
+    mount "$EFI_PART" /mnt/boot
+fi
 swapon "$SWAP_PART"
+
 
 echo "
 ######################################################
@@ -241,6 +260,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 echo "Removing subvolid entry in fstab ..."
 sed -i 's/subvolid=[0-9]*,//g' /mnt/etc/fstab
 
+
 echo "
 ######################################################
 # 9p shared directories
@@ -249,7 +269,6 @@ echo "
 "
 MOUNT_TAG_9P=" "
 while [ -n "$MOUNT_TAG_9P" ]; do
-    echo -e "\n"
     read -p "Enter the mount tag for 9p shared directory. (empty to skipll): " MOUNT_TAG_9P
     if [ -n "$MOUNT_TAG_9P" ] ; then
         read -p "Enter the destination point : " DEST_9P
@@ -260,12 +279,10 @@ while [ -n "$MOUNT_TAG_9P" ]; do
         arch-chroot /mnt chown ${OWNER_9P}:${GROUP_9P} ${DEST_9P}
         read -p "mode : " MODE_9P
         arch-chroot /mnt chmod ${MODE_9P} ${DEST_9P}
+        echo '9pnet_virtio' > /mnt/etc/modules-load.d/9pnet_virtio.conf
     fi
 done
 
-if [ -n "$MOUNT_TAG_9P" ] ; then
-    echo '9pnet_virtio' > /mnt/etc/modules-load.d/9pnet_virtio.conf
-fi
 
 echo "
 ######################################################
@@ -321,23 +338,24 @@ fi
 
 
 
-echo "
+partprobe &> /dev/null    # reload partition table
+sleep 1
+ROOT_UUID=$(lsblk -dno UUID $ROOT_BLOCK)
+EFI_UUID=$(lsblk -dno UUID $EFI_PART)
+if [ "$HARDENED" = y ] ; then
+    echo "
 ######################################################
 # Disk encryption
 # https://wiki.archlinux.org/title/Dm-crypt
 ######################################################
 "
-partprobe &> /dev/null    # reload partition table
-ROOT_UUID=$(lsblk -dno UUID $ROOT_DEV)
-BOOT_UUID=$(lsblk -dno UUID $BOOT_PART)
-if [ "$IS_ENCRYPT" = y ] ; then
     # kernel cmdline parameters for encrypted root partition
     KERNEL_CMD="root=/dev/mapper/cryptroot"
 
     # /etc/crypttab.initramfs for root
     echo -e "\nConfiguring /etc/crypttab.iniramfs for encrypted root ..."
-    if [ "$IS_CRYPTKEY" = y ] ; then
-        echo "cryptroot  UUID=$ROOT_UUID  rootkeyfile:UUID=$BOOT_UUID  password-echo=no,x-systemd.device-timeout=0,keyfile-timeout=5s,timeout=0,no-read-workqueue,no-write-workqueue,discard"  >>  /mnt/etc/crypttab.initramfs
+    if [ "$CRYPTKEY" = y ] ; then
+        echo "cryptroot  UUID=$ROOT_UUID  rootkeyfile:UUID=$EFI_UUID  password-echo=no,x-systemd.device-timeout=0,keyfile-timeout=5s,timeout=0,no-read-workqueue,no-write-workqueue,discard"  >>  /mnt/etc/crypttab.initramfs
     else
         echo "cryptroot  UUID=$ROOT_UUID  -  password-echo=no,x-systemd.device-timeout=0,timeout=0,no-read-workqueue,no-write-workqueue,discard"  >>  /mnt/etc/crypttab.initramfs
     fi
@@ -365,17 +383,16 @@ if [ "$IS_ENCRYPT" = y ] ; then
     sed -i '/^HOOKS=/ s/base/base systemd keyboard/' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/autodetect/autodetect sd-vconsole/' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/block/block sd-encrypt/' /mnt/etc/mkinitcpio.conf
-    if [ "$IS_CRYPTKEY" = y ] ; then
-        sed -i '/^MODULES=/ s/()/(vfat)/' /mnt/etc/mkinitcpio.conf
+    if [ "$CRYPTKEY" = y ] ; then
+        sed -i '/^MODULES=/ s/(/(vfat /' /mnt/etc/mkinitcpio.conf
     fi
-    arch-chroot /mnt mkinitcpio -P
 else
     KERNEL_CMD="root=UUID=$ROOT_UUID"
 fi
+
 # btrfs as root 
 # https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
 KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
-
 KERNEL_CMD="$KERNEL_CMD $OTHER_KERNEL_CMD"
 
 echo "
@@ -384,9 +401,9 @@ echo "
 # https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#Enabling_IOMMU
 ######################################################
 "
-read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " IS_VFIO
-: "${IS_VFIO:=n}"
-if [ "$IS_VFIO" = y ] ; then
+read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " ENABLE_VFIO
+: "${ENABLE_VFIO:=n}"
+if [ "$ENABLE_VFIO" = y ] ; then
     if [ $(echo "$UCODE_PKG" | grep "intel" | wc -l ) -ge 1 ] ; then
         # for intel cpu
         KERNEL_CMD="$KERNEL_CMD intel_iommu=on iommu=pt"
@@ -400,14 +417,26 @@ fi
 
 echo "
 ######################################################
-# boot loader (systemd-boot)
-# https://wiki.archlinux.org/title/Arch_boot_process#Boot_loader
-# If enabled secure boot use unified kernel image with systemd-boot,
-# otherwise use normal systemd-boot
+# Setup unified kernel image
+# https://wiki.archlinux.org/title/Unified_kernel_image
 ######################################################
 "
-arch-chroot /mnt bootctl install
-if [ "$IS_SECURE_BOOT" = y ] ; then
+arch-chroot /mnt mkdir -p /boot/EFI/Linux
+for KERNEL in $KERNEL_PKGS
+do 
+    sed -i '\:^ALL_kver=.*:a ALL_microcode=(/boot/*-ucode.img)' /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i "s:^#default_options=.*:default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\ndefault_efi_image=\"/boot/EFI/Linux/ArchLinux-$KERNEL.efi\":" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i "s:^fallback_options=.*:fallback_options=\"-S autodetect --splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\nfallback_efi_image=\"/boot/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\":" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+done
+
+echo "$KERNEL_CMD" > /mnt/etc/kernel/cmdline
+if [ "$HARDENED" != 'y' ] ; then
+    echo "Regenerating the initramfs ..."
+    arch-chroot /mnt mkinitcpio -P
+fi
+
+
+if [ "$HARDENED" = y ] ; then
     echo "
 ######################################################
 # Secure boot setup
@@ -464,67 +493,12 @@ echo "Enrolling your platform key ..."
 efi-updatevar -f /etc/secureboot/keys/PK/PK.auth PK
 sbkeysync --verbose --pk
 EOF
-    
-    # Setup unified kernel image
-    # https://wiki.archlinux.org/title/Unified_kernel_image
-    echo "Creating unified kernel image ..."
-    for KERNEL in $KERNEL_PKGS
-    do 
-        sed -i '\:^ALL_kver=.*:a ALL_microcode=(/boot/*-ucode.img)' /mnt/etc/mkinitcpio.d/$KERNEL.preset
-        sed -i "s:^#default_options=.*:default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\ndefault_efi_image=\"/boot/EFI/Linux/archlinux-$KERNEL.efi\":" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-        sed -i "s:^fallback_options=.*:fallback_options=\"-S autodetect --splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\nfallback_efi_image=\"/boot/EFI/Linux/archlinux-$KERNEL-fallback.efi\":" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    done
-    
-    echo "$KERNEL_CMD" > /mnt/etc/kernel/cmdline
-    echo "Regenerating the initramfs ..."
-    arch-chroot /mnt mkinitcpio -P
-
-    echo "Adding pacman hooks ..."
-    mkdir -p /mnt/etc/pacman.d/hooks
-    cat >> /mnt/etc/pacman.d/hooks/100-systemd-boot.hook <<'EOF'
-[Trigger]
-Type = Package
-Operation = Upgrade
-Target = systemd
-
-[Action]
-Description = Gracefully upgrading systemd-boot...
-When = PostTransaction
-Exec = /usr/bin/systemctl restart systemd-boot-update.service
-EOF
-
-    cat >> /mnt/etc/pacman.d/hooks/99-secureboot.hook <<'EOF'
-[Trigger]
-Operation = Install
-Operation = Upgrade
-Type = Package
-Target = linux*
-Target = systemd
-
-[Action]
-Description = Signing Kernel for SecureBoot
-When = PostTransaction
-Exec = /usr/bin/find /boot -type f ( -name 'archlinux-linux*.efi' -o -name systemd* -o -name BOOTX64.EFI ) -exec /usr/bin/sh -c 'if ! /usr/bin/sbverify --list {} 2>/dev/null | /usr/bin/grep -q "signature certificates"; then /usr/bin/sbsign --key /etc/efi-keys/db.key --cert /etc/efi-keys/db.crt --output "$1" "$1"; fi' _ {} ;
-Depends = sbsigntools
-Depends = findutils
-Depends = grep
-EOF
-
-    cat >> /mnt/boot/loader/loader.conf <<EOF
-default  archlinux-${KERNEL_PKGS%% *}.efi
-timeout  1
-console-mode keep
-editor   no
-EOF
-    
-    # sign the unified kernel image
-    arch-chroot /mnt pacman --noconfirm -S systemd
 
     echo -e "\n\n"
-    read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [y/N] " IS_MS_CERT
-    : "${IS_MS_CERT:=n}"
-    IS_MS_CERT="${IS_MS_CERT,,}"
-    if [ "$IS_MS_CERT" = y ] ; then
+    read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [y/N] " ADD_MS_CERT
+    : "${ADD_MS_CERT:=n}"
+    ADD_MS_CERT="${ADD_MS_CERT,,}"
+    if [ "$ADD_MS_CERT" = y ] ; then
         echo "Adding Microsoft's certificate to the database ..."
         arch-chroot /mnt bash <<'EOF'
 cd /etc/efi-keys
@@ -538,42 +512,63 @@ chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}*
 sbkeysync --verbose
 EOF
     fi
-    
-else
-    echo "
-######################################################
-# Configure systemd-boot for non-secure boot
-# https://wiki.archlinux.org/title/Systemd-boot
-######################################################
-"
-    echo "Configuring systemd-boot ..."
-    arch-chroot /mnt systemctl enable systemd-boot-update.service
 
-    # /boot/loader/loader.conf
-    cat >> /mnt/boot/loader/loader.conf <<EOF
-default  arch_${KERNEL_PKGS%% *}.conf
-timeout  1
-console-mode keep
-editor   no
+    echo "Adding pacman hooks ..."
+    mkdir -p /mnt/etc/pacman.d/hooks
+    cat >> /mnt/etc/pacman.d/hooks/99-secureboot.hook <<'EOF'
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = linux*
+Target = systemd
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/lib/modules/*/vmlinuz
+Target = usr/lib/initcpio/*
+
+[Action]
+Description = Signing Kernel for SecureBoot
+When = PostTransaction
+Exec = /usr/bin/bash -c 'for ENTRY in /boot/EFI/Linux/*.efi ; do /usr/bin/sbsign --key /etc/efi-keys/db.key --cert /etc/efi-keys/db.crt --output "/efi/EFI/Linux/${ENTRY##*/}" "/boot/EFI/Linux/${ENTRY##*/}" ; done'
+Depends = sbsigntools
+Depends = findutils
+Depends = grep
 EOF
 
-    # /boot/loader/entries/arch-linux.conf
-for KERNEL in $KERNEL_PKGS
-do 
-    cat >> "/mnt/boot/loader/entries/arch-${KERNEL}.conf" <<EOF
-title   Arch Linux ($KERNEL)
-linux   /vmlinuz-$KERNEL
-initrd  /$UCODE_PKG.img
-initrd  /initramfs-$KERNEL.img
-options $KERNEL_CMD
-EOF
-    # /boot/loader/entries/arch-linux-fallback.conf
-    cp "/mnt/boot/loader/entries/arch-${KERNEL}.conf" "/mnt/boot/loader/entries/arch-${KERNEL}-fallback.conf"
-    sed -i '/Arch Linux/ s/)/ fallback initramfs)/' "/mnt/boot/loader/entries/arch-${KERNEL}-fallback.conf"
-    sed -i "s/initramfs-${KERNEL}.img/initramfs-${KERNEL}-fallback.img/" "/mnt/boot/loader/entries/arch-${KERNEL}-fallback.conf"
-done
+    # sign the unified kernel image
+    arch-chroot /mnt mkdir -p /efi/EFI/Linux
+    arch-chroot /mnt pacman --noconfirm -S systemd
 
 fi
+
+echo "
+######################################################
+# Set up UFEI boot the unified kernel image directly
+# https://wiki.archlinux.org/title/Unified_kernel_image#Directly_from_UEFI
+######################################################
+"
+EFI_DEV=$(lsblk --noheadings --output PKNAME $EFI_PART)
+EFI_PART_NUM=$(echo $EFI_PART | grep -Eo '[0-9]+$')
+for KERNEL in $KERNEL_PKGS
+do
+    arch-chroot /mnt efibootmgr --create --disk /dev/${EFI_DEV} --part ${EFI_PART_NUM} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
+    arch-chroot /mnt efibootmgr --create --disk /dev/${EFI_DEV} --part ${EFI_PART_NUM} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
+done
+
+echo -e "\n"
+arch-chroot /mnt efibootmgr --verbose
+echo -e "\n\nDo you want to change boot order?: "
+read -p "Enter boot order XXXX,XXXX (empty to skip): " BOOT_ORDER
+if [ -n "$BOOT_ORDER" ] ; then
+    echo -e "\n"
+    arch-chroot /mnt efibootmgr --bootorder ${BOOT_ORDER} --verbose
+    echo -e "\n"
+fi
+
 
 echo "
 ######################################################
