@@ -12,6 +12,7 @@
       group: "{{ container_configs_dir.group }}"
       mode: "{{ container_configs_dir.mode }}"
 
+  - import_tasks: common_ufw.yml
 
   - include_tasks: "{{ container_name }}.yml"
     loop: "{{ containers }}"

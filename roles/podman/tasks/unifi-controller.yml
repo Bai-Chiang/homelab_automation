@@ -23,17 +23,6 @@
     name: unifi-controller
     enabled: yes
 
-- name: IP forwarding for routed trafic
-  ansible.builtin.lineinfile:
-    path: /etc/ufw/sysctl.conf
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    state: absent
-  loop:
-    - { regexp: '^net/ipv4/ip_forward', line: net/ipv4/ip_forward=1, insertafter: '^#net/ipv4/ip_forward' }
-    - { regexp: '^net/ipv6/conf/default/forwarding', line: net/ipv6/conf/default/forwarding=1, insertafter: '^#net/ipv6/conf/default/forwarding' }
-    - { regexp: '^net/ipv6/conf/all/forwarding', line: net/ipv6/conf/all/forwarding=1, insertafter: '^#net/ipv6/conf/all/forwarding' }
-
 - name: Set ufw incoming rules for UniFi web interface
   community.general.ufw:
     route: yes
@@ -45,7 +34,7 @@
     port: 8443
     comment: "Allow access UniFi web interface from {{ unifi_allow_web_from }}"
 
-- name: Set ufw incoming rules
+- name: Set ufw incoming rules for UniFi devices
   community.general.ufw:
     route: yes
     rule: allow
@@ -64,11 +53,4 @@
     #- { proto: tcp, from: "{{ unifi_allow_from }}", port: 8880, comment: UniFi guest portal HTTP redirect port }
     #- { proto: tcp, from: "{{ unifi_allow_from }}", port: 6789, comment: UniFi mobile throughput test }
     #- { proto: udp, from: "{{ unifi_allow_from }}", port: 5514, comment: UniFi remote syslog port }
-
-- name: UFW allow outgoing rules
-  community.general.ufw:
-    route: yes
-    rule: allow
-    interface_out: "{{ static_nic }}"
-    comment: "Allow outgoing routed traffic"
 
