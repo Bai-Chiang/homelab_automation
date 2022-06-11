@@ -7,24 +7,35 @@
         - libvirt
         - virt-install
         - edk2-ovmf    # UEFI support
-        #- bridge-utils    # bridged network support
       state: present
     when: libvirt_headless
 
   - name: Install GUI libvirt packages
     community.general.pacman:
       name:
-        - qemu
+        - qemu-full
         - libvirt
         - virt-manager
         - edk2-ovmf    # UEFI support
+      state: present
+    when: not libvirt_headless
+
+
+  - name: libvirt bridged network support
+    community.general.pacman:
+      name:
         - bridge-utils    # bridged network support
-        # The following three packages are for the default NAT/DHCP networking
+      state: present
+    when: libvirt_bridge
+
+  - name: libvirt NAT/DHCP networking support
+    community.general.pacman:
+      name:
         - iptables-nft
         - dnsmasq
         - dmidecode
       state: present
-    when: not libvirt_headless
+    when: libvirt_NAT
 
   - name: Get file system type of /var/lib/libvirt/images
     ansible.builtin.command: stat --file-system --format=%T /var/lib/libvirt/images
