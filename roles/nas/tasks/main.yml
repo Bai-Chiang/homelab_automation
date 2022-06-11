@@ -6,5 +6,6 @@
   - import_tasks: smartd.yml
   - import_tasks: nfs.yml
   - import_tasks: samba.yml
+    when: {{ smb_passwd }} is defined
 
   become: yes
