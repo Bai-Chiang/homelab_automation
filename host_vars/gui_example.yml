@@ -51,9 +51,6 @@ fonts_pkgs:
   - noto-fonts-cjk
   - ttf-font-awesome
   - noto-fonts-emoji
-  - gnu-free-fonts
-  - ttf-arphic-uming
-  - ttf-indic-otf
 
 other_pkgs:
   - kitty
