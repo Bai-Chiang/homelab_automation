@@ -31,10 +31,6 @@ wm_pkgs:
   - xorg-xwayland
   - python-i3ipc
 
-  - plasma-meta
-  - plasma-wayland-session
-  - xdg-desktop-portal-kde
-
 dotfiles_repo:
   https: 'https://github.com/username/dotfiles.git'
   ssh: 'git@github.com:username/dotfiles.git'
@@ -72,6 +68,7 @@ flatpak_pkgs:
   - org.kde.okular
   - io.mpv.Mpv
   - io.gitlab.librewolf-community
+  - org.kde.gwenview
   - org.mozilla.firefox
   - com.github.xournalpp.xournalpp
   - org.freedesktop.Sdk.Extension.texlive/x86_64/21.08
@@ -80,7 +77,6 @@ flatpak_pkgs:
   - com.github.johnfactotum.Foliate
   - org.libreoffice.LibreOffice
   - com.github.iwalton3.jellyfin-media-player
-
   - org.keepassxc.KeePassXC
   - org.kde.konversation
 
