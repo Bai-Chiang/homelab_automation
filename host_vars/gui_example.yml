@@ -63,22 +63,23 @@ other_pkgs:
   - gscan2pdf
 
 flatpak_pkgs:
+  - io.gitlab.librewolf-community
   - com.github.tchx84.Flatseal
   - org.kde.dolphin
   - org.kde.okular
   - io.mpv.Mpv
-  - io.gitlab.librewolf-community
   - org.kde.gwenview
   - org.mozilla.firefox
+
+  - org.keepassxc.KeePassXC
+  - org.qbittorent.qBittorrent
+  - org.kde.konversation
+  - im.riot.Riot
   - com.github.xournalpp.xournalpp
   - org.freedesktop.Sdk.Extension.texlive/x86_64/21.08
-  - org.qbittorent.qBittorrent
-  - org.videolan.VLC
-  - com.github.johnfactotum.Foliate
   - org.libreoffice.LibreOffice
-  - com.github.iwalton3.jellyfin-media-player
-  - org.keepassxc.KeePassXC
-  - org.kde.konversation
+  - com.github.johnfactotum.Foliate
+  #- com.github.iwalton3.jellyfin-media-player
 
   - com.valvesoftware.Steam
   - com.usebottles.bottles
