@@ -10,14 +10,13 @@ gpu_drivers:
   - mesa
 
 shell_pkgs:
-  - fish
   - zsh
   - zsh-completions
   - zsh-syntax-highlighting
   - zsh-autosuggestions
   - grml-zsh-config
 
-default_shell: /usr/bin/fish
+default_shell: /usr/bin/zsh
 
 wm_pkgs:
   - sway
