@@ -27,6 +27,7 @@ wm_pkgs:
   - xdg-utils
   - xdg-desktop-portal
   - xdg-desktop-portal-wlr
+  - xdg-desktop-portal-gtk 
   - xorg-xwayland
   - python-i3ipc
 
@@ -60,14 +61,16 @@ other_pkgs:
   - nm-connection-editor
   - system-config-printer
   - gscan2pdf
+  - yt-dlp
+  - mkvtoolnix-cli
 
 flatpak_pkgs:
-  - io.gitlab.librewolf-community
   - com.github.tchx84.Flatseal
   - org.kde.dolphin
   - org.kde.okular
   - io.mpv.Mpv
   - org.kde.gwenview
+  - io.gitlab.librewolf-community
   - org.mozilla.firefox
 
   - org.keepassxc.KeePassXC
