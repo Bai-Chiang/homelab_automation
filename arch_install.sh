@@ -519,13 +519,6 @@ EOF
 [Trigger]
 Operation = Install
 Operation = Upgrade
-Type = Package
-Target = linux*
-Target = systemd
-
-[Trigger]
-Operation = Install
-Operation = Upgrade
 Type = Path
 Target = usr/lib/modules/*/vmlinuz
 Target = usr/lib/initcpio/*
@@ -535,8 +528,6 @@ Description = Signing Kernel for SecureBoot
 When = PostTransaction
 Exec = /usr/bin/bash -c 'for ENTRY in /boot/EFI/Linux/*.efi ; do /usr/bin/sbsign --key /etc/efi-keys/db.key --cert /etc/efi-keys/db.crt --output "/efi/EFI/Linux/${ENTRY##*/}" "/boot/EFI/Linux/${ENTRY##*/}" ; done'
 Depends = sbsigntools
-Depends = findutils
-Depends = grep
 EOF
 
     # sign the unified kernel image
