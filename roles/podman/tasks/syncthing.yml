@@ -23,6 +23,18 @@
     name: syncthing
     enabled: yes
 
+- name: Set UFW incoming roles for Syncthing WebUI
+  community.general.ufw:
+    route: yes
+    rule: allow
+    interface_in: "{{ static_nic }}"
+    from_ip: "{{ item }}"
+    to_ip: any
+    proto: tcp
+    port: 8384
+    comment: "Allow Syncthing application WebUI from {{ item }}"
+  loop: "{{ syncthing_allow_web_from }}"
+
 - name: Set ufw incoming rules for syncthing
   block:
     - community.general.ufw:
@@ -35,7 +47,6 @@
         port: "{{ item.port }}"
         comment: "{{ item.comment }}"
       loop:
-        - { proto: tcp, port: 8384, comment: "Allow Syncthing application WebUI from {{ item_ip}}" }
         - { proto: tcp, port: 22000, comment: "Allow Syncthing listening port (TCP) from {{ item_ip }}" }
         - { proto: udp, port: 22000, comment: "Allow Syncthing listening port (UDP) from {{ item_ip }}" }
         - { proto: udp, port: 21027, comment: "Allow Syncthing listening port (UDP) from {{ item_ip }}" }
