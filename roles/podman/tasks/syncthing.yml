@@ -35,22 +35,39 @@
     comment: "Allow Syncthing application WebUI from {{ item }}"
   loop: "{{ syncthing_allow_web_from }}"
 
-- name: Set ufw incoming rules for syncthing
-  block:
-    - community.general.ufw:
-        route: yes
-        rule: allow
-        interface_in: "{{ static_nic }}"
-        from_ip: "{{ item_ip }}"
-        to_ip: any
-        proto: "{{ item.proto }}"
-        port: "{{ item.port }}"
-        comment: "{{ item.comment }}"
-      loop:
-        - { proto: tcp, port: 22000, comment: "Allow Syncthing listening port (TCP) from {{ item_ip }}" }
-        - { proto: udp, port: 22000, comment: "Allow Syncthing listening port (UDP) from {{ item_ip }}" }
-        - { proto: udp, port: 21027, comment: "Allow Syncthing listening port (UDP) from {{ item_ip }}" }
+- name: Set UFW incoming rules for Syncthing Listening port (TCP)
+  community.general.ufw:
+    route: yes
+    rule: allow
+    interface_in: "{{ static_nic }}"
+    from_ip: "{{ item }}"
+    to_ip: any
+    proto: tcp
+    port: 22000
+    comment: "Allow Syncthing listening port (TCP) from {{ item }}"
   loop: "{{ syncthing_allow_from }}"
-  loop_control:
-    loop_var: item_ip
+
+- name: Set UFW incoming rules for Syncthing Listening port (UDP)
+  community.general.ufw:
+    route: yes
+    rule: allow
+    interface_in: "{{ static_nic }}"
+    from_ip: "{{ item }}"
+    to_ip: any
+    proto: udp
+    port: 22000
+    comment: "Allow Syncthing listening port (TCP) from {{ item }}"
+  loop: "{{ syncthing_allow_from }}"
+
+- name: Set UFW incoming rules for Syncthing Protocol discovery
+  community.general.ufw:
+    route: yes
+    rule: allow
+    interface_in: "{{ static_nic }}"
+    from_ip: "{{ item }}"
+    to_ip: any
+    proto: udp
+    port: 21027
+    comment: "Allow Syncthing Protocol discovery from {{ item }}"
+  loop: "{{ syncthing_allow_from }}"
 
