@@ -1,0 +1,45 @@
+---
+- name: container config direcoty
+  ansible.builtin.file:
+    path: /opt/container-configs/syncthing
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+
+- name: syncthing.service
+  ansible.builtin.template:
+    src: syncthing.service.j2
+    dest: /etc/systemd/system/syncthing.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: systemctl enable syncthing.service
+  ansible.builtin.systemd:
+    name: syncthing
+    enabled: yes
+
+- name: Set ufw incoming rules for syncthing
+  block:
+    - community.general.ufw:
+        route: yes
+        rule: allow
+        interface_in: "{{ static_nic }}"
+        from_ip: "{{ item_ip }}"
+        to_ip: any
+        proto: "{{ item.proto }}"
+        port: "{{ item.port }}"
+        comment: "{{ item.comment }}"
+      loop:
+        - { proto: tcp, port: 8384, comment: "Allow Syncthing application WebUI from {{ item_ip}}" }
+        - { proto: tcp, port: 22000, comment: "Allow Syncthing listening port (TCP) from {{ item_ip }}" }
+        - { proto: udp, port: 22000, comment: "Allow Syncthing listening port (UDP) from {{ item_ip }}" }
+        - { proto: udp, port: 21027, comment: "Allow Syncthing listening port (UDP) from {{ item_ip }}" }
+  loop: "{{ syncthing_allow_from }}"
+  loop_control:
+    loop_var: item_ip
+

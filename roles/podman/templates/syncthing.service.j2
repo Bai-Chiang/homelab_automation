@@ -1,0 +1,36 @@
+# https://github.com/linuxserver/docker-syncthing
+
+[Unit]
+Description=Syncthing container
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/podman kill syncthing
+ExecStartPre=-/usr/bin/podman rm syncthing
+ExecStartPre=-/usr/bin/podman network create {{ syncthing_bridge_name }}
+ExecStartPre=/usr/bin/podman pull lscr.io/linuxserver/syncthing:latest
+ExecStart=/usr/bin/podman run \
+        --name=syncthing \
+        --network {{ syncthing_bridge_name }} \
+        --replace \
+        --restart unless-stopped \
+        -e PUID=1000 \
+        -e PGID=1000 \
+        -p 8384:8384 \
+        -p 22000:22000/tcp \
+        -p 22000:22000/udp \
+        -p 21027:21027/udp \
+        -v /opt/container-configs/syncthing:/config \
+{% for item in syncthing_data_dir %}
+        -v {{ item.src }}:/{{ item.name }} \
+{% endfor %}
+        lscr.io/linuxserver/syncthing:latest
+ExecStop=/usr/bin/podman stop syncthing
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
