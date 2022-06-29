@@ -28,11 +28,12 @@
     route: yes
     rule: allow
     interface_in: "{{ static_nic }}"
-    from_ip: "{{ unifi_allow_web_from }}"
+    from_ip: "{{ item }}"
     to_ip: any
     proto: tcp
     port: 8443
-    comment: "Allow access UniFi web interface from {{ unifi_allow_web_from }}"
+    comment: "Allow access UniFi web interface from {{ item }}"
+  loop: "{{ unifi_allow_web_from }}"
 
 - name: Set ufw incoming rules for UniFi devices
   community.general.ufw:
