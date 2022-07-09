@@ -5,6 +5,7 @@
   - import_tasks: btrfs_scrub.yml
   - import_tasks: smartd.yml
   - import_tasks: nfs.yml
+    when: nfs_mount_point is defined
   - include_tasks: samba.yml
     when: smb_passwd is defined
 
