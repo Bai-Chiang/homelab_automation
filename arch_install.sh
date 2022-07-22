@@ -601,20 +601,20 @@ if [ -n "$BOOT_ORDER" ] ; then
 fi
 
 
-#echo "
-#######################################################
-## unprivileged user namespace
-## https://wiki.archlinux.org/title/Podman#Rootless_Podman
-#######################################################
-#"
-#if [[ "$KERNEL_PKGS" == *"linux-hardened"* ]]; then
-#    read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [y/N] " ENABLE_USER_NS_UNPRIVILEGED
-#    : "${ENABLE_USER_NS_UNPRIVILEGED:=n}"
-#    ENABLE_USER_NS_UNPRIVILEGED="${ENABLE_USER_NS_UNPRIVILEGED,,}"
-#    if [ "$ENABLE_USER_NS_UNPRIVILEGED" = y ] ; then
-#        echo "kernel.unprivileged_userns_clone=1" >> /mnt/etc/sysctl.d/unprivileged_user_namespace.conf
-#    fi
-#fi
+echo "
+######################################################
+# unprivileged user namespace
+# https://wiki.archlinux.org/title/Podman#Rootless_Podman
+######################################################
+"
+if [[ "$KERNEL_PKGS" == *"linux-hardened"* ]]; then
+    read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [y/N] " ENABLE_USER_NS_UNPRIVILEGED
+    : "${ENABLE_USER_NS_UNPRIVILEGED:=n}"
+    ENABLE_USER_NS_UNPRIVILEGED="${ENABLE_USER_NS_UNPRIVILEGED,,}"
+    if [ "$ENABLE_USER_NS_UNPRIVILEGED" = y ] ; then
+        echo "kernel.unprivileged_userns_clone=1" >> /mnt/etc/sysctl.d/unprivileged_user_namespace.conf
+    fi
+fi
 
 
 echo "
