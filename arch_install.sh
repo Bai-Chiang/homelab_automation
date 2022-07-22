@@ -1,17 +1,18 @@
 #!/usr/bin/bash
 
 UCODE_PKG="intel-ucode"
-BASE_PKGS="base linux-firmware sudo python efibootmgr"
+BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
+#BASE_PKGS="base-selinux linux-firmware sudo-selinux selinux-python efibootmgr iptables-nft"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
-# server example
+## server example
 KERNEL_PKGS="linux-hardened"
 FS_PKGS="dosfstools btrfs-progs"
 #OTHER_KERNEL_CMD="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 # desktop example
-#KERNEL_PKGS="linux linux-zen"
+#KERNEL_PKGS="linux"
 #FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 #OTHER_PKGS="man-db man-pages texinfo vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
@@ -124,7 +125,7 @@ while [ -n "$DEVICE_ID" ]; do
         fdisk "$DEVICE"
     fi
 done
-PARTITIONS=$(lsblk --paths --list --noheadings --output=name,size,model | cat --number)
+PARTITIONS=$(lsblk --paths --list --noheadings --output=name,size,model | grep --invert-match "loop" | cat --number)
 
 # EFI partition
 echo -e "\n\nTell me the EFI partition number:"
@@ -240,6 +241,20 @@ fi
 swapon "$SWAP_PART"
 
 
+#echo "
+#######################################################
+## Add selinux repo
+## https://github.com/archlinuxhardened/selinux#binary-repository
+#######################################################
+#"
+#echo -e "
+#[selinux]
+#Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux
+#SigLevel = Never
+#" >> /etc/pacman.conf
+#pacman -Sy
+
+
 echo "
 ######################################################
 # Install packages
@@ -324,6 +339,13 @@ if [ "$NETWORKMANAGER" -eq 1 ] ; then
     echo "Enabling systemd-resolved.service and systemd-networkd.service ..."
     arch-chroot /mnt systemctl enable systemd-resolved.service
     arch-chroot /mnt systemctl enable systemd-networkd.service
+    read -p "Install and enable iwd (for WiFi) ? [y/N] " INSTALL_IWD
+    : "${INSTALL_IWD:=n}"
+    INSTALL_IWD="${INSTALL_IWD,,}"
+    if [ "$INSTALL_IWD" = y ] ; then
+        arch-chroot /mnt pacman --noconfirm -S iwd
+        arch-chroot /mnt systemctl enable iwd.service
+    fi
 elif [ "$NETWORKMANAGER" -eq 2 ] ; then
     echo "Installing NetworkManager and wpa_supplicant ..."
     arch-chroot /mnt pacman --noconfirm -S networkmanager wpa_supplicant
@@ -395,6 +417,23 @@ fi
 KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
 KERNEL_CMD="$KERNEL_CMD $OTHER_KERNEL_CMD"
 
+
+#echo "
+#######################################################
+## SELinux
+## https://wiki.archlinux.org/title/SELinux#Enable_SELinux_LSM
+#######################################################
+#"
+#echo "Adding SELinux LSM to kernel parameter ..."
+#KERNEL_CMD="$KERNEL_CMD lsm=landlock,lockdown,yama,integrity,selinux,bpf"
+#echo "Adding SELinux repo ..."
+#echo -e "
+#[selinux]
+#Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux
+#SigLevel = Never
+#" >> /mnt/etc/pacman.conf
+
+
 echo "
 ######################################################
 # VFIO kernel parameters
@@ -403,6 +442,7 @@ echo "
 "
 read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " ENABLE_VFIO
 : "${ENABLE_VFIO:=n}"
+ENABLE_VFIO="${ENABLE_VFIO,,}"
 if [ "$ENABLE_VFIO" = y ] ; then
     if [ $(echo "$UCODE_PKG" | grep "intel" | wc -l ) -ge 1 ] ; then
         # for intel cpu
@@ -551,14 +591,30 @@ do
 done
 
 echo -e "\n"
-arch-chroot /mnt efibootmgr --verbose
+arch-chroot /mnt efibootmgr
 echo -e "\n\nDo you want to change boot order?: "
 read -p "Enter boot order XXXX,XXXX (empty to skip): " BOOT_ORDER
 if [ -n "$BOOT_ORDER" ] ; then
     echo -e "\n"
-    arch-chroot /mnt efibootmgr --bootorder ${BOOT_ORDER} --verbose
+    arch-chroot /mnt efibootmgr --bootorder ${BOOT_ORDER}
     echo -e "\n"
 fi
+
+
+#echo "
+#######################################################
+## unprivileged user namespace
+## https://wiki.archlinux.org/title/Podman#Rootless_Podman
+#######################################################
+#"
+#if [[ "$KERNEL_PKGS" == *"linux-hardened"* ]]; then
+#    read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [y/N] " ENABLE_USER_NS_UNPRIVILEGED
+#    : "${ENABLE_USER_NS_UNPRIVILEGED:=n}"
+#    ENABLE_USER_NS_UNPRIVILEGED="${ENABLE_USER_NS_UNPRIVILEGED,,}"
+#    if [ "$ENABLE_USER_NS_UNPRIVILEGED" = y ] ; then
+#        echo "kernel.unprivileged_userns_clone=1" >> /mnt/etc/sysctl.d/unprivileged_user_namespace.conf
+#    fi
+#fi
 
 
 echo "
@@ -577,7 +633,7 @@ if [ "$IS_SSH" = y ] ; then
     echo "ssh port? (22)"
     read SSH_PORT
     : "${SSH_PORT:=22}"
-    sed -i "s/^#Port.*/Port ${SSH_PORT}/" /mnt/etc/ssh/sshd_config
+    sed -i "s/^#Port.*/Port ${SSH_PORT}/" /etc/ssh/sshd_config
 fi
 
 
@@ -587,44 +643,102 @@ echo "
 # https://wiki.archlinux.org/title/Users_and_groups
 ######################################################
 "
-arch-chroot /mnt sed -i '/^# %wheel ALL=(ALL:ALL) ALL/ s/# //' /etc/sudoers
-read -p "Do you want to add an administration account (user in group wheel) now? [Y/n] " IS_USER
-: "${IS_USER:=y}"
-if [ "$IS_USER" = y ] ; then
-    echo "Adding administration account ..."
+# add wheel group to sudoer
+sed -i '/^# %wheel ALL=(ALL:ALL) ALL/ s/# //' /mnt/etc/sudoers
+
+read -p "Do you want to create user with systemd-homed? [y/N] " IS_HOMED
+: "${IS_HOMED:=n}"
+IS_HOMED="${IS_HOMED,,}"
+if [ "$IS_HOMED" = y ] ; then
+    cat >> /mnt/root/homed.sh <<'EOF'
+systemctl enable --now systemd-homed.service
+read -p "Tell me your username: " USERNAME
+read -p "uid: (default 1000)" UID
+: "${UID:=1000}"
+read -p "Tell me the filesystem inside your home directory (btrfs or ext4): " FSTYPE
+homectl create "$USERNAME" --uid="$UID" --member-of=wheel --shell=/bin/bash --storage=luks --fs-type="$FSTYPE"
+
+read -p "Do you want to disable root account? [Y/n] " IS_ROOT_DISABLE
+: "${IS_ROOT_DISABLE:=n}"
+IS_ROOT_DISABLE="${IS_ROOT_DISABLE,,}"
+if [ "$IS_ROOT_DISABLE" = y ] ; then
+    # https://wiki.archlinux.org/title/Sudo#Disable_root_login
+    echo "Disabling root ..."
+    passwd -d root
+    passwd -l root
+EOF
+    echo "Created /root/homed.sh Run it after reboot to create systemd-homed user, which can't be done in chroot environment."
+    echo "Enter root password (/root/homed.sh can disable root account after you setup systemd-homed user)"
+    arch-chroot /mnt passwd
+
+
+else
     read -p "Tell me your username: " USERNAME
     arch-chroot /mnt useradd -m -G wheel "$USERNAME"
-    echo "Please enter your password: "
     arch-chroot /mnt passwd "$USERNAME"
+
     read -p "Do you want to disable root account? [Y/n] " IS_ROOT_DISABLE
-    : "${IS_ROOT_DISABLE:=y}"
+    : "${IS_ROOT_DISABLE:=n}"
+    IS_ROOT_DISABLE="${IS_ROOT_DISABLE,,}"
     if [ "$IS_ROOT_DISABLE" = y ] ; then
         # https://wiki.archlinux.org/title/Sudo#Disable_root_login
         echo "Disabling root ..."
         arch-chroot /mnt passwd -d root
         arch-chroot /mnt passwd -l root
     fi
-else
-    echo "Please Enter your root password."
-    arch-chroot /mnt passwd
-    cat >> /mnt/root/homed.sh <<'EOF'
-#!/usr/bin/bash
-# A script to create a user using systemd-homed since it cannot create a user under chroot environment.
-systemctl enable --now systemd-homed.service
-read -p "Tell me your username: " USERNAME
-read -p "Tell me the filesystem inside your home directory (btrfs or ext4): " FSTYPE
-homectl create "$USERNAME" --uid=1000 --member-of=wheel --shell=/bin/bash --storage=luks --fs-type="$FSTYPE"
-read -p "Do you want to disable root account? [Y/n] " IS_ROOT_DISABLE
-: "${IS_ROOT_DISABLE:=n}"
-if [ "$IS_ROOT_DISABLE" = y ] ; then
-    # https://wiki.archlinux.org/title/Sudo#Disable_root_login
-    echo "Disabling root ..."
-    passwd -d root
-    passwd -l root
-fi
-EOF
-    echo "Created a homed.sh script in the /root directory to help set up systemd-homed user account."
 fi
 
 
-
+# SELinux after reboot
+#echo "
+#######################################################
+## SELinux policy
+## https://wiki.archlinux.org/title/SELinux#Installing_a_policy
+#######################################################
+#"
+#echo "labeling filesystem ..."
+#
+## label filesystem
+#restorecon -r /
+#
+### hide the effects of incorrect labelling
+##cat >> /tmp/requiredmod.te <<'EOF'
+##module requiredmod 1.0;
+##
+##require {
+##        type devpts_t;
+##        type kernel_t;
+##        type device_t;
+##        type var_run_t;
+##        type udev_t;
+##        type hugetlbfs_t;
+##        type udev_tbl_t;
+##        type tmpfs_t;
+##        class sock_file write;
+##        class unix_stream_socket { read write ioctl };
+##        class capability2 block_suspend;
+##        class dir { write add_name };
+##        class filesystem associate;
+##}
+##
+###============= devpts_t ==============
+##allow devpts_t device_t:filesystem associate;
+##
+###============= hugetlbfs_t ==============
+##allow hugetlbfs_t device_t:filesystem associate;
+##
+###============= kernel_t ==============
+##allow kernel_t self:capability2 block_suspend;
+##
+###============= tmpfs_t ==============
+##allow tmpfs_t device_t:filesystem associate;
+##
+###============= udev_t ==============
+##allow udev_t kernel_t:unix_stream_socket { read write ioctl };
+##allow udev_t udev_tbl_t:dir { write add_name };
+##allow udev_t var_run_t:sock_file write;
+##EOF
+##
+##checkmodule -m -o /tmp/requiredmod.mod /tmp/requiredmod.te
+##semodule_package -o /tmp/requiredmod.pp -m /tmp/requiredmod.mod
+##semodule -i /tmp/requiredmod.pp
