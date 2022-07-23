@@ -685,6 +685,10 @@ else
         echo "Disabling root ..."
         arch-chroot /mnt passwd -d root
         arch-chroot /mnt passwd -l root
+    else
+        echo "Enter root password"
+        arch-chroot /mnt passwd
+
     fi
 fi
 
