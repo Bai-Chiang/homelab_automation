@@ -25,8 +25,7 @@ ExecStart=/usr/bin/podman run \
         -e SUBDOMAINS={{ swag_subdomains }} \
         -e VALIDATION=dns \
         -e DNSPLUGIN=cloudflare \
-        -e CERTPROVIDER=zerossl \
-        -e EMAIL=qiangbq@gmail.com \
+        -e CERTPROVIDER=letsencrypt \
         -e ONLY_SUBDOMAINS=true \
         -e STAGING=false \
         -p 443:443 \
