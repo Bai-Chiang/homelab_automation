@@ -633,7 +633,7 @@ if [ "$IS_SSH" = y ] ; then
     echo "ssh port? (22)"
     read SSH_PORT
     : "${SSH_PORT:=22}"
-    sed -i "s/^#Port.*/Port ${SSH_PORT}/" /etc/ssh/sshd_config
+    sed -i "s/^#Port.*/Port ${SSH_PORT}/" /mnt/etc/ssh/sshd_config
 fi
 
 
