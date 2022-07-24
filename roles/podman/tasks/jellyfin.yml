@@ -1,7 +1,7 @@
 ---
 - name: container config direcoty
   ansible.builtin.file:
-    path: /opt/container-configs/jellyfin
+    path: "{{ container_configs_dir.path }}/jellyfin"
     state: directory
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
@@ -23,15 +23,15 @@
     name: jellyfin
     enabled: yes
 
-- name: Set ufw incoming rules for Jellyfin web interface
-  community.general.ufw:
-    route: yes
-    rule: allow
-    interface_in: "{{ static_nic }}"
-    from_ip: "{{ item }}"
-    to_ip: any
-    proto: tcp
-    port: 8096
-    comment: "Allow access Jellyfin web interface (http) from {{ jellyfin_allow_from }}"
-  loop: "{{ jellyfin_allow_from }}"
+#- name: Set ufw incoming rules for Jellyfin web interface
+#  community.general.ufw:
+#    route: yes
+#    rule: allow
+#    interface_in: "{{ static_nic }}"
+#    from_ip: "{{ item }}"
+#    to_ip: any
+#    proto: tcp
+#    port: 8096
+#    comment: "Allow access Jellyfin web interface (http) from {{ jellyfin_allow_from }}"
+#  loop: "{{ jellyfin_allow_from }}"
 

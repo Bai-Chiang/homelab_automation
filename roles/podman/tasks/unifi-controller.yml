@@ -1,7 +1,7 @@
 ---
 - name: container config direcoty
   ansible.builtin.file:
-    path: /opt/container-configs/unifi-controller
+    path: "{{ container_configs_dir.path }}/unifi-controller"
     state: directory
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
@@ -23,17 +23,17 @@
     name: unifi-controller
     enabled: yes
 
-- name: Set ufw incoming rules for UniFi web interface
-  community.general.ufw:
-    route: yes
-    rule: allow
-    interface_in: "{{ static_nic }}"
-    from_ip: "{{ item }}"
-    to_ip: any
-    proto: tcp
-    port: 8443
-    comment: "Allow access UniFi web interface from {{ item }}"
-  loop: "{{ unifi_allow_web_from }}"
+#- name: Set ufw incoming rules for UniFi web interface
+#  community.general.ufw:
+#    route: yes
+#    rule: allow
+#    interface_in: "{{ static_nic }}"
+#    from_ip: "{{ item }}"
+#    to_ip: any
+#    proto: tcp
+#    port: 8443
+#    comment: "Allow access UniFi web interface from {{ item }}"
+#  loop: "{{ unifi_allow_web_from }}"
 
 - name: Set ufw incoming rules for UniFi devices
   community.general.ufw:

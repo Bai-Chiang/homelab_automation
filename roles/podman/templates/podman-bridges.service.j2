@@ -1,0 +1,13 @@
+[Unit]
+Description=create podman bridge networks
+
+[Service]
+{% for item in podman_bridges %}
+ExecStart=-/usr/bin/podman network create --subnet {{ item.subnet }} {{ item.name }}
+{% endfor %}
+
+Type=oneshot
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

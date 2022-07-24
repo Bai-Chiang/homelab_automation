@@ -1,0 +1,9 @@
+[Unit]
+Description=podman image prune timer
+
+[Timer]
+OnCalendar={{ podman_image_prune_timer }}
+
+[Install]
+WantedBy=timers.target
+

@@ -1,7 +1,7 @@
 ---
 - name: container config direcoty
   ansible.builtin.file:
-    path: /opt/container-configs/syncthing
+    path: "{{ container_configs_dir.path }}/syncthing"
     state: directory
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
@@ -23,17 +23,17 @@
     name: syncthing
     enabled: yes
 
-- name: Set UFW incoming roles for Syncthing WebUI
-  community.general.ufw:
-    route: yes
-    rule: allow
-    interface_in: "{{ static_nic }}"
-    from_ip: "{{ item }}"
-    to_ip: any
-    proto: tcp
-    port: 8384
-    comment: "Allow Syncthing application WebUI from {{ item }}"
-  loop: "{{ syncthing_allow_web_from }}"
+#- name: Set UFW incoming roles for Syncthing WebUI
+#  community.general.ufw:
+#    route: yes
+#    rule: allow
+#    interface_in: "{{ static_nic }}"
+#    from_ip: "{{ item }}"
+#    to_ip: any
+#    proto: tcp
+#    port: 8384
+#    comment: "Allow Syncthing application WebUI from {{ item }}"
+#  loop: "{{ syncthing_allow_web_from }}"
 
 - name: Set UFW incoming rules for Syncthing Listening port (TCP)
   community.general.ufw:
@@ -59,15 +59,15 @@
     comment: "Allow Syncthing listening port (TCP) from {{ item }}"
   loop: "{{ syncthing_allow_from }}"
 
-- name: Set UFW incoming rules for Syncthing Protocol discovery
-  community.general.ufw:
-    route: yes
-    rule: allow
-    interface_in: "{{ static_nic }}"
-    from_ip: "{{ item }}"
-    to_ip: any
-    proto: udp
-    port: 21027
-    comment: "Allow Syncthing Protocol discovery from {{ item }}"
-  loop: "{{ syncthing_allow_from }}"
+  #- name: Set UFW incoming rules for Syncthing Protocol discovery
+  #  community.general.ufw:
+  #    route: yes
+  #    rule: allow
+  #    interface_in: "{{ static_nic }}"
+  #    from_ip: "{{ item }}"
+  #    to_ip: any
+  #    proto: udp
+  #    port: 21027
+  #    comment: "Allow Syncthing Protocol discovery from {{ item }}"
+  #  loop: "{{ syncthing_allow_from }}"
 

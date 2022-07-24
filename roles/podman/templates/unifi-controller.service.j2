@@ -3,31 +3,33 @@
 [Unit]
 Description=unifi-controller container
 Wants=network-online.target
-After=network-online.target nss-lookup.target
+After=network-online.target
+Requires=podman-bridges.service
 
 [Service]
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/podman kill unifi-controller
 ExecStartPre=-/usr/bin/podman rm unifi-controller
-ExecStartPre=-/usr/bin/podman network create {{ unifi_bridge_name }}
 ExecStartPre=/usr/bin/podman pull lscr.io/linuxserver/unifi-controller:latest
 ExecStart=/usr/bin/podman run \
+        --detach \
         --name=unifi-controller \
-        --network {{ unifi_bridge_name }} \
+        --network {{ unifi_bridge_name }}:ip={{ unifi_container_ip }} \
         --replace \
         --restart unless-stopped \
         -e PUID=1000 \
         -e PGID=1000 \
+        -e TZ={{ timezone }} \
         -e MEM_LIMIT=2048 \
         -e MEM_STARTUP=1024 \
-        -p 8443:8443 \
         -p 3478:3478/udp \
         -p 10001:10001/udp \
         -p 8080:8080 \
-        -v /opt/container-configs/unifi-controller:/config \
+        -v {{ container_configs_dir.path }}/unifi-controller:/config \
         lscr.io/linuxserver/unifi-controller:latest
 ExecStop=/usr/bin/podman stop unifi-controller
 
+Type=forking
 Restart=always
 RestartSec=5
 

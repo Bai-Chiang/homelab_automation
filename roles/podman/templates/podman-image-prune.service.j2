@@ -1,0 +1,6 @@
+[Unit]
+Description=prune all unused podman images
+
+[Service]
+ExecStart=/usr/bin/podman image prune --all --force
+
