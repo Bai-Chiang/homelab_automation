@@ -1,4 +1,4 @@
 #!/usr/bin/bash
 
-echo -e "Subject:UPS notification\n$1" | msmtp -a default {{ msmtp_to }}
+echo -e "To:{{ msmtp_to }}\nSubject:UPS notification\n$1" | msmtp -t -a default
 

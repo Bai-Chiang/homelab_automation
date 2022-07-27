@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 SUBJECT="Auto-update $HOSTNAME $(/usr/bin/date '+%F %T')"
+TO="{{ msmtp_to }}"
 
 {% if btrfs_scrub_time is defined %}
 # systemctl is-active return 0 if at least one is active
@@ -18,7 +19,7 @@ UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
 {% endif %}
 
 # send email
-echo -e "Subject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -a default {{ msmtp_to }}
+echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -t -a default 
 
 sleep 5
 
