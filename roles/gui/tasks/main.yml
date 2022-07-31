@@ -45,3 +45,8 @@
     daemon_reload: yes
     scope: user
 
+- name: Create screenshots directories
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/screenshots"
+    state: directory
+  
