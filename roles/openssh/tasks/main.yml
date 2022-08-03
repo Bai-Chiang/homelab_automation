@@ -36,6 +36,7 @@
       validate: /usr/sbin/sshd -T -f %s
     loop:
       - { regexp: '^PasswordAuthentication', line: PasswordAuthentication no, insertafter: '#\s*PasswordAuthentication' }
+    - { regexp: '^KbdInteractiveAuthentication', line: KbdInteractiveAuthentication no, insertafter: '^KbdInteractiveAuthentication' }
       - { regexp: '^AuthenticationMethods', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication' }
 
   - name: Add custom ssh rule to UFW
