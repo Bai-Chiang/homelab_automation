@@ -4,7 +4,7 @@ VM_NAME=myvm
 VM_SIZE=32
 CPU_CORES=2
 RAM_SIZE=4096
-ARCH_ISO=/path/to/archlinux.iso
+ISO=/path/to/archlinux.iso
 SHARED_DIR=/path/to/src
 MOUNT_TAG=mount-tag
 NIC=eth0
@@ -20,7 +20,7 @@ virt-install \
     --memorybacking allocation.mode=ondemand \
     --cpu host-passthrough,cache.mode=passthrough,topology.sockets=1,topology.cores=${CPU_CORES},topology.threads=1 \
     --os-variant name=archlinux \
-    --cdrom ${ARCH_ISO} \
+    --cdrom ${ISO} \
     --disk path=/var/lib/libvirt/images/${VM_NAME}.qcow2,size=${VM_SIZE},bus=virtio \
     --filesystem type=mount,accessmode=mapped,source.dir=${SHARED_DIR},target.dir=${MOUNT_TAG} \
     #--network bridge=br0,model.type=virtio \
