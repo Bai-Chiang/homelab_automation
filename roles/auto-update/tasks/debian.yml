@@ -1,0 +1,30 @@
+---
+- block: 
+  - name: apt install unattended-upgrades apt-listchanges
+    ansible.builtin.apt:
+      pkg:
+        - unattended-upgrades
+        - apt-listchanges
+      state: latest
+
+  - name: Check /etc/apt/apt.conf.d/20auto-upgrades stats
+    ansible.builtin.stat:
+      path: /etc/apt/apt.conf.d/20auto-upgrades
+    register: auto_upgrades
+
+  - name: Create /etc/apt/apt.conf.d/20auto-upgrades if not exists
+    ansible.builtin.shell: |
+      echo unattended-upgrades unattended-upgrades/enable_auto_updates boolean true | debconf-set-selections
+      dpkg-reconfigure -f noninteractive unattended-upgrades
+    when: not auto_upgrades.stat.exists
+
+  - name: 20auto-upgrades config
+    ansible.builtin.lineinfile:
+      path: /etc/apt/apt.conf.d/20auto-upgrades
+      line: "{{ item.line }}"
+      regexp: "{{ item.regexp }}"
+    loop:
+      - { line: 'APT::Periodic::Update-Package-Lists "1";', regexp: '^APT::Periodic::Update-Package-Lists' }
+      - { line: 'APT::Periodic::Unattended-Upgrade "1";', regexp: '^APT::Periodic::Unattended-Upgrade' }
+
+  become: yes

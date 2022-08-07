@@ -1,0 +1,7 @@
+---
+- name: Automatic start-up of systemd user instances
+  ansible.builtin.command: "loginctl enable-linger {{ ansible_user_id }}"
+  become: yes
+
+- import_tasks: relay.yml
+

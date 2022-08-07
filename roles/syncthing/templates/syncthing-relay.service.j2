@@ -1,0 +1,15 @@
+[Unit]
+Description=Syncthing relay server
+
+[Service]
+Type=simple
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
+Restart=always
+RestartSec=5
+TimeoutStartSec=0
+
+ExecStart={{ ansible_user_dir }}/syncthing/strelaysrv-linux-amd64-{{ relaysrv_version }}/strelaysrv -listen=:{{ relay_port }} -pools='' -status-srv='' -keys={{ ansible_user_dir }}/syncthing/keys
+
+[Install]
+WantedBy=multi-user.target

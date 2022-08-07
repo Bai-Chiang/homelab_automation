@@ -1,37 +1,6 @@
 ---
-- block:
-  - name: auto-update.service
-    ansible.builtin.copy:
-      src: auto-update.service
-      dest: /etc/systemd/system/auto-update.service
-      owner: root
-      group: root
-      mode: '0644'
-  
-  - name: auto-update.timer
-    ansible.builtin.template:
-      src: auto-update.timer.j2
-      dest: /etc/systemd/system/auto-update.timer
-      owner: root
-      group: root
-      mode: '0644'
-  
-  - name: auto-update.sh
-    ansible.builtin.template:
-      src: auto-update.sh.j2
-      dest: /usr/local/bin/auto-update.sh
-      owner: root
-      group: root
-      mode: '0700'
-  
-  - name: systemctl daemon-reload
-    ansible.builtin.systemd:
-      daemon_reload: yes
-  
-  - name: systemctl enable auto-update.timer
-    ansible.builtin.systemd:
-      name: auto-update.timer
-      enabled: yes
-      state: started
+- include_tasks: archlinux.yml
+  when: ansible_facts['os_family'] == "Archlinux"
 
-  become: yes
+- include_tasks: debian.yml
+  when: ansible_facts['os_family'] == "Debian"

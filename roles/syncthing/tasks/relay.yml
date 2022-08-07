@@ -1,0 +1,38 @@
+---
+
+- name: Create syncthing directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/syncthing/keys"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0700'
+
+- name: Download and extract relaysrv binary
+  ansible.builtin.unarchive:
+    src: "https://github.com/syncthing/relaysrv/releases/download/{{ relaysrv_version }}/strelaysrv-linux-amd64-{{ relaysrv_version }}.tar.gz"
+    dest: "{{ ansible_user_dir }}/syncthing/"
+    remote_src: yes
+
+- name: Create systemd user directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.config/systemd/user"
+    state: directory
+
+- name: syncthing-relay.service
+  ansible.builtin.template:
+    src: syncthing-relay.service.j2
+    dest: "{{ ansible_user_dir }}/.config/systemd/user/syncthing-relay.service"
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    scope: user
+
+#- name: systemctl --user enable syncthing-relay.service --now
+#  ansible.builtin.systemd:
+#    name: syncthing-relay
+#    enabled: yes
+#    scope: user
+#    state: started
+    

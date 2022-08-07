@@ -1,10 +1,21 @@
 ---
 - block:
+  
+  - name: Check /etc/network/interfaces on Debian
+    ansible.builtin.stat:
+      path: /etc/network/interfaces
+    register: network_interfaces
+    when: ansible_facts['os_family'] == "Debian"
 
-  - name: Delete default network configuration
+  - name: Remove /etc/network/interfaces on Debian
+    ansible.builtin.command: mv /etc/network/interfaces /etc/network/interfaces.save
+    when: ansible_facts['os_family'] == "Debian" and network_interfaces.stat.exists
+
+  - name: Delete default network configuration on Archlinux
     ansible.builtin.file:
       path: /etc/systemd/network/20-ethernet.network
       state: absent
+    when: ansible_facts['os_family'] == "Archlinux"
 
   - name: Configure network
     ansible.builtin.template:
@@ -13,5 +24,10 @@
       owner: root
       group: root
       mode: '0644'
+
+  - name: systemctl enable systemd-networkd
+    ansible.builtin.systemd:
+      name: systemd-networkd
+      enabled: yes
 
   become: yes

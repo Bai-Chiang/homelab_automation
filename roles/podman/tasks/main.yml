@@ -44,4 +44,5 @@
     loop_control:
       loop_var: container_name
 
+  when: ansible_facts['os_family'] == "Archlinux"
   become: yes
