@@ -1,0 +1,23 @@
+[Interface]
+Address = {{ wg_ip }}
+ListenPort = {{ wg_port }}
+PrivateKey = {{ wg_private_key.stdout }}
+{% if wg_postup is defined %}
+PostUP = {{ wg_postup }}
+{% endif %}
+{% if wg_postdown is defined %}
+PostDown = {{ wg_postdown }}
+{% endif %}
+
+{% for item in wg_peers %}
+# {{ item.comment }}
+[Peer]
+PublicKey = {{ item.publickey }}
+PresharedKey = {{ item.presharedkey }}
+AllowedIPs = {{ item.allowdips }}
+{% if item.endpoint is defined %}
+Endpoint = {{ item.endpoint }}
+{% endif %}
+
+{% endfor %}
+

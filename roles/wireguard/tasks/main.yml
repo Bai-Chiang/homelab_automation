@@ -1,0 +1,76 @@
+---
+- block:
+
+  - name: apt install wireguard
+    ansible.builtin.apt:
+      name: wireguard
+      state: present
+
+  - name: Get stats of wireguard private key
+    ansible.builtin.stat:
+      path: /etc/wireguard/private.key
+    register: wg_private_key_file
+
+  - name: Get stats of wireguard public key
+    ansible.builtin.stat:
+      path: /etc/wireguard/public.key
+    register: wg_public_key_file
+
+  - name: Generate key
+    ansible.builtin.shell: |
+      wg genkey | (umask 0077 && tee /etc/wireguard/private.key) | wg pubkey > /etc/wireguard/public.key
+    when: not ( wg_private_key_file.stat.exists and wg_public_key_file.stat.exists )
+  
+  - name: Get private.key
+    ansible.builtin.command: cat /etc/wireguard/private.key
+    register: wg_private_key
+    changed_when: False
+  
+  - name: Get public.key
+    ansible.builtin.command: cat /etc/wireguard/public.key
+    register: wg_public_key
+    changed_when: False
+  
+  - name: wg0.conf
+    ansible.builtin.template:
+      src: wg0.conf.j2
+      dest: /etc/wireguard/wg0.conf
+      owner: root
+      group: root
+      mode: '0600'
+
+  - name: systemctl enable wg-quick@wg0.service
+    ansible.builtin.systemd:
+      name: wg-quick@wg0.service
+      enabled: yes
+
+  - name: Allow wireguard connection
+    community.general.ufw:
+      rule: allow
+      from_ip: any
+      proto: udp
+      port: "{{ wg_port }}"
+      comment: Allow wireguard connection
+
+  #- name: IP forwarding for routed trafic
+  #  ansible.builtin.lineinfile:
+  #    path: /etc/ufw/sysctl.conf
+  #    regexp: "{{ item.regexp }}"
+  #    line: "{{ item.line }}"
+  #    state: absent
+  #  loop:
+  #    - { regexp: '^net/ipv4/ip_forward', line: net/ipv4/ip_forward=1, insertafter: '^#net/ipv4/ip_forward' }
+  #    - { regexp: '^net/ipv6/conf/default/forwarding', line: net/ipv6/conf/default/forwarding=1, insertafter: '^#net/ipv6/conf/default/forwarding' }
+  #    - { regexp: '^net/ipv6/conf/all/forwarding', line: net/ipv6/conf/all/forwarding=1, insertafter: '^#net/ipv6/conf/all/forwarding' }
+  
+  #- name: Forwarding rules
+  #  community.general.ufw:
+  #    route: yes
+  #    rule: allow
+  #    interface_in: wg0
+  #    from_ip: any
+  #    to_ip: any
+  #    proto: tcp
+  #    comment: "Forwarding rule for wireguard"
+
+  become: yes
