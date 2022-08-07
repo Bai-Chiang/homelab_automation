@@ -4,17 +4,23 @@
     ansible.builtin.package_facts:
       manager: apt
 
-  - include_tasks: install_docker.yml
+  - include_tasks: debian_install_docker.yml
     when: "'docker-ce' not in ansible_facts.packages"
-
-  - name: docker-compose.yml
-    ansible.builtin.template:
-      src: docker-compose.yml.j2
-      dest: "/opt/docker-compose.yml"
-      owner: "root"
-      group: "root"
-      mode: '0600'
 
   when: ansible_facts['os_family'] == "Debian"
   become: yes
 
+
+- block:
+  - name: pacman -S ufw
+    community.general.pacman:
+      name:
+        - docker
+        - docker-compose
+      state: present
+
+  - name: systemctl enable --now docker.service
+    ansible.builtin.systemd: name=docker.service enabled=yes state=started 
+
+  when: ansible_facts['os_family'] == "Archlinux"
+  become: yes
