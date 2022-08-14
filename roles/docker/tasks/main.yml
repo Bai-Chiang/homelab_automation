@@ -10,7 +10,6 @@
   when: ansible_facts['os_family'] == "Debian"
   become: yes
 
-
 - block:
   - name: pacman -S ufw
     community.general.pacman:
@@ -23,4 +22,33 @@
     ansible.builtin.systemd: name=docker.service enabled=yes state=started 
 
   when: ansible_facts['os_family'] == "Archlinux"
+  become: yes
+
+
+- block:
+  - name: Copy docker-compose.yml
+    ansible.builtin.copy:
+      src: docker-compose.yml
+      dest: /opt/docker-compose.yml
+      owner: root
+      group: root
+      mode: '0600'
+
+  - name: Create docker-compose.service
+    ansible.builtin.copy:
+      src: docker-compose.service
+      dest: /etc/systemd/system/docker-compose.service
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: systemctl daemon-reload
+    ansible.builtin.systemd:
+      daemon_reload: yes
+
+  - name: systemctl enable docker-compose
+    ansible.builtin.systemd:
+      name: docker-compose.service
+      enabled: yes
+
   become: yes

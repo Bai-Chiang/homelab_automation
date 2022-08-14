@@ -1,0 +1,16 @@
+[Unit]
+Description=docker-compose auto start
+After=docker.service
+Requires=docker.service
+
+[Service]
+WorkingDirectory=/opt
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStartPre=-/usr/bin/docker container prune -f
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose down
+
+[Install]
+WantedBy=multi-user.target
