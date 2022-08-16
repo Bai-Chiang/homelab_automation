@@ -6,3 +6,8 @@ DHCP=no
 Address={{ static_ip }}
 Gateway={{ static_gateway }}
 DNS={{ static_dns }}
+
+{% if disable_ipv6 is defined and disable_ipv6 %}
+IPv6AcceptRA=no
+LinkLocalAddressing=no
+{% endif %}
