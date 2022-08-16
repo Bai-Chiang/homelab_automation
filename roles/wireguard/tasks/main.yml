@@ -1,57 +1,47 @@
 ---
 - block:
+  - name: pacman -S wireguard-tools
+    community.general.pacman:
+      name:
+        - wireguard-tools
+        - systemd-resolvconf
+      state: present
+    when: ansible_facts['os_family'] == "Archlinux"
 
   - name: apt install wireguard
     ansible.builtin.apt:
       name: wireguard
       state: present
+    when: ansible_facts['os_family'] == "Debian"
 
-  - name: Get stats of wireguard private key
-    ansible.builtin.stat:
-      path: /etc/wireguard/private.key
-    register: wg_private_key_file
+  - include_tasks: generate_keys.yml
+    when: wg_interface_name is undefined
 
-  - name: Get stats of wireguard public key
-    ansible.builtin.stat:
-      path: /etc/wireguard/public.key
-    register: wg_public_key_file
-
-  - name: Generate key
-    ansible.builtin.shell: |
-      wg genkey | (umask 0077 && tee /etc/wireguard/private.key) | wg pubkey > /etc/wireguard/public.key
-    when: not ( wg_private_key_file.stat.exists and wg_public_key_file.stat.exists )
-  
-  - name: Get private.key
-    ansible.builtin.command: cat /etc/wireguard/private.key
-    register: wg_private_key
-    changed_when: False
-  
-  - name: Get public.key
-    ansible.builtin.command: cat /etc/wireguard/public.key
-    register: wg_public_key
-    changed_when: False
-  
-  - name: wg0.conf
-    ansible.builtin.template:
-      src: wg0.conf.j2
-      dest: /etc/wireguard/wg0.conf
+  - name: Copy wg config file when wg_interface_name is provided
+    ansible.builtin.copy:
+      src: "{{ wg_interface_name }}.conf"
+      dest: "/etc/wireguard/{{ wg_interface_name }}.conf"
       owner: root
       group: root
       mode: '0600'
+    when: wg_interface_name is defined
 
-  - name: systemctl enable wg-quick@wg0.service
+  - name: "systemctl enable wg-quick@{{ wg_interface_name }}.service"
     ansible.builtin.systemd:
-      name: wg-quick@wg0.service
+      name: "wg-quick@{{ wg_interface_name }}.service"
       enabled: yes
 
-  - name: Allow wireguard connection
-    community.general.ufw:
-      rule: allow
-      from_ip: any
-      proto: udp
-      port: "{{ wg_port }}"
-      comment: Allow wireguard connection
+  - include_tasks: kill_switch.yml
+    when: wg_kill_switch is defined and wg_kill_switch
 
+  #  - name: Allow wireguard connection
+  #    community.general.ufw:
+  #      rule: allow
+  #      from_ip: any
+  #      proto: udp
+  #      port: "{{ wg_port }}"
+  #      comment: Allow wireguard connection
+  #
   #- name: IP forwarding for routed trafic
   #  ansible.builtin.lineinfile:
   #    path: /etc/ufw/sysctl.conf
