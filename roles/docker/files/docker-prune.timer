@@ -1,0 +1,8 @@
+[Unit]
+Description=Docker system prune timer
+
+[Timer]
+OnCalendar=daily
+
+[Install]
+WantedBy=timers.target

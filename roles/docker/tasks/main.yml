@@ -7,7 +7,7 @@
   - include_tasks: debian_install_docker.yml
     when: "'docker-ce' not in ansible_facts.packages"
 
-  when: ansible_facts['os_family'] == "Debian"
+  when: ansible_facts['distribution'] == "Debian"
   become: yes
 
 - block:
@@ -28,27 +28,34 @@
 - block:
   - name: Copy docker-compose.yml
     ansible.builtin.copy:
-      src: docker-compose.yml
+      src: "{{ docker_compose_file }}"
       dest: /opt/docker-compose.yml
       owner: root
       group: root
       mode: '0600'
 
-  - name: Create docker-compose.service
+  - name: "Create {{ item }}"
     ansible.builtin.copy:
-      src: docker-compose.service
-      dest: /etc/systemd/system/docker-compose.service
+      src: "{{ item }}"
+      dest: "/etc/systemd/system/{{ item }}"
       owner: root
       group: root
       mode: '0644'
+    loop:
+      - docker-compose.service
+      - docker-prune.service
+      - docker-prune.timer
 
   - name: systemctl daemon-reload
     ansible.builtin.systemd:
       daemon_reload: yes
 
-  - name: systemctl enable docker-compose
+  - name: "systemctl enable {{ item }}"
     ansible.builtin.systemd:
-      name: docker-compose.service
+      name: "{{ item }}"
       enabled: yes
+    loop:
+      - docker-compose.service
+      - docker-prune.timer
 
   become: yes

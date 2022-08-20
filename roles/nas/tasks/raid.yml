@@ -1,4 +1,10 @@
 ---
+- name: Install cryptsetup
+  ansible.builtin.apt:
+    pkg: cryptsetup
+    state: latest
+  when: ansible_facts['os_family'] == "Debian"
+  
 - name: Edit /etc/crypttab
   ansible.builtin.lineinfile:
     path: /etc/crypttab

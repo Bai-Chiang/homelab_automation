@@ -17,7 +17,7 @@
       state: absent
     when: ansible_facts['os_family'] == "Archlinux"
 
-  - name: Configure network
+  - name: "Create {{ static_nic }}.network"
     ansible.builtin.template:
       src: en0.network.j2
       dest: /etc/systemd/network/{{ static_nic }}.network
