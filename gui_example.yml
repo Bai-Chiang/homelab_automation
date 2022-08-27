@@ -22,7 +22,7 @@
     - import_tasks: tasks/update.yml
 
   roles:
-    - common
+    - archlinux_common
     - gui
     - libvirt
     - pip

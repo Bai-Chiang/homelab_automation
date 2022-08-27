@@ -8,7 +8,7 @@
     - import_tasks: tasks/update.yml
 
   roles:
-    - common
+    - archlinux_common
     - networkd_static
     - openssh
     - libvirt

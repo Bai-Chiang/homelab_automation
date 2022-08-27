@@ -30,6 +30,7 @@ wm_pkgs:
   - xdg-desktop-portal-gtk 
   - xorg-xwayland
   - python-i3ipc
+  - wl-clipboard
 
 dotfiles_repo:
   https: 'https://github.com/username/dotfiles.git'

@@ -33,6 +33,7 @@
 
   - name: pacman -S reflector
     community.general.pacman: name=reflector state=present
+    when: ansible_architecture == 'x86_64'
 
   - name: Configure reflector
     ansible.builtin.lineinfile:
@@ -40,12 +41,15 @@
       regexp: '^--country'
       line: --country us 
       insertafter: '^#\s*--country'
+    when: ansible_architecture == 'x86_64'
 
   - name: systemctl enable reflector.service
     ansible.builtin.systemd: name=reflector enabled=yes
+    when: ansible_architecture == 'x86_64'
 
   - name: systemctl enable --now reflector.timer
     ansible.builtin.systemd: name=reflector.timer enabled=yes state=started
+    when: ansible_architecture == 'x86_64'
 
   - name: pacman -S pacman-contrib for paccache
     community.general.pacman: name=pacman-contrib state=present
@@ -68,7 +72,7 @@
     community.general.ufw: default=deny direction=routed
 
   - name: systemctl enable --now ufw.service
-    ansible.builtin.systemd: name=reflector.timer enabled=yes state=started 
+    ansible.builtin.systemd: name=ufw.service enabled=yes state=started 
   
   become: yes
 
