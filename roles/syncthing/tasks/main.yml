@@ -25,14 +25,15 @@
       group: root
       mode: '0644'
 
-  - name: systemctl daemon-reload
-    ansible.builtin.systemd:
-      daemon_reload: yes
-
-  - name: "systemctl enable syncthing@{{ ansible_user_id }}.service"
+  - name: "systemctl enable syncthing#{{ ansible_user_id }}.service (not systemd-homed)"
     ansible.builtin.systemd:
       name: "syncthing@{{ ansible_user_id }}.service"
       enabled: yes
+    when: not homed
+
+  - name: systemctl daemon-reload
+    ansible.builtin.systemd:
+      daemon_reload: yes
 
   - name: Set UFW incoming rules for Syncthing Listening port (TCP)
     community.general.ufw:
@@ -45,5 +46,11 @@
     loop: "{{ syncthing_allow_ip }}"
     when: syncthing_allow_ip is defined
 
-
   become: yes
+
+- name: systemctl enable syncthing.service (systemd-homed)
+  ansible.builtin.systemd:
+    name: "syncthing.service"
+    enabled: yes
+    scope: user
+  when: homed
