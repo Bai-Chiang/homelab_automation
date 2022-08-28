@@ -1,7 +1,49 @@
 ---
-- name: Automatic start-up of systemd user instances
-  ansible.builtin.command: "loginctl enable-linger {{ ansible_user_id }}"
+- block:
+
+  - name: pacman -S syncthing
+    community.general.pacman:
+      name: syncthing
+      state: present
+
+  - name: edit default syncthing@.service
+    ansible.builtin.file:
+      path: /etc/systemd/system/syncthing@.service.d
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+
+  - name: Stop syncthing journal spam
+    ansible.builtin.copy:
+      content: |
+        [Service]
+        ExecStart=
+        ExecStart=/bin/bash -c 'set -o pipefail; /usr/bin/syncthing -no-browser -no-restart -logflags=0 | grep -v "INFO: "'
+      dest: /etc/systemd/system/syncthing@.service.d/nospam.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: systemctl daemon-reload
+    ansible.builtin.systemd:
+      daemon_reload: yes
+
+  - name: "systemctl enable syncthing@{{ ansible_user_id }}.service"
+    ansible.builtin.systemd:
+      name: "syncthing@{{ ansible_user_id }}.service"
+      enabled: yes
+
+  - name: Set UFW incoming rules for Syncthing Listening port (TCP)
+    community.general.ufw:
+      rule: allow
+      direction: in
+      from: "{{ item }}"
+      proto: tcp
+      port: 22000
+      comment: "Allow Syncthing listening port (TCP) from {{ item }}"
+    loop: "{{ syncthing_allow_ip }}"
+    when: syncthing_allow_ip is defined
+
+
   become: yes
-
-- import_tasks: relay.yml
-
