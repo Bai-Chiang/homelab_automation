@@ -415,7 +415,9 @@ fi
 # btrfs as root 
 # https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
 KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
-KERNEL_CMD="$KERNEL_CMD $OTHER_KERNEL_CMD"
+# modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
+# https://wiki.archlinux.org/title/PC_speaker#Globally
+KERNEL_CMD="$KERNEL_CMD modprobe.blacklist=pcspkr $OTHER_KERNEL_CMD"
 
 
 #echo "

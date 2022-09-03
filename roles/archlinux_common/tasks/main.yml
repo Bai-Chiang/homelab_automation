@@ -14,15 +14,15 @@
   - name: systemctl enable --now systemd-timesyncd.service
     ansible.builtin.systemd: name=systemd-timesyncd state=started enabled=yes
 
-  - name: Disable bell sound
-    ansible.builtin.lineinfile:
-      path: "{{ item.path }}"
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-      insertafter: "{{ item.insertafter }}"
-    loop:
-      - { path: /etc/inputrc, regexp: '^set bell-style', insertafter: '^#\s*set bell-style', line: set bell-style none }
-      - { path: /etc/profile, regexp: '^export LESS', insertafter: '#\s*export LESS', line: 'export LESS="$LESS -Q"' }
+  #- name: Disable bell sound
+  #  ansible.builtin.lineinfile:
+  #    path: "{{ item.path }}"
+  #    regexp: "{{ item.regexp }}"
+  #    line: "{{ item.line }}"
+  #    insertafter: "{{ item.insertafter }}"
+  #  loop:
+  #    - { path: /etc/inputrc, regexp: '^set bell-style', insertafter: '^#\s*set bell-style', line: set bell-style none }
+  #    - { path: /etc/profile, regexp: '^export LESS', insertafter: '#\s*export LESS', line: 'export LESS="$LESS -Q"' }
 
   - name: Enable pacman parallel downloads
     ansible.builtin.lineinfile:
