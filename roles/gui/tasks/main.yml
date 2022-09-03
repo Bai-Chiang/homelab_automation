@@ -31,6 +31,12 @@
   - name: Install other packages
     community.general.pacman: name={{ other_pkgs }} state=present
 
+  - name: systemctl enable cups.socket
+    ansible.builtin.systemd:
+      name: cups.socket
+      enabled: yes
+    when: '"cups" in other_pkgs'
+
   become: yes
 
 - import_tasks: dotfiles.yml  
