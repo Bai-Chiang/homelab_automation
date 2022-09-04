@@ -13,7 +13,7 @@
   - name: Install GUI libvirt packages
     community.general.pacman:
       name:
-        - qemu-full
+        - qemu-desktop
         - libvirt
         - virt-manager
         - edk2-ovmf    # UEFI support
@@ -60,7 +60,7 @@
     community.general.homectl:
       name: "{{ ansible_user_id }}"
       password: "{{ ansible_become_password }}"
-      memberof: wheel,libvirt
+      memberof: "{{ ansible_user_id }},wheel,libvirt"
     when: homed
 
   - name: systemctl enable libvirtd.service
@@ -68,7 +68,7 @@
 
   - name: Auto-start VMs for headless install
     include_tasks: auto-start_VMs.yml
-    when: libvirt_headless
+    when: libvirt_headless and ( auto_start_vm_list is defined )
 
   become: yes
 
