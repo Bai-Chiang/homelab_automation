@@ -1,8 +1,17 @@
-inventory
-/*.yml
-host_vars/*
+*
+!/.gitignore
+!/LICENSE
+!/README.md
 
-!*example.yml
-create_*.sh
-!create_vm.sh
+!/ansible.cfg
+!/hosts.ini
+!/roles
+!/roles/*
+!/tasks
+!/tasks/*
 
+!/arch_install.sh
+!/create_vm.sh
+!*_example*
+!/homed.sh
+!/iommu.sh
