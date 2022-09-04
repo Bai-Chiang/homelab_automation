@@ -2,6 +2,7 @@
 - block:
 
   - import_tasks: raid.yml
+    when: crypttab_entries is defined
 
   - import_tasks: btrfs_scrub.yml
     when: btrfs_scrub_path is defined
