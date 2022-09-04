@@ -278,29 +278,6 @@ sed -i 's/subvolid=[0-9]*,//g' /mnt/etc/fstab
 
 echo "
 ######################################################
-# 9p shared directories
-# https://wiki.archlinux.org/title/libvirt#9p
-######################################################
-"
-MOUNT_TAG_9P=" "
-while [ -n "$MOUNT_TAG_9P" ]; do
-    read -p "Enter the mount tag for 9p shared directory. (empty to skipll): " MOUNT_TAG_9P
-    if [ -n "$MOUNT_TAG_9P" ] ; then
-        read -p "Enter the destination point : " DEST_9P
-        arch-chroot /mnt mkdir ${DEST_9P}
-        echo "$MOUNT_TAG_9P  $DEST_9P  9p  trans=virtio,version=9p2000.L  0 0"  >> /mnt/etc/fstab
-        read -p "owner : " OWNER_9P
-        read -p "group : " GROUP_9P
-        arch-chroot /mnt chown ${OWNER_9P}:${GROUP_9P} ${DEST_9P}
-        read -p "mode : " MODE_9P
-        arch-chroot /mnt chmod ${MODE_9P} ${DEST_9P}
-        echo '9pnet_virtio' > /mnt/etc/modules-load.d/9pnet_virtio.conf
-    fi
-done
-
-
-echo "
-######################################################
 # Set time zone
 # https://wiki.archlinux.org/title/Installation_guide#Time_zone
 ######################################################
