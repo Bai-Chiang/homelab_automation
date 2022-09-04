@@ -8,7 +8,7 @@ TO="{{ msmtp_to }}"
 /usr/bin/systemctl is-active --quiet --all "btrfs-scrub@*.service"
 BTRFS_SCRUB_EXIT=$?
 if [ $BTRFS_SCRUB_EXIT -eq 0 ] ; then
-    UPDATE_MSG="${UPDATE_MSG}btrfs-scrub is running. Skipped update.\n"
+    UPDATE_MSG="btrfs-scrub is running. Skipped update.\n"
 else
     # Update system
     UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
@@ -31,6 +31,11 @@ if [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
 else
     # Reboot all VMs
     systemctl restart 'libvirt_start@*' --all
+fi
+{% elif btrfs_scrub_time is defined %}
+if [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
+    # Reboot after update
+    systemctl reboot
 fi
 {% else %}
 systemctl reboot
