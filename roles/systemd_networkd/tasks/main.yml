@@ -1,0 +1,17 @@
+---
+- block:
+  - name: Delete default network configuration on Archlinux
+    ansible.builtin.file:
+      path: /etc/systemd/network/20-ethernet.network
+      state: absent
+    when: ansible_facts['os_family'] == "Archlinux"
+
+  - name: Copy systemd-network configs
+    ansible.builtin.copy:
+      src: files/systemd_networkd/
+      dest: /etc/systemd/network/
+      owner: root
+      group: root
+      mode: '0644'
+    
+  become: yes
