@@ -5,6 +5,8 @@
 
 !/ansible.cfg
 !/hosts.ini
+!*_example*
+
 !/roles
 !/roles/*
 !/tasks
@@ -12,6 +14,5 @@
 
 !/arch_install.sh
 !/create_vm.sh
-!*_example*
 !/homed.sh
 !/iommu.sh

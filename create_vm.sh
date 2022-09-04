@@ -16,6 +16,7 @@ chmod 700 ${SHARED_DIR}
 
 virt-install \
     --name ${VM_NAME} \
+    --autostart \
     --memory ${RAM_SIZE} \
     --memorybacking allocation.mode=ondemand \
     --cpu host-passthrough,cache.mode=passthrough,topology.sockets=1,topology.cores=${CPU_CORES},topology.threads=1 \
@@ -23,9 +24,9 @@ virt-install \
     --cdrom ${ISO} \
     --disk path=/var/lib/libvirt/images/${VM_NAME}.qcow2,size=${VM_SIZE},bus=virtio \
     --filesystem type=mount,accessmode=mapped,source.dir=${SHARED_DIR},target.dir=${MOUNT_TAG} \
-    #--network bridge=br0,model.type=virtio \
+    --network bridge=br0,model.type=virtio \
     #--network none \
-    --network type=direct,source=${NIC},source.mode=passthrough,model.type=virtio,trustGuestRxFilters=yes \
+    #--network type=direct,source=${NIC},source.mode=passthrough,model.type=virtio,trustGuestRxFilters=yes \
     --graphics none \
     --autoconsole text \
     --serial pty \
