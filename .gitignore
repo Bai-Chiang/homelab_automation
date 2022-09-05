@@ -8,7 +8,7 @@
 !*_example*
 
 !/roles
-!/roles/*
+!/roles/**
 !/tasks
 !/tasks/*
 
