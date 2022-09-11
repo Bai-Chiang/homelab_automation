@@ -22,7 +22,7 @@
     ansible.builtin.lineinfile:
       path: /etc/ssh/sshd_config
       regexp: '^Port'
-      line: "Port {{ ssh_port }}"
+      line: "Port {{ ansible_port }}"
       insertafter: '#\s*Port'
       validate: /usr/sbin/sshd -T -f %s
     #notify: restart sshd
@@ -46,7 +46,7 @@
         [SSH-custom]
         title=SSH server
         description=SSH server
-        ports={{ ssh_port }}/tcp
+        ports={{ ansible_port }}/tcp
       create: yes
       marker: "; SSH {mark} ANSIBLE MANAGED BLOCK"
 
