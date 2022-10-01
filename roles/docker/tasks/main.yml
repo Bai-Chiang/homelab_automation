@@ -7,7 +7,7 @@
   - include_tasks: debian_install_docker.yml
     when: "'docker-ce' not in ansible_facts.packages"
 
-  when: ansible_facts['distribution'] == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
   become: yes
 
 
