@@ -3,7 +3,11 @@ Description=create podman bridge networks
 
 [Service]
 {% for item in podman_bridges %}
+{% if item.subnet is defined %}
 ExecStart=-/usr/bin/podman network create --subnet {{ item.subnet }} {{ item.name }}
+{% else %}
+ExecStart=-/usr/bin/podman network create {{ item.name }}
+{% endif %}
 {% endfor %}
 
 Type=oneshot

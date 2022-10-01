@@ -1,10 +1,11 @@
 ---
 - name: container config direcoty
   ansible.builtin.file:
-    path: "{{ container_configs_dir.path }}/swag"
+    path: "/home/{{ podman_user }}/container_configs/swag"
     state: directory
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ podman_user }}"
+    group: "{{ podman_user }}"
+    mode: '0700'
 
 - name: swag.service
   ansible.builtin.template:
@@ -14,14 +15,16 @@
     group: root
     mode: '0644'
 
-- name: systemctl daemon-reload
+- name: systemctl --user daemon-reload
   ansible.builtin.systemd:
     daemon_reload: yes
+    scope: user
 
-- name: systemctl enable swag.service
+- name: systemctl --user enable swag.service
   ansible.builtin.systemd:
     name: swag
     enabled: yes
+    scope: user
 
 - name: Allow ufw incoming rules for web interface
   community.general.ufw:
@@ -33,5 +36,7 @@
     proto: tcp
     port: 443
     comment: "Allow access web interface from {{ item }}"
+  when: ansible_facts['os_family'] == "Archlinux" or ansible_facts['os_family'] == "Debian"
+  become: yes
   loop: "{{ allow_web_from }}"
 
