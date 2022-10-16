@@ -27,43 +27,6 @@
       enabled: yes
       scope: user
 
-  #- name: Set UFW incoming roles for Syncthing WebUI
-  #  community.general.ufw:
-  #    route: yes
-  #    rule: allow
-  #    interface_in: "{{ static_nic }}"
-  #    from_ip: "{{ item }}"
-  #    to_ip: any
-  #    proto: tcp
-  #    port: 8384
-  #    comment: "Allow Syncthing application WebUI from {{ item }}"
-  #  loop: "{{ syncthing_allow_web_from }}"
-
-
-  #- name: Set UFW incoming rules for Syncthing Listening port (UDP)
-  #  community.general.ufw:
-  #    route: yes
-  #    rule: allow
-  #    interface_in: "{{ static_nic }}"
-  #    from_ip: "{{ item }}"
-  #    to_ip: any
-  #    proto: udp
-  #    port: 22000
-  #    comment: "Allow Syncthing listening port (TCP) from {{ item }}"
-  #  loop: "{{ syncthing_allow_from }}"
-
-  #- name: Set UFW incoming rules for Syncthing Protocol discovery
-  #  community.general.ufw:
-  #    route: yes
-  #    rule: allow
-  #    interface_in: "{{ static_nic }}"
-  #    from_ip: "{{ item }}"
-  #    to_ip: any
-  #    proto: udp
-  #    port: 21027
-  #    comment: "Allow Syncthing Protocol discovery from {{ item }}"
-  #  loop: "{{ syncthing_allow_from }}"
-
   become: yes
   become_user: "{{ podman_user }}"
 
@@ -76,4 +39,5 @@
     immediate: yes
     state: enabled
   loop: "{{ syncthing_firewall }}"
+  when: syncthing_firewall is defined
   become: yes

@@ -38,11 +38,14 @@
     stat:
       path: "/var/lib/systemd/linger/{{ podman_user }}"
     register: podman_user_lingering
-    when: podman_user != "root"
+    when:
+      - enable_lingering
+      - podman_user != "root"
 
   - name: Enable lingering
     command: "loginctl enable-linger {{ podman_user }}"
     when:
+      - enable_lingering
       - podman_user != "root"
       - not podman_user_lingering.stat.exists
 
@@ -85,10 +88,6 @@
       group: "{{ podman_user }}"
       mode: '0700'
 
-#  #- import_tasks: common_ufw.yml
-#  #  when: ansible_facts['os_family'] == "Archlinux" or ansible_facts['os_family'] == "Debian"
-
-#  - name: create podman-system-prune.service/timer and podman-bridges.service
   - name: create podman-system-prune.service/timer
     ansible.builtin.template:
       src: "{{ item }}.j2"
@@ -99,14 +98,12 @@
     loop:
       - podman-system-prune.service
       - podman-system-prune.timer
-#- podman-bridges.service
 
   - name: systemctl --user daemon-reload
     ansible.builtin.systemd:
       daemon_reload: yes
       scope: user
   
-#  - name: systemctl --user enable podman-system-prune.timer and podman-bridges.service
   - name: systemctl --user enable podman-system-prune.timer
     ansible.builtin.systemd:
       name: "{{ item }}"
@@ -115,7 +112,6 @@
     loop:
       - podman-system-prune.timer
       - podman-auto-update.timer
-#- podman-bridges.service
 
   become: yes
   become_user: "{{ podman_user }}"

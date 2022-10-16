@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 UCODE_PKG="intel-ucode"
-BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
+BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft openssh"
 #BASE_PKGS="base-selinux linux-firmware sudo-selinux selinux-python efibootmgr iptables-nft"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
@@ -606,7 +606,7 @@ read -p "Do you want to enable ssh? [y/N] " IS_SSH
 : "${IS_SSH:=n}"
 IS_SSH="${IS_SSH,,}"
 if [ "$IS_SSH" = y ] ; then
-    arch-chroot /mnt pacman --noconfirm -S openssh
+    arch-chroot /mnt pacman --noconfirm -S --needed openssh
     arch-chroot /mnt systemctl enable sshd.service
     echo " Enabled sshd.service"
     echo "ssh port? (22)"
