@@ -1,0 +1,43 @@
+---
+- block:
+  - name: container config direcoty
+    ansible.builtin.file:
+      path: "{{ container_configs_dir }}/sonarr"
+      state: directory
+      owner: "{{ podman_user }}"
+      group: "{{ podman_user }}"
+      mode: '0700'
+
+  - name: sonarr.service
+    ansible.builtin.template:
+      src: sonarr.service.j2
+      dest: "/home/{{ podman_user }}/.config/systemd/user/sonarr.service"
+      owner: "{{ podman_user }}"
+      group: "{{ podman_user }}"
+      mode: '0600'
+
+  - name: systemctl --user daemon-reload
+    ansible.builtin.systemd:
+      daemon_reload: yes
+      scope: user
+
+  #- name: systemctl --user enable jellyfin.service
+  #  ansible.builtin.systemd:
+  #    name: jellyfin
+  #    enabled: yes
+  #    scope: user
+
+  #- name: Set ufw incoming rules for Jellyfin web interface
+  #  community.general.ufw:
+  #    route: yes
+  #    rule: allow
+  #    interface_in: "{{ static_nic }}"
+  #    from_ip: "{{ item }}"
+  #    to_ip: any
+  #    proto: tcp
+  #    port: 8096
+  #    comment: "Allow access Jellyfin web interface (http) from {{ jellyfin_allow_from }}"
+  #  loop: "{{ jellyfin_allow_from }}"
+
+  become: yes
+  become_user: "{{ podman_user }}"

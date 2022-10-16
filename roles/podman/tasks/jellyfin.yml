@@ -1,37 +1,42 @@
 ---
-- name: container config direcoty
-  ansible.builtin.file:
-    path: "{{ container_configs_dir.path }}/jellyfin"
-    state: directory
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+- block:
+  - name: container config direcoty
+    ansible.builtin.file:
+      path: "{{ container_configs_dir }}/jellyfin"
+      state: directory
+      owner: "{{ podman_user }}"
+      group: "{{ podman_user }}"
+      mode: '0700'
 
-- name: jellyfin.service
-  ansible.builtin.template:
-    src: jellyfin.service.j2
-    dest: /etc/systemd/system/jellyfin.service
-    owner: root
-    group: root
-    mode: '0644'
+  - name: jellyfin.service
+    ansible.builtin.template:
+      src: jellyfin.service.j2
+      dest: "/home/{{ podman_user }}/.config/systemd/user/jellyfin.service"
+      owner: "{{ podman_user }}"
+      group: "{{ podman_user }}"
+      mode: '0600'
 
-- name: systemctl daemon-reload
-  ansible.builtin.systemd:
-    daemon_reload: yes
+  - name: systemctl --user daemon-reload
+    ansible.builtin.systemd:
+      daemon_reload: yes
+      scope: user
 
-- name: systemctl enable jellyfin.service
-  ansible.builtin.systemd:
-    name: jellyfin
-    enabled: yes
+  - name: systemctl --user enable jellyfin.service
+    ansible.builtin.systemd:
+      name: jellyfin
+      enabled: yes
+      scope: user
 
-#- name: Set ufw incoming rules for Jellyfin web interface
-#  community.general.ufw:
-#    route: yes
-#    rule: allow
-#    interface_in: "{{ static_nic }}"
-#    from_ip: "{{ item }}"
-#    to_ip: any
-#    proto: tcp
-#    port: 8096
-#    comment: "Allow access Jellyfin web interface (http) from {{ jellyfin_allow_from }}"
-#  loop: "{{ jellyfin_allow_from }}"
+  become: yes
+  become_user: "{{ podman_user }}"
 
+
+- name: Set firewall rules for Jellyfin web interface
+  ansible.posix.firewalld:
+    rich_rule: "{{ item }}"
+    zone: "{{ firewalld_default_zone }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ jellyfin_firewall }}"
+  become: yes

@@ -13,13 +13,26 @@
       state: present
     when: ansible_facts['os_family'] == "Debian"
 
+  - name: dnf install podman
+    ansible.builtin.dnf:
+      name: podman
+      state: present
+    when: ansible_facts['os_family'] == "RedHat"
+
   - name: create separate podman user
     # disable the podman account ( don't allow login )
     ansible.builtin.user:
       name: "{{ podman_user }}"
       passworkd_lock: yes
-      expires: 1
-    when: podman_user != ansible_user_id
+      shell: "/usr/bin/nologin"
+    when: 
+      - podman_user != ansible_user_id
+      - podman_user != "root"
+
+  - name: Get {{ podman_user }} info
+    ansible.builtin.getent:
+      database: passwd
+      key: "{{ podman_user }}"
 
   - name: Check lingering
     stat:
@@ -29,13 +42,36 @@
 
   - name: Enable lingering
     command: "loginctl enable-linger {{ podman_user }}"
-    when: not podman_user_lingering.stat.exists
+    when:
+      - podman_user != "root"
+      - not podman_user_lingering.stat.exists
+
+  - name: Set /etc/subuid
+    ansible.builtin.copy:
+      content: |
+        {{ podman_user }}:100000:524288
+      dest: /etc/subuid
+      owner: root
+      group: root
+      mode: '0644'
+    when: ansible_facts['os_family'] == "Archlinux"
+
+  - name: Set /etc/subgid
+    ansible.builtin.copy:
+      content: |
+        {{ podman_user }}:100000:524288
+      dest: /etc/subgid
+      owner: root
+      group: root
+      mode: '0644'
+    when: ansible_facts['os_family'] == "Archlinux"
+
   become: yes
 
 - block:
   - name: setup container configs directory
     ansible.builtin.file:
-      path: "/home/{{ podman_user }}/container_configs"
+      path: "{{ container_configs_dir }}"
       state: directory
       owner: "{{ podman_user }}"
       group: "{{ podman_user }}"
@@ -49,10 +85,11 @@
       group: "{{ podman_user }}"
       mode: '0700'
 
-  #- import_tasks: common_ufw.yml
-  #  when: ansible_facts['os_family'] == "Archlinux" or ansible_facts['os_family'] == "Debian"
+#  #- import_tasks: common_ufw.yml
+#  #  when: ansible_facts['os_family'] == "Archlinux" or ansible_facts['os_family'] == "Debian"
 
-  - name: create podman-system-prune.service/timer and podman-bridges.service
+#  - name: create podman-system-prune.service/timer and podman-bridges.service
+  - name: create podman-system-prune.service/timer
     ansible.builtin.template:
       src: "{{ item }}.j2"
       dest: "/home/{{ podman_user }}/.config/systemd/user/{{ item }}"
@@ -62,26 +99,30 @@
     loop:
       - podman-system-prune.service
       - podman-system-prune.timer
-      - podman-bridges.service
+#- podman-bridges.service
 
   - name: systemctl --user daemon-reload
     ansible.builtin.systemd:
       daemon_reload: yes
       scope: user
   
-  - name: systemctl --user enable podman-system-prune.timer and podman-bridges.service
+#  - name: systemctl --user enable podman-system-prune.timer and podman-bridges.service
+  - name: systemctl --user enable podman-system-prune.timer
     ansible.builtin.systemd:
       name: "{{ item }}"
       enabled: yes
       scope: user
     loop:
       - podman-system-prune.timer
-      - podman-bridges.service
-
-  - include_tasks: "{{ container_name }}.yml"
-    loop: "{{ podman_containers }}"
-    loop_control:
-      loop_var: container_name
+      - podman-auto-update.timer
+#- podman-bridges.service
 
   become: yes
   become_user: "{{ podman_user }}"
+
+
+- include_tasks: "{{ container_name }}.yml"
+  loop: "{{ podman_containers }}"
+  loop_control:
+    loop_var: container_name
+

@@ -17,24 +17,31 @@ ExecStart=/usr/bin/podman run \
 	--cgroups=no-conmon \
 	--rm \
 	--sdnotify=conmon \
-	--detach \
 	--replace \
+	--detach \
 	--label io.containers.autoupdate=registry \
-	--uidmap 1000:0:1 \
-	--uidmap 0:1:1000 \
-	--name=jellyfin \
-	--hostname=jellyfin \
-	--env PUID=1000 \
-	--env PGID=1000 \
-	--env TZ={{ TZ }} \
+	--name jellyfin \
 	--publish 8096:8096/tcp \
-	--volume {{ container_configs_dir }}/jellyfin:/config:Z \
+	--user {{ getent_passwd[podman_user].1}}:{{ getent_passwd[podman_user].2}} \
+	--userns keep-id \
+	--volume {{ container_configs_dir }}/jellyfin/cache:/cache:Z \
+	--volume {{ container_configs_dir }}/jellyfin/config:/config:Z \
 	--volume {{ jellyfin_library }}:/media:ro \
-	lscr.io/linuxserver/jellyfin:latest
+    docker.io/jellyfin/jellyfin:latest
 ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all
+
+# Security Features
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+PrivateMounts=yes
+ProtectHostname=yes
 
 [Install]
 WantedBy=default.target

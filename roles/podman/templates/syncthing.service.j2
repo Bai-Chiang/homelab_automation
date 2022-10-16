@@ -1,37 +1,43 @@
-# https://github.com/linuxserver/docker-syncthing
+# container-syncthing.service
 
 [Unit]
-Description=Syncthing container
+Description=Podman container-syncthing.service
+Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
 After=network-online.target
-Requires=podman-bridges.service
+RequiresMountsFor=%t/containers
 
 [Service]
-TimeoutStartSec=0
-ExecStartPre=-/usr/bin/podman kill syncthing
-ExecStartPre=-/usr/bin/podman rm syncthing
-ExecStartPre=/usr/bin/podman pull lscr.io/linuxserver/syncthing:latest
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=on-failure
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/%n.ctr-id
 ExecStart=/usr/bin/podman run \
-        --detach \
-        --name=syncthing \
-        --network {{ syncthing_bridge_name }}:ip={{ syncthing_container_ip }} \
-        --replace \
-        --restart unless-stopped \
-        -e PUID=1000 \
-        -e PGID=1000 \
-        -e TZ={{ timezone }} \
-        -p 22000:22000/tcp \
-        -p 22000:22000/udp \
-        -v {{ container_configs_dir.path }}/syncthing:/config \
+	--cidfile=%t/%n.ctr-id \
+	--cgroups=no-conmon \
+	--rm \
+	--sdnotify=conmon \
+	--detach \
+	--replace \
+	--label io.containers.autoupdate=registry \
+    --uidmap 1000:0:1 \
+	--uidmap 0:1:1000 \
+	--name=syncthing \
+	--hostname=syncthing \
+	--env PUID=1000 \
+	--env PGID=1000 \
+	--env TZ={{ TZ }} \
+	--publish 8384:8384/tcp \
+	--publish 22000:22000/tcp \
+	--volume {{ container_configs_dir }}/syncthing:/config:Z \
 {% for item in syncthing_data_dir %}
-        -v {{ item.src }}:/{{ item.name }} \
+    --volume {{ item.src }}:{{ item.dest }}:rw \
 {% endfor %}
-        lscr.io/linuxserver/syncthing:latest
-ExecStop=/usr/bin/podman stop syncthing
-
-Type=forking
-Restart=always
-RestartSec=5
+	lscr.io/linuxserver/syncthing:latest
+ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
+ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
+Type=notify
+NotifyAccess=all
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

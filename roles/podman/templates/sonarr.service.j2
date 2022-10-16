@@ -1,7 +1,7 @@
-# container-jellyfin.service
+# container-sonarr.service
 
 [Unit]
-Description=Podman container-jellyfin.service
+Description=Podman container-sonarr.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
 After=network-online.target
@@ -22,15 +22,15 @@ ExecStart=/usr/bin/podman run \
 	--label io.containers.autoupdate=registry \
 	--uidmap 1000:0:1 \
 	--uidmap 0:1:1000 \
-	--name=jellyfin \
-	--hostname=jellyfin \
+	--name=sonarr \
+	--hostname=sonarr \
 	--env PUID=1000 \
 	--env PGID=1000 \
 	--env TZ={{ TZ }} \
-	--publish 8096:8096/tcp \
-	--volume {{ container_configs_dir }}/jellyfin:/config:Z \
-	--volume {{ jellyfin_library }}:/media:ro \
-	lscr.io/linuxserver/jellyfin:latest
+	--publish 8989:8989/tcp \
+	--volume {{ container_configs_dir }}/sonarr:/config:Z \
+    --volume {{ arr_media_dir }}:/data:rw \
+	lscr.io/linuxserver/sonarr:latest
 ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
 Type=notify
