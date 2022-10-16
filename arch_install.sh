@@ -618,6 +618,23 @@ fi
 
 echo "
 ######################################################
+# Firewalld
+# https://wiki.archlinux.org/title/firewalld
+######################################################
+"
+arch-chroot /mnt pacman --noconfirm -S firewalld
+arch-chroot /mnt systemctl enable firewalld.service
+echo "Set default firewall zone to drop."
+arch-chroot /mnt firewall-offline-cmd --set-default-zone=drop
+if [ "$IS_SSH" = y ] ; then
+    echo "modify default ssh service with new port."
+    sed "/port=/s/port=\"22\"/port=\"${SSH_PORT}\"/" /mnt/usr/lib/firewalld/services/ssh.xml  > /mnt/etc/firewalld/services/ssh.xml
+    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service=ssh
+fi
+
+
+echo "
+######################################################
 # User account
 # https://wiki.archlinux.org/title/Users_and_groups
 ######################################################

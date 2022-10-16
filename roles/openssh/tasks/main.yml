@@ -39,25 +39,25 @@
       - { regexp: '^KbdInteractiveAuthentication', line: KbdInteractiveAuthentication no, insertafter: '^KbdInteractiveAuthentication' }
       - { regexp: '^AuthenticationMethods', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication' }
 
-  - name: Add custom ssh rule to UFW
-    ansible.builtin.blockinfile:
-      path: /etc/ufw/applications.d/ufw-custom
-      block: | 
-        [SSH-custom]
-        title=SSH server
-        description=SSH server
-        ports={{ ansible_port }}/tcp
-      create: yes
-      marker: "; SSH {mark} ANSIBLE MANAGED BLOCK"
+  #- name: Add custom ssh rule to UFW
+  #  ansible.builtin.blockinfile:
+  #    path: /etc/ufw/applications.d/ufw-custom
+  #    block: | 
+  #      [SSH-custom]
+  #      title=SSH server
+  #      description=SSH server
+  #      ports={{ ansible_port }}/tcp
+  #    create: yes
+  #    marker: "; SSH {mark} ANSIBLE MANAGED BLOCK"
 
-  - name: Set ufw rule for ssh
-    community.general.ufw:
-      rule: limit
-      direction: in
-      from: "{{ item }}"
-      name: SSH-custom
-      comment: "Limit ssh incoming from {{ item }}"
-    loop: "{{ ssh_allow_ip }}"
+  - name: Firewall rule for ssh
+    ansible.posix.firewalld:
+      rich_rule: "{{ item }}"
+      zone: "{{ firewalld_default_zone }}"
+      permanent: yes
+      immediate: no
+      state: enabled
+    loop: "{{ ssh_firewall }}"
 
   become: yes
 
