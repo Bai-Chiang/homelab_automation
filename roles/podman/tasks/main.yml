@@ -1,9 +1,12 @@
 ---
 - block:
   
-  - name: pacman -S podman
+  - name: pacman -S podman fuse-overlayfs slirp4netns
     community.general.pacman:
-      name: podman
+      name:
+        - podman
+        - fuse-overlayfs
+        - slirp4netns
       state: present
     when: ansible_facts['os_family'] == "Archlinux"
 
@@ -52,7 +55,7 @@
   - name: Set /etc/subuid
     ansible.builtin.copy:
       content: |
-        {{ podman_user }}:100000:524288
+        {{ podman_user }}:524288:65536
       dest: /etc/subuid
       owner: root
       group: root
@@ -62,7 +65,7 @@
   - name: Set /etc/subgid
     ansible.builtin.copy:
       content: |
-        {{ podman_user }}:100000:524288
+        {{ podman_user }}:524288:65536
       dest: /etc/subgid
       owner: root
       group: root
