@@ -33,25 +33,25 @@
     state: present
   loop: "{{ nfs_mount_point }}"
 
-- name: Add custom NFS rule to UFW
-  ansible.builtin.blockinfile:
-    path: /etc/ufw/applications.d/ufw-custom
-    block: | 
-      [NFS-custom]
-      title=NFS server
-      description=NFS server
-      ports=2049/tcp
-    create: yes
-    marker: "; NFS {mark} ANSIBLE MANAGED BLOCK"
-
-- name: Configure firewall for NFS
-  community.general.ufw:
-    rule: allow
-    direction: in
-    name: NFS-custom
-    from: "{{ item }}"
-    comment: "Allow NFS from {{ item }}"
-  loop: "{{ nfs_allow_ip }}"
+#- name: Add custom NFS rule to UFW
+#  ansible.builtin.blockinfile:
+#    path: /etc/ufw/applications.d/ufw-custom
+#    block: | 
+#      [NFS-custom]
+#      title=NFS server
+#      description=NFS server
+#      ports=2049/tcp
+#    create: yes
+#    marker: "; NFS {mark} ANSIBLE MANAGED BLOCK"
+#
+#- name: Configure firewall for NFS
+#  community.general.ufw:
+#    rule: allow
+#    direction: in
+#    name: NFS-custom
+#    from: "{{ item }}"
+#    comment: "Allow NFS from {{ item }}"
+#  loop: "{{ nfs_allow_ip }}"
 
 - name: systemctl enable nfs-server.service
   ansible.builtin.systemd:

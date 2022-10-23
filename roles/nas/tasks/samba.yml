@@ -9,25 +9,25 @@
     validate: testparm -s %s
   #notify: restart samba
 
-- name: Add custom Samba rule to UFW
-  ansible.builtin.blockinfile:
-    path: /etc/ufw/applications.d/ufw-custom
-    block: | 
-      [Samba-custom]
-      title=SMB/CIFS server
-      description=SMB/CIFS server
-      ports=445/tcp
-    create: yes
-    marker: "; SMB/CIFS {mark} ANSIBLE MANAGED BLOCK"
-
-- name: Configure firewall for CIFS
-  community.general.ufw:
-    rule: allow
-    direction: in
-    name: Samba-custom
-    from: "{{ item }}"
-    comment: "Allow SMB/CIFS from {{ item }}"
-  loop: "{{ CIFS_allow_ip }}"
+#- name: Add custom Samba rule to UFW
+#  ansible.builtin.blockinfile:
+#    path: /etc/ufw/applications.d/ufw-custom
+#    block: | 
+#      [Samba-custom]
+#      title=SMB/CIFS server
+#      description=SMB/CIFS server
+#      ports=445/tcp
+#    create: yes
+#    marker: "; SMB/CIFS {mark} ANSIBLE MANAGED BLOCK"
+#
+#- name: Configure firewall for CIFS
+#  community.general.ufw:
+#    rule: allow
+#    direction: in
+#    name: Samba-custom
+#    from: "{{ item }}"
+#    comment: "Allow SMB/CIFS from {{ item }}"
+#  loop: "{{ CIFS_allow_ip }}"
 
 - name: Add samba user
   shell: (echo {{ smb_passwd }}; echo {{ smb_passwd }}) | smbpasswd -s -a {{ ansible_user_id }}
