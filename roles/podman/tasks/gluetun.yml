@@ -1,26 +1,18 @@
 ---
 - block:
-  - name: sonarr container config direcoty
-    ansible.builtin.file:
-      path: "{{ container_configs_dir }}/sonarr"
-      state: directory
-      owner: "{{ podman_user }}"
-      group: "{{ podman_user }}"
-      mode: '0700'
-
-  - name: sonarr.service
+  - name: gluetun.service
     ansible.builtin.template:
-      src: sonarr.service.j2
-      dest: "/home/{{ podman_user }}/.config/systemd/user/sonarr.service"
+      src: gluetun.service.j2
+      dest: "/home/{{ podman_user }}/.config/systemd/user/gluetun.service"
       owner: "{{ podman_user }}"
       group: "{{ podman_user }}"
       mode: '0600'
 
-  #- name: systemctl --user enable jellyfin.service
-  #  ansible.builtin.systemd:
-  #    name: jellyfin
-  #    enabled: yes
-  #    scope: user
+  - name: systemctl --user enable gluetun.service
+    ansible.builtin.systemd:
+      name: gluetun
+      enabled: yes
+      scope: user
 
   #- name: Set ufw incoming rules for Jellyfin web interface
   #  community.general.ufw:

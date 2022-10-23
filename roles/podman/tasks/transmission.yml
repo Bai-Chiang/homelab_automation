@@ -1,26 +1,31 @@
 ---
 - block:
-  - name: sonarr container config direcoty
+  - name: transmission container config direcoty
     ansible.builtin.file:
-      path: "{{ container_configs_dir }}/sonarr"
+      path: "{{ container_configs_dir }}/transmission"
       state: directory
       owner: "{{ podman_user }}"
       group: "{{ podman_user }}"
       mode: '0700'
 
-  - name: sonarr.service
+  - name: transmission.service
     ansible.builtin.template:
-      src: sonarr.service.j2
-      dest: "/home/{{ podman_user }}/.config/systemd/user/sonarr.service"
+      src: transmission.service.j2
+      dest: "/home/{{ podman_user }}/.config/systemd/user/transmission.service"
       owner: "{{ podman_user }}"
       group: "{{ podman_user }}"
       mode: '0600'
 
-  #- name: systemctl --user enable jellyfin.service
+  #- name: systemctl --user daemon-reload
   #  ansible.builtin.systemd:
-  #    name: jellyfin
-  #    enabled: yes
+  #    daemon_reload: yes
   #    scope: user
+
+  - name: systemctl --user enable transmission.service
+    ansible.builtin.systemd:
+      name: transmission.service
+      enabled: yes
+      scope: user
 
   #- name: Set ufw incoming rules for Jellyfin web interface
   #  community.general.ufw:

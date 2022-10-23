@@ -1,6 +1,6 @@
 ---
 - block:
-  - name: container config direcoty
+  - name: jellyfin container config direcoty
     ansible.builtin.file:
       path: "{{ container_configs_dir }}/jellyfin"
       state: directory
@@ -15,11 +15,6 @@
       owner: "{{ podman_user }}"
       group: "{{ podman_user }}"
       mode: '0600'
-
-  - name: systemctl --user daemon-reload
-    ansible.builtin.systemd:
-      daemon_reload: yes
-      scope: user
 
   - name: systemctl --user enable jellyfin.service
     ansible.builtin.systemd:

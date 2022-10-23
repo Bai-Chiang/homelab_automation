@@ -1,10 +1,11 @@
-# container-syncthing.service
+# container-transmission.service
 
 [Unit]
-Description=Podman container-syncthing.service
+Description=Podman container-transmission.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
-After=network-online.target
+After=network-online.target gluetun.service
+Requires=gluetun.service
 RequiresMountsFor=%t/containers
 
 [Service]
@@ -24,24 +25,21 @@ ExecStart=/usr/bin/podman run \
     --uidmap 1000:0:1 \
     --uidmap 0:1:1000 \
     --uidmap 1001:1001:64536 \
-    --name=syncthing \
-    --hostname=syncthing \
+    --name=transmission \
+    --network=container:gluetun \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --publish 8384:8384/tcp \
-    --publish 22000:22000/tcp \
-    --volume {{ container_configs_dir }}/syncthing:/config:Z \
-{% for item in syncthing_data_dir %}
-    --volume {{ item.src }}:{{ item.dest }}:rw \
-{% endfor %}
-    lscr.io/linuxserver/syncthing:latest
+    --volume {{ container_configs_dir }}/transmission:/config:Z \
+    --volume {{ torrents_dir }}:/downloads:Z \
+    --volume {{ torrent_files_dir }}:/watch:Z \
+    lscr.io/linuxserver/transmission:latest
 ExecStop=/usr/bin/podman stop \
-    --ignore \
+    --ignore -t 10 \
     --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm \
     -f \
-    --ignore \
+    --ignore -t 10 \
     --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all

@@ -102,11 +102,6 @@
       - podman-system-prune.service
       - podman-system-prune.timer
 
-  - name: systemctl --user daemon-reload
-    ansible.builtin.systemd:
-      daemon_reload: yes
-      scope: user
-  
   - name: systemctl --user enable podman-system-prune.timer
     ansible.builtin.systemd:
       name: "{{ item }}"
@@ -125,3 +120,12 @@
   loop_control:
     loop_var: container_name
 
+
+- block:
+  - name: systemctl --user daemon-reload
+    ansible.builtin.systemd:
+      daemon_reload: yes
+      scope: user
+  become: yes
+  become_user: "{{ podman_user }}"
+  

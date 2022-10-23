@@ -11,7 +11,8 @@ RequiresMountsFor=%t/containers
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
 TimeoutStopSec=70
-ExecStartPre=/bin/rm -f %t/%n.ctr-id
+ExecStartPre=/bin/rm \
+    -f %t/%n.ctr-id
 ExecStart=/usr/bin/podman run \
     --cidfile=%t/%n.ctr-id \
     --cgroups=no-conmon \
@@ -32,8 +33,13 @@ ExecStart=/usr/bin/podman run \
     --volume {{ container_configs_dir }}/sonarr:/config:Z \
     --volume {{ arr_media_dir }}:/data:rw \
     lscr.io/linuxserver/sonarr:latest
-ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
-ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
+ExecStop=/usr/bin/podman stop \
+    --ignore -t 10 \
+    --cidfile=%t/%n.ctr-id
+ExecStopPost=/usr/bin/podman rm \
+    -f \
+    --ignore -t 10 \
+    --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all
 
