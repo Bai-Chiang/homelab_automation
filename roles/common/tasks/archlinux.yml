@@ -73,6 +73,19 @@
 
   #- name: systemctl enable --now ufw.service
   #  ansible.builtin.systemd: name=ufw.service enabled=yes state=started 
+
+  - name: Optimize AUR building CFLAGS
+    ansible.builtin.lineinfile:
+      path: /etc/makepkg.conf
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+      backrefs: "{{ item.backrefs }}"
+      insertafter: "{{ item.insertafter }}"
+    loop:
+      - { regexp: '^(CFLAGS=.*-march=).*( -pipe.*)', line: '\1native -O3\2', backrefs: yes, insertafter: '' }
+      - { regexp: '^RUSTFLAGS=', line: 'RUSTFLAGS="-C opt-level=3 -C target-cpu=native"', backrefs: no, insertafter: '^#RUSTFLAGS=' }
+      - { regexp: '^MAKEFLAGS=', line: 'MAKEFLAGS="-j$(nproc)"', backrefs: no, insertafter: '^#MAKEFLAGS=' }
+
   
   become: yes
 
