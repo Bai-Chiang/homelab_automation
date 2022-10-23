@@ -85,7 +85,15 @@
       - { regexp: '^(CFLAGS=.*-march=).*( -pipe.*)', line: '\1native -O3\2', backrefs: yes, insertafter: '' }
       - { regexp: '^RUSTFLAGS=', line: 'RUSTFLAGS="-C opt-level=3 -C target-cpu=native"', backrefs: no, insertafter: '^#RUSTFLAGS=' }
       - { regexp: '^MAKEFLAGS=', line: 'MAKEFLAGS="-j$(nproc)"', backrefs: no, insertafter: '^#MAKEFLAGS=' }
-
   
   become: yes
+
+
+- name: Create paru directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.cache/paru/clone"
+    state: directory
+    mode: '0755'
+
+
 
