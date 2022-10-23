@@ -2,9 +2,9 @@
 # Whether the home directory is mounted using systemd-homed
 homed: true
 
-libvirt_headless: false
-libvirt_bridge: true
-libvirt_NAT: true
+firewalld_default_zone: drop
+
+reflector_country: us
 
 gpu_drivers:
   - mesa
@@ -63,7 +63,6 @@ other_pkgs:
   - system-config-printer
   - gscan2pdf
   - yt-dlp
-  - mkvtoolnix-cli
 
 flatpak_pkgs:
   - com.github.tchx84.Flatseal
@@ -75,22 +74,20 @@ flatpak_pkgs:
   - org.mozilla.firefox
 
   - org.keepassxc.KeePassXC
-  - org.qbittorent.qBittorrent
   - org.kde.konversation
-  - im.riot.Riot
+  - com.calibre_ebook.calibre
+  - com.github.johnfactotum.Foliate
+  - org.qbittorent.qBittorrent
   - com.github.xournalpp.xournalpp
   - org.freedesktop.Sdk.Extension.texlive/x86_64/21.08
   - org.libreoffice.LibreOffice
-  - com.github.johnfactotum.Foliate
-  #- com.github.iwalton3.jellyfin-media-player
 
   - com.valvesoftware.Steam
   - com.usebottles.bottles
 
-pip_pkgs:
-  - numpy
-  - ipython
-  - scipy
-  - matplotlib
 
+
+libvirt_headless: false
+libvirt_bridge: true
+libvirt_NAT: true
 

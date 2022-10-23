@@ -3,9 +3,9 @@
 # Whether the home directory is mounted using systemd-homed
 homed: false
 
-ansible_user: tux
-ansible_port: 22
-ansible_become_password: sudopassword
+firewalld_default_zone: drop
+
+reflector_country: us
 
 
 # networkd_static

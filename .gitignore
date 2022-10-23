@@ -11,6 +11,8 @@
 !/roles/**
 !/tasks
 !/tasks/*
+!/host_vars
+!/host_vars/*example.yml
 
 !/arch_install.sh
 !/create_vm.sh

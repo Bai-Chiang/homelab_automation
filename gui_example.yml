@@ -22,12 +22,8 @@
     - import_tasks: tasks/update.yml
 
   roles:
-    - archlinux_common
+    - common
     - gui
     - libvirt
-    - pip
 
-  #tasks:
 
-  post_tasks:
-    - import_tasks: tasks/ufw.yml
