@@ -7,15 +7,15 @@ BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
 ## server example
-KERNEL_PKGS="linux-hardened"
-FS_PKGS="dosfstools btrfs-progs"
+#KERNEL_PKGS="linux-hardened"
+#FS_PKGS="dosfstools btrfs-progs"
 #OTHER_KERNEL_CMD="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 # desktop example
-#KERNEL_PKGS="linux"
-#FS_PKGS="dosfstools e2fsprogs btrfs-progs"
-#OTHER_PKGS="man-db man-pages texinfo vim"
-#OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
+KERNEL_PKGS="linux"
+FS_PKGS="dosfstools e2fsprogs btrfs-progs"
+OTHER_PKGS="man-db man-pages texinfo vim"
+OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
 
 
 ######################################################
