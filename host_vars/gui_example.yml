@@ -74,12 +74,6 @@ flatpak_pkgs:
   - org.mozilla.firefox
 
   - org.keepassxc.KeePassXC
-  - org.kde.konversation
-  - com.calibre_ebook.calibre
-  - com.github.johnfactotum.Foliate
-  - org.qbittorent.qBittorrent
-  - com.github.xournalpp.xournalpp
-  - org.freedesktop.Sdk.Extension.texlive/x86_64/21.08
   - org.libreoffice.LibreOffice
 
   - com.valvesoftware.Steam
