@@ -30,8 +30,8 @@ ExecStart=/usr/bin/podman run \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
     --publish 8989:8989/tcp \
-    --volume {{ container_configs_dir }}/sonarr:/config:Z \
-    --volume {{ arr_media_dir }}:/data:rw \
+    --volume {{ podman_user.container_configs_dir }}/sonarr:/config:Z \
+    --volume {{ podman_user.arr_media_dir }}:/data:rw \
     lscr.io/linuxserver/sonarr:latest
 ExecStop=/usr/bin/podman stop \
     --ignore -t 10 \

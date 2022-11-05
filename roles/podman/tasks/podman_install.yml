@@ -1,0 +1,23 @@
+---
+- block:
+  - name: pacman -S podman fuse-overlayfs slirp4netns
+    community.general.pacman:
+      name:
+        - podman
+        - fuse-overlayfs
+        - slirp4netns
+      state: present
+    when: ansible_facts['os_family'] == "Archlinux"
+
+  - name: apt install podman
+    ansible.builtin.apt:
+      name: podman
+      state: present
+    when: ansible_facts['os_family'] == "Debian"
+
+  - name: dnf install podman
+    ansible.builtin.dnf:
+      name: podman
+      state: present
+    when: ansible_facts['os_family'] == "RedHat"
+  become: yes

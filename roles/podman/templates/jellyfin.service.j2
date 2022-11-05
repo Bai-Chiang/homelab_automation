@@ -30,8 +30,8 @@ ExecStart=/usr/bin/podman run \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
     --publish 8096:8096/tcp \
-    --volume {{ container_configs_dir }}/jellyfin:/config:Z \
-    --volume {{ jellyfin_library }}:/media:ro \
+    --volume {{ podman_user.container_configs_dir }}/jellyfin:/config:Z \
+    --volume {{ podman_user.jellyfin_library }}:/media:ro \
     lscr.io/linuxserver/jellyfin:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \

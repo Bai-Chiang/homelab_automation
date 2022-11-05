@@ -1,131 +1,32 @@
 ---
-- block:
-  
-  - name: pacman -S podman fuse-overlayfs slirp4netns
-    community.general.pacman:
-      name:
-        - podman
-        - fuse-overlayfs
-        - slirp4netns
-      state: present
-    when: ansible_facts['os_family'] == "Archlinux"
+- import_tasks: podman_install.yml
 
-  - name: apt install podman
-    ansible.builtin.apt:
-      name: podman
-      state: present
-    when: ansible_facts['os_family'] == "Debian"
-
-  - name: dnf install podman
-    ansible.builtin.dnf:
-      name: podman
-      state: present
-    when: ansible_facts['os_family'] == "RedHat"
-
-  - name: create separate podman user
-    # disable the podman account ( don't allow login )
-    ansible.builtin.user:
-      name: "{{ podman_user }}"
-      passworkd_lock: yes
-      shell: "/usr/bin/nologin"
-    when: 
-      - podman_user != ansible_user_id
-      - podman_user != "root"
-
-  - name: Get {{ podman_user }} info
-    ansible.builtin.getent:
-      database: passwd
-      key: "{{ podman_user }}"
-
-  - name: Check lingering
-    stat:
-      path: "/var/lib/systemd/linger/{{ podman_user }}"
-    register: podman_user_lingering
-    when:
-      - enable_lingering
-      - podman_user != "root"
-
-  - name: Enable lingering
-    command: "loginctl enable-linger {{ podman_user }}"
-    when:
-      - enable_lingering
-      - podman_user != "root"
-      - not podman_user_lingering.stat.exists
-
-  - name: Set /etc/subuid
-    ansible.builtin.copy:
-      content: |
-        {{ podman_user }}:524288:65536
-      dest: /etc/subuid
-      owner: root
-      group: root
-      mode: '0644'
-    when: ansible_facts['os_family'] == "Archlinux"
-
-  - name: Set /etc/subgid
-    ansible.builtin.copy:
-      content: |
-        {{ podman_user }}:524288:65536
-      dest: /etc/subgid
-      owner: root
-      group: root
-      mode: '0644'
-    when: ansible_facts['os_family'] == "Archlinux"
-
-  become: yes
-
-- block:
-  - name: setup container configs directory
-    ansible.builtin.file:
-      path: "{{ container_configs_dir }}"
-      state: directory
-      owner: "{{ podman_user }}"
-      group: "{{ podman_user }}"
-      mode: '0700'
-
-  - name: setup systemd user directory
-    ansible.builtin.file:
-      path: "/home/{{ podman_user }}/.config/systemd/user"
-      state: directory
-      owner: "{{ podman_user }}"
-      group: "{{ podman_user }}"
-      mode: '0700'
-
-  - name: create podman-system-prune.service/timer
-    ansible.builtin.template:
-      src: "{{ item }}.j2"
-      dest: "/home/{{ podman_user }}/.config/systemd/user/{{ item }}"
-      owner: "{{ podman_user }}"
-      group: "{{ podman_user }}"
-      mode: '0600'
-    loop:
-      - podman-system-prune.service
-      - podman-system-prune.timer
-
-  - name: systemctl --user enable podman-system-prune.timer
-    ansible.builtin.systemd:
-      name: "{{ item }}"
-      enabled: yes
-      scope: user
-    loop:
-      - podman-system-prune.timer
-      - podman-auto-update.timer
-
-  become: yes
-  become_user: "{{ podman_user }}"
-
-
-- include_tasks: "{{ container_name }}.yml"
+- include_tasks: podman_setup.yml
   loop: "{{ podman_containers }}"
   loop_control:
-    loop_var: container_name
+    loop_var: podman_user
+
+#- ansible.builtin.debug:
+#    msg: "gluetun" in container.name
+#  loop: "{{ podman_containers }}"
+#  loop_control:
+#    loop_var: container
+
+#- include_tasks: "{{ container.name }}.yml"
+#  loop: "{{ podman_containers }}"
+#  loop_control:
+#    loop_var: container
 
 
-- block:
-  - name: systemctl --user daemon-reload
-    ansible.builtin.systemd:
-      daemon_reload: yes
-      scope: user
-  become: yes
-  become_user: "{{ podman_user }}"
-  
+#  - block:
+#    - name: systemctl --user daemon-reload
+#      ansible.builtin.systemd:
+#        daemon_reload: yes
+#        scope: user
+#    become: yes
+#    become_user: "{{ podman_user }}"
+#  
+#  loop: "{{ podman_list }}"
+#  loop_control:
+#    loop_var: podman_user
+#

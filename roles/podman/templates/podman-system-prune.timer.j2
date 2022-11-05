@@ -2,7 +2,7 @@
 Description=podman image prune timer
 
 [Timer]
-OnCalendar={{ podman_system_prune_timer }}
+OnCalendar={{ podman_user.podman_system_prune_timer }}
 
 [Install]
 WantedBy=timers.target

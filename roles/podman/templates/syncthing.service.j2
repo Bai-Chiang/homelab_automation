@@ -31,8 +31,8 @@ ExecStart=/usr/bin/podman run \
     --env TZ={{ TZ }} \
     --publish 8384:8384/tcp \
     --publish 22000:22000/tcp \
-    --volume {{ container_configs_dir }}/syncthing:/config:Z \
-{% for item in syncthing_data_dir %}
+    --volume {{ podman_user.container_configs_dir }}/syncthing:/config:Z \
+{% for item in podman_user.syncthing_data_dirs %}
     --volume {{ item.src }}:{{ item.dest }}:rw \
 {% endfor %}
     lscr.io/linuxserver/syncthing:latest

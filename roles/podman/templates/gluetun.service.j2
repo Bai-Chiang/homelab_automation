@@ -28,13 +28,13 @@ ExecStart=/usr/bin/podman run \
     --env TZ={{ TZ }} \
     --env VPN_SERVICE_PROVIDER=custom \
     --env VPN_TYPE=wireguard \
-    --env VPN_ENDPOINT_IP={{ gluetun_vpn_endpoint_ip }} \
-    --env VPN_ENDPOINT_PORT={{ gluetun_vpn_endpoint_port }} \
-    --env WIREGUARD_PUBLIC_KEY={{ gluetun_server_public_key }} \
-    --env WIREGUARD_PRIVATE_KEY={{ gluetun_wireguard_private_key }} \
-    --env WIREGUARD_PRESHARED_KEY={{ gluetun_wireguard_preshared_key }} \
-    --env WIREGUARD_ADDRESSES={{ gluetun_wireguard_address }} \
-{% if "transmission" in podman_containers %}
+    --env VPN_ENDPOINT_IP={{ podman_user.gluetun_vpn_endpoint_ip }} \
+    --env VPN_ENDPOINT_PORT={{ podman_user.gluetun_vpn_endpoint_port }} \
+    --env WIREGUARD_PUBLIC_KEY={{ podman_user.gluetun_server_public_key }} \
+    --env WIREGUARD_PRIVATE_KEY={{ podman_user.gluetun_wireguard_private_key }} \
+    --env WIREGUARD_PRESHARED_KEY={{ podman_user.gluetun_wireguard_preshared_key }} \
+    --env WIREGUARD_ADDRESSES={{ podman_user.gluetun_wireguard_address }} \
+{% if "transmission" in podman_user.containers %}
     --publish 9091:9091/tcp \
 {% endif %}
     docker.io/qmcgaw/gluetun

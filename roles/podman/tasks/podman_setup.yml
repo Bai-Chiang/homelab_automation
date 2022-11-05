@@ -1,0 +1,97 @@
+---
+- block:
+  - name: create separate podman user
+    # disable the podman account ( don't allow login )
+    ansible.builtin.user:
+      name: "{{ podman_user.name }}"
+      passworkd_lock: yes
+      shell: "/usr/bin/nologin"
+    when: 
+      - podman_user.name != ansible_user_id
+      - podman_user.name != "root"
+
+  - name: Get {{ podman_user.name }} info
+    ansible.builtin.getent:
+      database: passwd
+      key: "{{ podman_user.name }}"
+
+  - name: Check lingering
+    stat:
+      path: "/var/lib/systemd/linger/{{ podman_user.name }}"
+    register: podman_user_lingering
+    when:
+      - podman_user.enable_lingering
+      - podman_user.name != "root"
+
+  - name: Enable lingering
+    command: "loginctl enable-linger {{ podman_user.name }}"
+    when:
+      - podman_user.enable_lingering
+      - podman_user.name != "root"
+      - not podman_user_lingering.stat.exists
+
+  - name: Set /etc/subuid
+    ansible.builtin.copy:
+      content: |
+        {{ podman_user.name }}:524288:65536
+      dest: /etc/subuid
+      owner: root
+      group: root
+      mode: '0644'
+    when: ansible_facts['os_family'] == "Archlinux"
+
+  - name: Set /etc/subgid
+    ansible.builtin.copy:
+      content: |
+        {{ podman_user.name }}:524288:65536
+      dest: /etc/subgid
+      owner: root
+      group: root
+      mode: '0644'
+    when: ansible_facts['os_family'] == "Archlinux"
+  become: yes
+
+- block:
+  - name: setup container configs directory
+    ansible.builtin.file:
+      path: "{{ podman_user.container_configs_dir }}"
+      state: directory
+      owner: "{{ podman_user.name }}"
+      group: "{{ podman_user.name }}"
+      mode: '0700'
+
+  - name: setup systemd user directory
+    ansible.builtin.file:
+      path: "/home/{{ podman_user.name }}/.config/systemd/user"
+      state: directory
+      owner: "{{ podman_user.name }}"
+      group: "{{ podman_user.name }}"
+      mode: '0700'
+
+  - name: create podman-system-prune.service/timer
+    ansible.builtin.template:
+      src: "{{ item }}.j2"
+      dest: "/home/{{ podman_user.name }}/.config/systemd/user/{{ item }}"
+      owner: "{{ podman_user.name }}"
+      group: "{{ podman_user.name }}"
+      mode: '0600'
+    loop:
+      - podman-system-prune.service
+      - podman-system-prune.timer
+
+  - name: systemctl --user enable podman-system-prune.timer
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      enabled: yes
+      scope: user
+    loop:
+      - podman-system-prune.timer
+      - podman-auto-update.timer
+  become: yes
+  become_user: "{{ podman_user.name }}"
+
+
+- include_tasks: "{{ container }}.yml"
+  loop: "{{ podman_user.containers }}"
+  loop_control:
+    loop_var: container

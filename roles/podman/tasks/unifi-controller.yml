@@ -4,8 +4,8 @@
     ansible.builtin.file:
       path: "{{ container_configs_dir }}/unifi-controller"
       state: directory
-      owner: "{{ podman_user }}"
-      group: "{{ podman_user }}"
+      owner: root
+      group: root
       mode: '0700'
 
   - name: unifi-controller.service

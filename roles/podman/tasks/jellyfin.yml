@@ -2,18 +2,18 @@
 - block:
   - name: jellyfin container config direcoty
     ansible.builtin.file:
-      path: "{{ container_configs_dir }}/jellyfin"
+      path: "{{ podman_user.container_configs_dir }}/jellyfin"
       state: directory
-      owner: "{{ podman_user }}"
-      group: "{{ podman_user }}"
+      owner: "{{ podman_user.name }}"
+      group: "{{ podman_user.name }}"
       mode: '0700'
 
   - name: jellyfin.service
     ansible.builtin.template:
       src: jellyfin.service.j2
-      dest: "/home/{{ podman_user }}/.config/systemd/user/jellyfin.service"
-      owner: "{{ podman_user }}"
-      group: "{{ podman_user }}"
+      dest: "/home/{{ podman_user.name }}/.config/systemd/user/jellyfin.service"
+      owner: "{{ podman_user.name }}"
+      group: "{{ podman_user.name }}"
       mode: '0600'
 
   - name: systemctl --user enable jellyfin.service
@@ -23,7 +23,7 @@
       scope: user
 
   become: yes
-  become_user: "{{ podman_user }}"
+  become_user: "{{ podman_user.name }}"
 
 
 - name: Set firewall rules for Jellyfin web interface
@@ -33,5 +33,5 @@
     permanent: yes
     immediate: yes
     state: enabled
-  loop: "{{ jellyfin_firewall }}"
+  loop: "{{ podman_user.jellyfin_firewall_rules }}"
   become: yes

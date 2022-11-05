@@ -30,9 +30,9 @@ ExecStart=/usr/bin/podman run \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --volume {{ container_configs_dir }}/transmission:/config:Z \
-    --volume {{ torrents_dir }}:/downloads:Z \
-    --volume {{ torrent_files_dir }}:/watch:Z \
+    --volume {{ podman_user.container_configs_dir }}/transmission:/config:Z \
+    --volume {{ podman_user.torrents_dir }}:/downloads:Z \
+    --volume {{ podman_user.torrent_files_dir }}:/watch:Z \
     lscr.io/linuxserver/transmission:latest
 ExecStop=/usr/bin/podman stop \
     --ignore -t 10 \
