@@ -1,5 +1,19 @@
 ---
 - block:
+  - name: setsebool -P container_use_devices=true
+    ansible.posix.seboolean:
+      name: container_use_devices
+      state: yes
+      persistent: yes
+    when: ansible_selinux.status == "enabled"
+
+  - name: setsebool -P domain_kernel_load_modules=true
+    ansible.posix.seboolean:
+      name: domain_kernel_load_modules
+      state: yes
+      persistent: yes
+    when: ansible_selinux.status == "enabled"
+
   - name: gluetun.service
     ansible.builtin.template:
       src: gluetun.service.j2
