@@ -2,7 +2,7 @@
 - import_tasks: podman_install.yml
 
 - include_tasks: podman_setup.yml
-  loop: "{{ podman_containers }}"
+  loop: "{{ podman_users }}"
   loop_control:
     loop_var: podman_user
 

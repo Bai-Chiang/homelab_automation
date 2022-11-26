@@ -28,11 +28,11 @@
 
 - name: Set firewall rules for Syncthing Listening port (TCP)
   ansible.posix.firewalld:
-    rich_rule: "{{ item }}"
+    rich_rule: rule family="ipv4" source address="{{ item }}" port port="22000" protocol="tcp" accept
     zone: "{{ firewalld_default_zone }}"
     permanent: yes
     immediate: yes
     state: enabled
-  loop: "{{ podman_user.syncthing_firewall_rules }}"
-  when: podman_user.syncthing_firewall_rules is defined
+  loop: "{{ podman_user.syncthing_allow_from_ipv4 }}"
+  when: podman_user.syncthing_allow_from_ipv4 is defined
   become: yes

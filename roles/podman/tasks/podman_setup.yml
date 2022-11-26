@@ -4,16 +4,19 @@
     # disable the podman account ( don't allow login )
     ansible.builtin.user:
       name: "{{ podman_user.name }}"
-      passworkd_lock: yes
+      uid: "{{ podman_user.uid }}"
+      password_lock: yes
       shell: "/usr/bin/nologin"
     when: 
       - podman_user.name != ansible_user_id
       - podman_user.name != "root"
 
-  - name: Get {{ podman_user.name }} info
-    ansible.builtin.getent:
-      database: passwd
-      key: "{{ podman_user.name }}"
+  #- name: Get {{ podman_user.name }} info
+  #  ansible.builtin.getent:
+  #    database: passwd
+  #    key: "{{ podman_user.name }}"
+  #- ansible.builtin.debug:
+  #    var: ansible_facts.getent_passwd
 
   - name: Check lingering
     stat:
@@ -30,28 +33,28 @@
       - podman_user.name != "root"
       - not podman_user_lingering.stat.exists
 
-  - name: Set /etc/subuid
-    ansible.builtin.copy:
-      content: |
-        {{ podman_user.name }}:524288:65536
+  - name: /etc/subuid
+    ansible.builtin.lineinfile:
+      line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
+      regexp: "^{{ podman_user.name }}"
       dest: /etc/subuid
+      create: true
       owner: root
       group: root
       mode: '0644'
     when: ansible_facts['os_family'] == "Archlinux"
 
   - name: Set /etc/subgid
-    ansible.builtin.copy:
-      content: |
-        {{ podman_user.name }}:524288:65536
+    ansible.builtin.lineinfile:
+      line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
+      regexp: "^{{ podman_user.name }}"
       dest: /etc/subgid
+      create: true
       owner: root
       group: root
       mode: '0644'
     when: ansible_facts['os_family'] == "Archlinux"
-  become: yes
 
-- block:
   - name: setup container configs directory
     ansible.builtin.file:
       path: "{{ podman_user.container_configs_dir }}"
@@ -59,7 +62,9 @@
       owner: "{{ podman_user.name }}"
       group: "{{ podman_user.name }}"
       mode: '0700'
+  become: yes
 
+- block:
   - name: setup systemd user directory
     ansible.builtin.file:
       path: "/home/{{ podman_user.name }}/.config/systemd/user"

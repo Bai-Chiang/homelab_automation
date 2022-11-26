@@ -4,14 +4,13 @@
 Description=Podman container-unifi-controller.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
-After=network-online.target
+After=network-online.target nss-lookup.target
 RequiresMountsFor=%t/containers
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
 TimeoutStopSec=70
-ExecStartPre=-/usr/bin/podman network create --driver macvlan --opt parent={{ unifi_nic }} --subnet {{ unifi_subnet }} unifi_net
 ExecStartPre=/bin/rm \
     -f %t/%n.ctr-id
 ExecStart=/usr/bin/podman run \
@@ -29,8 +28,8 @@ ExecStart=/usr/bin/podman run \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --network unifi_net:ip={{ unifi_ip }} \
-    --volume {{ container_configs_dir }}/unifi-controller:/config:Z \
+    --network host \
+    --volume {{ podman_user.container_configs_dir }}/unifi-controller:/config:Z \
     lscr.io/linuxserver/unifi-controller:latest
 ExecStop=/usr/bin/podman stop \
     --ignore -t 10 \

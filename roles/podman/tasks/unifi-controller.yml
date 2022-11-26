@@ -2,19 +2,28 @@
 - block:
   - name: unifi-controller container config direcoty
     ansible.builtin.file:
-      path: "{{ container_configs_dir }}/unifi-controller"
+      path: "{{ podman_user.container_configs_dir }}/unifi-controller"
       state: directory
-      owner: root
-      group: root
+      owner: "{{ podman_user.name}}"
+      group: "{{ podman_user.name }}"
       mode: '0700'
 
   - name: unifi-controller.service
     ansible.builtin.template:
       src: unifi-controller.service.j2
-      dest: /etc/systemd/system/unifi-controller.service
-      owner: root
-      group: root
-      mode: '0644'
+      dest: "/home/{{ podman_user.name }}/.config/systemd/user/unifi-controller.service"
+      owner: "{{ podman_user.name}}"
+      group: "{{ podman_user.name }}"
+      mode: '0600'
+
+  - name: systemctl --user enable unifi-controller.service
+    ansible.builtin.systemd:
+      name: unifi-controller
+      enabled: yes
+      scope: user
+
+  become: yes
+  become_user: "{{ podman_user.name }}"
 
   #- name: systemctl daemon-reload
   #  ansible.builtin.systemd:
@@ -56,5 +65,46 @@
   #    #- { proto: tcp, from: "{{ unifi_allow_from }}", port: 8880, comment: UniFi guest portal HTTP redirect port }
   #    #- { proto: tcp, from: "{{ unifi_allow_from }}", port: 6789, comment: UniFi mobile throughput test }
   #    #- { proto: udp, from: "{{ unifi_allow_from }}", port: 5514, comment: UniFi remote syslog port }
+  
+- block:
+  - name: Set firewall rules for UniFi web
+    ansible.posix.firewalld:
+      rich_rule: rule family="ipv4" source address="{{ item }}" port port="8443" protocol="tcp" accept
+      zone: "{{ firewalld_default_zone }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop: "{{ podman_user.unifi_web_allow_from_ipv4 }}"
+    when: podman_user.unifi_web_allow_from_ipv4 is defined
+
+  - name: Set firewall rules for UniFi STUN port
+    ansible.posix.firewalld:
+      rich_rule: rule family="ipv4" source address="{{ item }}" port port="3478" protocol="udp" accept
+      zone: "{{ firewalld_default_zone }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop: "{{ podman_user.unifi_allow_from_ipv4 }}"
+    when: podman_user.unifi_allow_from_ipv4 is defined
+
+  - name: Set firewall rules for UniFi AP discovery
+    ansible.posix.firewalld:
+      rich_rule: rule family="ipv4" source address="{{ item }}" port port="10001" protocol="udp" accept
+      zone: "{{ firewalld_default_zone }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop: "{{ podman_user.unifi_allow_from_ipv4 }}"
+    when: podman_user.unifi_allow_from_ipv4 is defined
+
+  - name: Set firewall rules for UniFi device communication
+    ansible.posix.firewalld:
+      rich_rule: rule family="ipv4" source address="{{ item }}" port port="8080" protocol="tcp" accept
+      zone: "{{ firewalld_default_zone }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop: "{{ podman_user.unifi_allow_from_ipv4 }}"
+    when: podman_user.unifi_allow_from_ipv4 is defined
 
   become: yes
