@@ -52,12 +52,12 @@
 
   - name: Firewall rule for ssh
     ansible.posix.firewalld:
-      rich_rule: "{{ item }}"
-      zone: "{{ firewalld_default_zone }}"
+      rich_rule: rule family="ipv4" source address="{{ item }}" service name="ssh" accept
       permanent: yes
-      immediate: no
+      immediate: yes
       state: enabled
-    loop: "{{ ssh_firewall }}"
+    loop: "{{ ssh_allow_from_ipv4 }}"
+    when: ssh_allow_from_ipv4 is defined
 
   become: yes
 
