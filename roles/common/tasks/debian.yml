@@ -1,15 +1,23 @@
 ---
 - block:
-  - name: apt install ufw
+#  - name: apt install ufw
+#    ansible.builtin.apt:
+#      name: ufw
+#      state: present
+#
+#  - name: ufw default incoming rule
+#    community.general.ufw: default=deny direction=incoming
+#
+#  - name: ufw default routed rule
+#    community.general.ufw: default=deny direction=routed
+#
+#  - name: systemctl enable --now ufw.service
+#    ansible.builtin.systemd: name=ufw.service enabled=yes state=started 
+
+  - name: apt install firewalld
     ansible.builtin.apt:
-      name: ufw
+      name: firewalld
       state: present
-
-  - name: ufw default incoming rule
-    community.general.ufw: default=deny direction=incoming
-
-  - name: ufw default routed rule
-    community.general.ufw: default=deny direction=routed
 
   - name: systemctl enable --now ufw.service
     ansible.builtin.systemd: name=ufw.service enabled=yes state=started 
