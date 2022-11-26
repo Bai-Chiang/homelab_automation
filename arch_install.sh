@@ -629,7 +629,9 @@ arch-chroot /mnt firewall-offline-cmd --set-default-zone=drop
 if [ "$IS_SSH" = y ] ; then
     echo "modify default ssh service with new port."
     sed "/port=/s/port=\"22\"/port=\"${SSH_PORT}\"/" /mnt/usr/lib/firewalld/services/ssh.xml  > /mnt/etc/firewalld/services/ssh.xml
-    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service=ssh
+    #arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service=ssh
+    read -p "ssh allow ip address (example 192.168.1.0/24)" SSH_FROM
+    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${SSH_FROM}' service name='ssh' accept"
 fi
 
 
