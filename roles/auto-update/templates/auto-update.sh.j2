@@ -3,6 +3,14 @@
 SUBJECT="Auto-update $HOSTNAME $(/usr/bin/date '+%F %T')"
 TO="{{ msmtp_to }}"
 
+# Check need reboot
+NUM_PKG=$(/usr/bin/checkupdates | grep -E 'linux|systemd' | wc -l)
+if [ $NUM_PKG -eq 0 ] ; then
+    NEED_REBOOT=0
+else
+    NEED_REBOOT=1
+fi
+
 {% if btrfs_scrub_time is defined %}
 # systemctl is-active return 0 if at least one is active
 /usr/bin/systemctl is-active --quiet --all "btrfs-scrub@*.service"
@@ -12,10 +20,12 @@ if [ $BTRFS_SCRUB_EXIT -eq 0 ] ; then
 else
     # Update system
     UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
+    UPDATE_MSG="${UPDATE_MSG}\n\ncheckservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
 fi
 {% else %}
 # Update system
 UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
+UPDATE_MSG="${UPDATE_MSG}\n\ncheckservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
 {% endif %}
 
 # send email
@@ -23,22 +33,15 @@ echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -t -a default
 
 sleep 5
 
-{% if btrfs_scrub_time is defined and auto_start_vm_list is defined %}
-if [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
-    # Reboot after update
-    systemctl stop 'libvirt_start@*' --all
-    systemctl reboot
-else
-    # Reboot all VMs
-    systemctl restart 'libvirt_start@*' --all
-fi
-{% elif btrfs_scrub_time is defined %}
-if [ $BTRFS_SCRUB_EXIT -ne 0 ] ; then
-    # Reboot after update
+{% if btrfs_scrub_time is defined %}
+if [ $BTRFS_SCRUB_EXIT -ne 0 ] && [ $NEED_REBOOT -eq 1 ] ; then
+    # Reboot if necessary
     systemctl reboot
 fi
 {% else %}
-systemctl reboot
+if [ $NEED_REBOOT -eq 1 ] ; then
+    systemctl reboot
+fi
 {% endif %}
 
 exit 0

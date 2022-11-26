@@ -4,7 +4,7 @@
 Description=Podman container-syncthing.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
-After=network-online.target
+After=network-online.target nss-lookup.target
 RequiresMountsFor=%t/containers
 
 [Service]

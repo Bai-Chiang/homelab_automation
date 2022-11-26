@@ -1,5 +1,8 @@
 ---
 - block:
+  - name: pacman -S archlinux-contrib
+    community.general.pacman: name=archlinux-contrib state=present
+
   - name: auto-update.service
     ansible.builtin.copy:
       src: auto-update.service

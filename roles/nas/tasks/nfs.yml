@@ -21,8 +21,8 @@
 - name: add root mount to /etc/exports
   ansible.builtin.lineinfile:
     path: /etc/exports
-    regexp: "^{{ nfs_root }}  127.0.0.1"
-    line: "{{ nfs_root }}  127.0.0.1(ro,sync,nocrossmnt,fsid=0)"
+    regexp: "^{{ nfs_root }}  {{ nfs_root_ip_range }}"
+    line: "{{ nfs_root }}  {{ nfs_root_ip_range }}(ro,sync,nocrossmnt,fsid=0)"
     state: present
 
 - name: add other mount points to /etc/exports
@@ -52,6 +52,17 @@
 #    from: "{{ item }}"
 #    comment: "Allow NFS from {{ item }}"
 #  loop: "{{ nfs_allow_ip }}"
+#
+- name: Set firewall rules for NFS
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" port port="2049" protocol="tcp" accept
+    zone: "{{ firewalld_default_zone }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ nfs_allow_from_ipv4 }}"
+  when: nfs_allow_from_ipv4 is defined
+  become: yes
 
 - name: systemctl enable nfs-server.service
   ansible.builtin.systemd:
