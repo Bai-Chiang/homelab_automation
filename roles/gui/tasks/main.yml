@@ -56,5 +56,5 @@
     path: "{{ ansible_user_dir }}/screenshots"
     state: directory
   
-- import_tasks: vagrant.yml
+- include_tasks: libvirt.yml
   when: ansible_architecture == 'x86_64'

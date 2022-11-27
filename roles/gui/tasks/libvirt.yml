@@ -49,9 +49,5 @@
   - name: systemctl start virtlogd.service
     ansible.builtin.systemd: name=virtlogd.service state=started
 
-  - name: pacman -S vagrant
-    community.general.pacman: name=vagrant state=present
-    register: vagrant_install
-
   become: yes
 
