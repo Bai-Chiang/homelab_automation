@@ -1,41 +1,21 @@
 ---
 - block:
-  - name: Install headless libvirt packages
+  - name: Install libvirt packages
     community.general.pacman:
       name:
-        - qemu-base
-        - libvirt
-        - virt-install
-        - edk2-ovmf    # UEFI support
-      state: present
-    when: libvirt_headless
-
-  - name: Install GUI libvirt packages
-    community.general.pacman:
-      name:
+        # libvirt
         - qemu-desktop
         - libvirt
         - virt-manager
-        - edk2-ovmf    # UEFI support
-      state: present
-    when: not libvirt_headless
-
-
-  - name: libvirt bridged network support
-    community.general.pacman:
-      name:
-        - bridge-utils    # bridged network support
-      state: present
-    when: libvirt_bridge
-
-  - name: libvirt NAT/DHCP networking support
-    community.general.pacman:
-      name:
+        # default NAT/DHCP networking support
         - iptables-nft
         - dnsmasq
         - dmidecode
+        # bridged networking support
+        - bridge-utils
+        # UEFI support
+        - edk2-ovmf
       state: present
-    when: libvirt_NAT
 
   - name: Get file system type of /var/lib/libvirt/images
     ansible.builtin.command: stat --file-system --format=%T /var/lib/libvirt/images
@@ -63,14 +43,15 @@
       memberof: "{{ ansible_user_id }},wheel,libvirt"
     when: homed
 
-  - name: systemctl enable libvirtd.service
-    ansible.builtin.systemd: name=libvirtd.service enabled=yes
+  - name: systemctl enable --now libvirtd.service
+    ansible.builtin.systemd: name=libvirtd.service enabled=yes state=started
 
-  - name: Auto-start VMs for headless install
-    include_tasks: auto-start_VMs.yml
-    when: libvirt_headless and ( auto_start_vm_list is defined )
+  - name: systemctl start virtlogd.service
+    ansible.builtin.systemd: name=virtlogd.service state=started
+
+  - name: pacman -S vagrant
+    community.general.pacman: name=vagrant state=present
+    register: vagrant_install
 
   become: yes
-
-
 
