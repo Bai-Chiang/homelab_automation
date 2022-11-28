@@ -16,10 +16,11 @@
       group: "{{ podman_user.name }}"
       mode: '0600'
 
-  - name: systemctl --user enable transmission.service
+  - name: systemctl --user enable --now transmission.service
     ansible.builtin.systemd:
       name: transmission.service
       enabled: yes
+      state: started
       scope: user
 
   become: yes

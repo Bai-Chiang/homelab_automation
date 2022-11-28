@@ -16,10 +16,11 @@
       group: "{{ podman_user.name }}"
       mode: '0600'
 
-  - name: systemctl --user enable syncthing.service
+  - name: systemctl --user enable --now syncthing.service
     ansible.builtin.systemd:
       name: syncthing
       enabled: yes
+      state: started
       scope: user
 
   become: yes

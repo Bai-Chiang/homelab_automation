@@ -16,5 +16,12 @@
       group: "{{ podman_user.name }}"
       mode: '0600'
 
+  - name: systemctl --user enable --now sonarr.service
+    ansible.builtin.systemd:
+      name: sonarr
+      enabled: yes
+      state: started
+      scope: user
+
   become: yes
   become_user: "{{ podman_user.name }}"

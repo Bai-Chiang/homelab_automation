@@ -22,10 +22,11 @@
       group: "{{ podman_user.name }}"
       mode: '0600'
 
-  - name: systemctl --user enable gluetun.service
+  - name: systemctl --user enable --now gluetun.service
     ansible.builtin.systemd:
       name: gluetun
       enabled: yes
+      state: started
       scope: user
 
   become: yes
