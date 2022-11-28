@@ -19,17 +19,21 @@ if [ $BTRFS_SCRUB_EXIT -eq 0 ] ; then
     UPDATE_MSG="btrfs-scrub is running. Skipped update.\n"
 else
     # Update system
-    UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
-    UPDATE_MSG="${UPDATE_MSG}\n\ncheckservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
+    UPDATE_MSG="# pacman -Syu\n$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
+    UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
 fi
 {% else %}
 # Update system
 UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
-UPDATE_MSG="${UPDATE_MSG}\n\ncheckservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
+UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
 {% endif %}
 
 # send email
-echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -t -a default 
+if [ $NEED_REBOOT -eq 1 ] ; then
+    echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}\n\nrebooting..." | msmtp -t -a default
+else
+    echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -t -a default
+fi
 
 sleep 5
 
