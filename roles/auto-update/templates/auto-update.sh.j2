@@ -21,19 +21,21 @@ else
     # Update system
     UPDATE_MSG="# pacman -Syu\n$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
     UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
+    if [ $NEED_REBOOT -eq 1 ] ; then
+        UPDATE_MSG="${UPDATE_MSG}\n\n# systemctl reboot"
+    fi
 fi
 {% else %}
 # Update system
 UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
 UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
+if [ $NEED_REBOOT -eq 1 ] ; then
+    UPDATE_MSG="${UPDATE_MSG}\n\n# systemctl reboot"
+fi
 {% endif %}
 
 # send email
-if [ $NEED_REBOOT -eq 1 ] ; then
-    echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}\n\nrebooting..." | msmtp -t -a default
-else
-    echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -t -a default
-fi
+echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -t -a default
 
 sleep 5
 
