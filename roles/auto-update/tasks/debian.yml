@@ -34,7 +34,7 @@
       line: "{{ item.line }}"
       insertafter: "{{ item.insertafter }}"
     loop:
-      - { regexp: '^Unattended-Upgrade::Automatic-Reboot ', insertafter: '^//Unattended-Upgrade::Automatic-Reboot ', line: 'Unattended-Upgrade::Automatic-Reboot "true"' }
+      - { regexp: '^Unattended-Upgrade::Automatic-Reboot ', insertafter: '^//Unattended-Upgrade::Automatic-Reboot ', line: 'Unattended-Upgrade::Automatic-Reboot "true";' }
 
 
   become: yes
