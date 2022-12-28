@@ -13,7 +13,7 @@
 - name: Add bind mount to /etc/fstab
   ansible.builtin.lineinfile:
     path: /etc/fstab
-    regexp: "^{{ item.target }}  {{item.bind }}"
+    regexp: "^{{ item.target }}\\s+{{item.bind }}"
     line: "{{ item.target }}  {{item.bind }}  none  bind  0 0"
     state: present
   loop: "{{ nfs_mount_point }}"
@@ -21,15 +21,15 @@
 - name: add root mount to /etc/exports
   ansible.builtin.lineinfile:
     path: /etc/exports
-    regexp: "^{{ nfs_root }}  {{ nfs_root_ip_range }}"
-    line: "{{ nfs_root }}  {{ nfs_root_ip_range }}(ro,sync,nocrossmnt,fsid=0)"
+    regexp: "^{{ nfs_root }}\\s+"
+    line: "{{ nfs_root }}  {{ nfs_root_ip_opt }}"
     state: present
 
 - name: add other mount points to /etc/exports
   ansible.builtin.lineinfile:
     path: /etc/exports
-    regexp: "^{{ item.bind }}  {{ item.ip }}"
-    line: "{{ item.bind }}  {{ item.ip }}{{ item.opt }}"
+    regexp: "^{{ item.bind }}\\s+"
+    line: "{{ item.bind }}  {{ item.ip_opt }}"
     state: present
   loop: "{{ nfs_mount_point }}"
 
