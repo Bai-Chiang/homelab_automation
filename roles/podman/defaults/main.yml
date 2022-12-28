@@ -1,0 +1,2 @@
+---
+firewalld_default_zone: public

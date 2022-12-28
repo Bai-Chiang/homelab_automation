@@ -35,11 +35,15 @@ ExecStart=/usr/bin/podman run \
     --volume {{ podman_user.torrent_files_dir }}:/watch:Z \
     lscr.io/linuxserver/transmission:latest
 ExecStop=/usr/bin/podman stop \
-    --ignore -t 10 \
+    --ignore \
+    --time=10 \
     --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm \
-    -f \
-    --ignore -t 10 \
+    --force \
+    --ignore \
+{% if not ( ansible_distribution == "Debian" and ansible_distribution_major_version <= "11" ) %}
+    --time=10 \
+{% endif %}
     --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all

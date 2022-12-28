@@ -34,16 +34,23 @@ ExecStart=/usr/bin/podman run \
     --env WIREGUARD_PRIVATE_KEY={{ podman_user.gluetun_wireguard_private_key }} \
     --env WIREGUARD_PRESHARED_KEY={{ podman_user.gluetun_wireguard_preshared_key }} \
     --env WIREGUARD_ADDRESSES={{ podman_user.gluetun_wireguard_address }} \
+{% if podman_user.gluetun_firewall_vpn_input_ports is defined %}
+    --env FIREWALL_VPN_INPUT_PORTS={{ podman_user.gluetun_firewall_vpn_input_ports }} \
+{% endif %}
 {% if "transmission" in podman_user.containers %}
     --publish 9091:9091/tcp \
 {% endif %}
     docker.io/qmcgaw/gluetun
 ExecStop=/usr/bin/podman stop \
-    --ignore -t 10 \
+    --ignore \
+    --time=10 \
     --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm \
-    -f \
-    --ignore -t 10 \
+    --force \
+    --ignore \
+{% if not ( ansible_distribution == "Debian" and ansible_distribution_major_version <= "11" ) %}
+    --time=10 \
+{% endif %}
     --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all

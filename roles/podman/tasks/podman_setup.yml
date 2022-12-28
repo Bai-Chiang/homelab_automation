@@ -86,15 +86,20 @@
 
   - name: systemctl --user enable podman-system-prune.timer
     ansible.builtin.systemd:
-      name: "{{ item }}"
+      name: "podman-system-prune.timer"
       enabled: yes
       scope: user
-    loop:
-      - podman-system-prune.timer
-      - podman-auto-update.timer
+
+  # Debian 11 does not have podman-auto-update.timer unit for user only has system unit
+  - name: systemctl --user enable podman-auto-update.timer
+    ansible.builtin.systemd:
+      name: "podman-auto-update.timer"
+      enabled: yes
+      scope: user
+    when: ansible_facts['os_family'] != "Debian"
+
   become: yes
   become_user: "{{ podman_user.name }}"
-
 
 - include_tasks: "{{ container }}.yml"
   loop: "{{ podman_user.containers }}"

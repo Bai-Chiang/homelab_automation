@@ -32,11 +32,13 @@ ExecStart=/usr/bin/podman run \
     --volume {{ podman_user.container_configs_dir }}/unifi-controller:/config:Z \
     lscr.io/linuxserver/unifi-controller:latest
 ExecStop=/usr/bin/podman stop \
-    --ignore -t 10 \
+    --ignore \
+    --time=10 \
     --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm \
-    -f \
-    --ignore -t 10 \
+    --force \
+    --ignore \
+    --time=10 \
     --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all
