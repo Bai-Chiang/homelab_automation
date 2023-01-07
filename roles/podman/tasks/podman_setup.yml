@@ -62,6 +62,13 @@
       owner: "{{ podman_user.name }}"
       group: "{{ podman_user.name }}"
       mode: '0700'
+
+  # install acl package for ansible to become other unprivileged user
+  - name: dnf install acl
+    ansible.builtin.dnf:
+      name: acl
+      state: present
+    when: ansible_facts['os_family'] == "RedHat"
   become: yes
 
 - block:
@@ -90,13 +97,11 @@
       enabled: yes
       scope: user
 
-  # Debian 11 does not have podman-auto-update.timer unit for user only has system unit
   - name: systemctl --user enable podman-auto-update.timer
     ansible.builtin.systemd:
       name: "podman-auto-update.timer"
       enabled: yes
       scope: user
-    when: ansible_facts['os_family'] != "Debian"
 
   become: yes
   become_user: "{{ podman_user.name }}"
