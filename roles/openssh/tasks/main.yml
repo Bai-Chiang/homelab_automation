@@ -56,8 +56,8 @@
       permanent: yes
       immediate: yes
       state: enabled
-    loop: "{{ ssh_allow_from_ipv4 }}"
-    when: ssh_allow_from_ipv4 is defined
+    loop: "{{ ssh_accept_source_ipv4 }}"
+    when: ssh_accept_source_ipv4 is defined
 
   become: yes
 

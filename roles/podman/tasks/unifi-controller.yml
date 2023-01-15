@@ -58,7 +58,7 @@
       permanent: yes
       immediate: yes
       state: enabled
-    loop: "{{ podman_user.unifi_allow_from_ipv4 }}"
-    when: podman_user.unifi_allow_from_ipv4 is defined
+    loop: "{{ podman_user.unifi_accept_source_ipv4 }}"
+    when: podman_user.unifi_accept_source_ipv4 is defined
 
   become: yes

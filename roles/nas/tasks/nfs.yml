@@ -61,8 +61,8 @@
     permanent: yes
     immediate: yes
     state: enabled
-  loop: "{{ nfs_allow_from_ipv4 }}"
-  when: nfs_allow_from_ipv4 is defined
+  loop: "{{ nfs_accept_source_ipv4 }}"
+  when: nfs_accept_source_ipv4 is defined
   become: yes
 
 - name: systemctl enable nfs-server.service
