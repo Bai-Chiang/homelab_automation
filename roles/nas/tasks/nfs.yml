@@ -55,7 +55,8 @@
 #
 - name: Set firewall rules for NFS
   ansible.posix.firewalld:
-    rich_rule: rule family="ipv4" source address="{{ item }}" port port="2049" protocol="tcp" accept
+    #rich_rule: rule family="ipv4" source address="{{ item }}" port port="2049" protocol="tcp" accept
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="nfs" accept
     zone: "{{ firewalld_default_zone }}"
     permanent: yes
     immediate: yes

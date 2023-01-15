@@ -27,13 +27,34 @@
   become_user: "{{ podman_user.name }}"
 
 
-- name: Set firewall rules for Syncthing Listening port (TCP)
-  ansible.posix.firewalld:
-    rich_rule: rule family="ipv4" source address="{{ item }}" port port="22000" protocol="tcp" accept
-    zone: "{{ firewalld_default_zone }}"
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop: "{{ podman_user.syncthing_allow_from_ipv4 }}"
-  when: podman_user.syncthing_allow_from_ipv4 is defined
+- block:
+  # 22000/tcp    Syncthing Listening port
+  - name: add syncthing firewalld service file syncthing.xml
+    ansible.builtin.copy:
+      content: |
+        <?xml version="1.0" encoding="utf-8"?>
+        <service>
+          <short>Syncthing</short>
+          <description>Syncthing</description>
+          <port protocol="tcp" port="22000"/>
+        </service>
+      dest: /etc/firewalld/services/syncthing.xml
+      owner: root
+      group: root
+      mode: '0644'
+    register: syncthing_firewalld_file
+
+  - name: Reload firewalld when syncthing.xml changed
+    ansible.builtin.command: firewall-cmd --reload
+    when: syncthing_firewalld_file.changed
+
+  - name: Set firewall rules for Syncthing Listening port (TCP)
+    ansible.posix.firewalld:
+      rich_rule: rule family="ipv4" source address="{{ item }}" service name="syncthing" accept
+      zone: "{{ firewalld_default_zone }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop: "{{ podman_user.syncthing_allow_from_ipv4 }}"
+    when: podman_user.syncthing_allow_from_ipv4 is defined
   become: yes

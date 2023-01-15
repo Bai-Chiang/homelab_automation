@@ -26,81 +26,34 @@
   become: yes
   become_user: "{{ podman_user.name }}"
 
-  #- name: systemctl daemon-reload
-  #  ansible.builtin.systemd:
-  #    daemon_reload: yes
-
-  #- name: systemctl enable unifi-controller.service
-  #  ansible.builtin.systemd:
-  #    name: unifi-controller
-  #    enabled: yes
-
-  ##- name: Set ufw incoming rules for UniFi web interface
-  ##  community.general.ufw:
-  ##    route: yes
-  ##    rule: allow
-  ##    interface_in: "{{ static_nic }}"
-  ##    from_ip: "{{ item }}"
-  ##    to_ip: any
-  ##    proto: tcp
-  ##    port: 8443
-  ##    comment: "Allow access UniFi web interface from {{ item }}"
-  ##  loop: "{{ unifi_allow_web_from }}"
-
-  #- name: Set ufw incoming rules for UniFi devices
-  #  community.general.ufw:
-  #    route: yes
-  #    rule: allow
-  #    interface_in: "{{ static_nic }}"
-  #    from_ip: "{{ item.from }}"
-  #    to_ip: any
-  #    proto: "{{ item.proto }}"
-  #    port: "{{ item.port }}"
-  #    comment: "{{ item.comment }}"
-  #  loop:
-  #    - { proto: udp, from: "{{ unifi_allow_from }}", port: 3478, comment: UniFi STUN port }
-  #    - { proto: udp, from: "{{ unifi_allow_from }}", port: 10001, comment: UniFi AP discovery }
-  #    - { proto: tcp, from: "{{ unifi_allow_from }}", port: 8080, comment: UniFi device communication }
-  #    #- { proto: udp, from: "{{ unifi_allow_from }}", port: 1900, comment: UniFi OS Console discoverable on a Layer 2 network }
-  #    #- { proto: tcp, from: "{{ unifi_allow_from }}", port: 8843, comment: UniFi guest portal HTTPS redirect port }
-  #    #- { proto: tcp, from: "{{ unifi_allow_from }}", port: 8880, comment: UniFi guest portal HTTP redirect port }
-  #    #- { proto: tcp, from: "{{ unifi_allow_from }}", port: 6789, comment: UniFi mobile throughput test }
-  #    #- { proto: udp, from: "{{ unifi_allow_from }}", port: 5514, comment: UniFi remote syslog port }
-  
 - block:
-  - name: Set firewall rules for UniFi web
-    ansible.posix.firewalld:
-      rich_rule: rule family="ipv4" source address="{{ item }}" port port="8443" protocol="tcp" accept
-      zone: "{{ firewalld_default_zone }}"
-      permanent: yes
-      immediate: yes
-      state: enabled
-    loop: "{{ podman_user.unifi_web_allow_from_ipv4 }}"
-    when: podman_user.unifi_web_allow_from_ipv4 is defined
+  # 3478/udp    UniFi STUN port 
+  # 10001/udp   UniFi AP discovery
+  # 8080/tcp    UniFi device communication
+  - name: add unifi firewalld service file unifi.xml
+    ansible.builtin.copy:
+      content: |
+        <?xml version="1.0" encoding="utf-8"?>
+        <service>
+          <short>UniFi</short>
+          <description>UniFi controller.</description>
+          <port protocol="udp" port="3478"/>
+          <port protocol="udp" port="10001"/>
+          <port protocol="tcp" port="8080"/>
+        </service>
+      dest: /etc/firewalld/services/unifi.xml
+      owner: root
+      group: root
+      mode: '0644'
+    register: unifi_firewalld_file
 
-  - name: Set firewall rules for UniFi STUN port
-    ansible.posix.firewalld:
-      rich_rule: rule family="ipv4" source address="{{ item }}" port port="3478" protocol="udp" accept
-      zone: "{{ firewalld_default_zone }}"
-      permanent: yes
-      immediate: yes
-      state: enabled
-    loop: "{{ podman_user.unifi_allow_from_ipv4 }}"
-    when: podman_user.unifi_allow_from_ipv4 is defined
+  - name: Reload firewalld when unifi.xml changed
+    ansible.builtin.command: firewall-cmd --reload
+    when: unifi_firewalld_file.changed
 
-  - name: Set firewall rules for UniFi AP discovery
+  - name: Enable firewall rules for UniFi
     ansible.posix.firewalld:
-      rich_rule: rule family="ipv4" source address="{{ item }}" port port="10001" protocol="udp" accept
-      zone: "{{ firewalld_default_zone }}"
-      permanent: yes
-      immediate: yes
-      state: enabled
-    loop: "{{ podman_user.unifi_allow_from_ipv4 }}"
-    when: podman_user.unifi_allow_from_ipv4 is defined
-
-  - name: Set firewall rules for UniFi device communication
-    ansible.posix.firewalld:
-      rich_rule: rule family="ipv4" source address="{{ item }}" port port="8080" protocol="tcp" accept
+      rich_rule: rule family="ipv4" source address="{{ item }}" service name="unifi" accept
       zone: "{{ firewalld_default_zone }}"
       permanent: yes
       immediate: yes
