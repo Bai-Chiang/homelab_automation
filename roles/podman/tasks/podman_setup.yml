@@ -5,7 +5,9 @@
     ansible.builtin.user:
       name: "{{ podman_user.name }}"
       uid: "{{ podman_user.uid }}"
-      password_lock: yes
+      password: '!'
+      password_lock: true
+      create_home: true
       shell: "/usr/bin/nologin"
     when: 
       - podman_user.name != ansible_user_id
