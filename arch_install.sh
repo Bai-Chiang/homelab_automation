@@ -261,7 +261,7 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Install_essential_packages
 ######################################################
 "
-pacstrap /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS
+pacstrap -K /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS
 
 
 echo "
