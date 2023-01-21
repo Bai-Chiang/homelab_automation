@@ -1,8 +1,7 @@
 #!/usr/bin/bash
 
 UCODE_PKG="intel-ucode"
-BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft openssh"
-#BASE_PKGS="base-selinux linux-firmware sudo-selinux selinux-python efibootmgr iptables-nft"
+BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
@@ -14,7 +13,7 @@ TIMEZONE="US/Eastern"
 # desktop example
 KERNEL_PKGS="linux"
 FS_PKGS="dosfstools e2fsprogs btrfs-progs"
-OTHER_PKGS="man-db man-pages texinfo vim"
+OTHER_PKGS="man-db vim"
 OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
 
 
@@ -187,6 +186,7 @@ if [ "$HARDENED" = y ] ; then
         # passphrase
         echo -e "\nRunning cryptsetup ..."
         cryptsetup --type luks2 --verify-passphrase --sector-size 4096 --verbose luksFormat "$ROOT_PART"
+        echo -e "\nDecrypting root partition ..."
         cryptsetup open "$ROOT_PART" cryptroot
     else
         # create keyfile
@@ -241,18 +241,26 @@ fi
 swapon "$SWAP_PART"
 
 
-#echo "
-#######################################################
-## Add selinux repo
-## https://github.com/archlinuxhardened/selinux#binary-repository
-#######################################################
-#"
-#echo -e "
-#[selinux]
-#Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux
-#SigLevel = Never
-#" >> /etc/pacman.conf
-#pacman -Sy
+echo "
+######################################################
+# Add selinux repo
+# https://github.com/archlinuxhardened/selinux#binary-repository
+######################################################
+"
+read -p "Do you want to enable SELinux repo? [y/N] " SELINUX
+: "${SELINUX:=n}"
+SELINUX="${SELINUX,,}"
+
+if [ "$SELINUX" == y ] ; then
+    echo "[selinux]" >> /etc/pacman.conf
+    echo "Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux" >> /etc/pacman.conf
+    echo "SigLevel = PackageOptional" >> /etc/pacman.conf
+    pacman -Sy
+    BASE_PKGS=$(echo $BASE_PKGS | sed 's/base /base-selinux /')
+    BASE_PKGS=$(echo $BASE_PKGS | sed 's/base-devel /base-devel-selinux /')
+    BASE_PKGS=$(echo $BASE_PKGS | sed 's/sudo /sudo-selinux /')
+    BASE_PKGS="$BASE_PKGS archlinux-keyring"
+fi
 
 
 echo "
@@ -261,7 +269,7 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Install_essential_packages
 ######################################################
 "
-pacstrap -K /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS
+pacstrap -K /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS efibootmgr
 
 
 echo "
@@ -397,20 +405,22 @@ KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
 KERNEL_CMD="$KERNEL_CMD modprobe.blacklist=pcspkr $OTHER_KERNEL_CMD"
 
 
-#echo "
-#######################################################
-## SELinux
-## https://wiki.archlinux.org/title/SELinux#Enable_SELinux_LSM
-#######################################################
-#"
-#echo "Adding SELinux LSM to kernel parameter ..."
-#KERNEL_CMD="$KERNEL_CMD lsm=landlock,lockdown,yama,integrity,selinux,bpf"
-#echo "Adding SELinux repo ..."
-#echo -e "
-#[selinux]
-#Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux
-#SigLevel = Never
-#" >> /mnt/etc/pacman.conf
+echo "
+######################################################
+# SELinux
+# https://wiki.archlinux.org/title/SELinux#Enable_SELinux_LSM
+######################################################
+"
+if [ "$SELINUX" == y ] ; then
+    echo "Adding SELinux LSM to kernel parameter ..."
+    KERNEL_CMD="$KERNEL_CMD lsm=landlock,lockdown,yama,integrity,selinux,bpf"
+    echo "Adding SELinux repo ..."
+    echo "[selinux]" >> /mnt/etc/pacman.conf
+    echo "Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux" >> /mnt/etc/pacman.conf
+    echo "SigLevel = PackageOptional" >> /mnt/etc/pacman.conf
+else
+    echo "Skipping ..."
+fi
 
 
 echo "
@@ -560,7 +570,11 @@ EOF
 
     # sign the unified kernel image
     arch-chroot /mnt mkdir -p /efi/EFI/Linux
-    arch-chroot /mnt pacman --noconfirm -S systemd
+    if [ "$SELINUX" != y ] ; then
+        arch-chroot /mnt pacman --noconfirm -S systemd
+    else
+        arch-chroot /mnt pacman --noconfirm -S systemd-selinux
+    fi
 
 fi
 
@@ -572,6 +586,7 @@ echo "
 "
 EFI_DEV=$(lsblk --noheadings --output PKNAME $EFI_PART)
 EFI_PART_NUM=$(echo $EFI_PART | grep -Eo '[0-9]+$')
+arch-chroot /mnt pacman --noconfirm -S --needed efibootmgr
 for KERNEL in $KERNEL_PKGS
 do
     arch-chroot /mnt efibootmgr --create --disk /dev/${EFI_DEV} --part ${EFI_PART_NUM} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
@@ -658,24 +673,6 @@ read -p "Do you want to create user with systemd-homed? [y/N] " IS_HOMED
 : "${IS_HOMED:=n}"
 IS_HOMED="${IS_HOMED,,}"
 if [ "$IS_HOMED" = y ] ; then
-#    cat >> /mnt/root/homed.sh <<'EOF'
-#systemctl enable --now systemd-homed.service
-#read -p "Tell me your username: " USERNAME
-#read -p "uid: (default 1000)" UID
-#: "${UID:=1000}"
-#read -p "Tell me the filesystem inside your home directory (btrfs or ext4): " FSTYPE
-#homectl create "$USERNAME" --uid="$UID" --member-of=wheel --shell=/bin/bash --storage=luks --fs-type="$FSTYPE"
-#
-#read -p "Do you want to disable root account? [Y/n] " IS_ROOT_DISABLE
-#: "${IS_ROOT_DISABLE:=n}"
-#IS_ROOT_DISABLE="${IS_ROOT_DISABLE,,}"
-#if [ "$IS_ROOT_DISABLE" = y ] ; then
-#    # https://wiki.archlinux.org/title/Sudo#Disable_root_login
-#    echo "Disabling root ..."
-#    passwd -d root
-#    passwd -l root
-#fi
-#EOF
     cp "$(pwd)/homed.sh" /mnt/root/homed.sh
     echo "Created /root/homed.sh Run it after reboot to create systemd-homed user, which can't be done in chroot environment."
     echo "Enter root password (/root/homed.sh can disable root account after you setup systemd-homed user)"
@@ -702,57 +699,3 @@ else
     fi
 fi
 
-
-# SELinux after reboot
-#echo "
-#######################################################
-## SELinux policy
-## https://wiki.archlinux.org/title/SELinux#Installing_a_policy
-#######################################################
-#"
-#echo "labeling filesystem ..."
-#
-## label filesystem
-#restorecon -r /
-#
-### hide the effects of incorrect labelling
-##cat >> /tmp/requiredmod.te <<'EOF'
-##module requiredmod 1.0;
-##
-##require {
-##        type devpts_t;
-##        type kernel_t;
-##        type device_t;
-##        type var_run_t;
-##        type udev_t;
-##        type hugetlbfs_t;
-##        type udev_tbl_t;
-##        type tmpfs_t;
-##        class sock_file write;
-##        class unix_stream_socket { read write ioctl };
-##        class capability2 block_suspend;
-##        class dir { write add_name };
-##        class filesystem associate;
-##}
-##
-###============= devpts_t ==============
-##allow devpts_t device_t:filesystem associate;
-##
-###============= hugetlbfs_t ==============
-##allow hugetlbfs_t device_t:filesystem associate;
-##
-###============= kernel_t ==============
-##allow kernel_t self:capability2 block_suspend;
-##
-###============= tmpfs_t ==============
-##allow tmpfs_t device_t:filesystem associate;
-##
-###============= udev_t ==============
-##allow udev_t kernel_t:unix_stream_socket { read write ioctl };
-##allow udev_t udev_tbl_t:dir { write add_name };
-##allow udev_t var_run_t:sock_file write;
-##EOF
-##
-##checkmodule -m -o /tmp/requiredmod.mod /tmp/requiredmod.te
-##semodule_package -o /tmp/requiredmod.pp -m /tmp/requiredmod.mod
-##semodule -i /tmp/requiredmod.pp
