@@ -443,10 +443,19 @@ echo "
 arch-chroot /mnt mkdir -p /boot/EFI/Linux
 for KERNEL in $KERNEL_PKGS
 do 
-    sed -i '\:^ALL_kver=.*:a ALL_microcode=(/boot/*-ucode.img)' /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i "s:^#default_options=.*:default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\ndefault_efi_image=\"/boot/EFI/Linux/ArchLinux-$KERNEL.efi\":" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i "s:^fallback_options=.*:fallback_options=\"-S autodetect --splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\nfallback_efi_image=\"/boot/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\":" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    # Add line ALL_microcode=(/boot/*-ucode.img)
+    sed -i '\|^ALL_kver=.*|a ALL_microcode=(/boot/*-ucode.img)' /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    # Add Arch splash screen and add PRESET_uki=
+    sed -i "s|^#default_options=.*|default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\ndefault_uki=\"/boot/EFI/Linux/ArchLinux-$KERNEL.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i "s|^fallback_options=.*|fallback_options=\"-S autodetect\"\\nfallback_uki=\"/boot/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    # comment out PRESET_image=
+    sed -i "s|^default_image=.*|#&|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i "s|^fallback_image=.*|#&|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
 done
+
+# remove leftover initramfs-*.img from /boot or /efi
+rm /mnt/efi/initramfs-*.img 2>/dev/null
+rm /mnt/boot/initramfs-*.img 2>/dev/null
 
 echo "$KERNEL_CMD" > /mnt/etc/kernel/cmdline
 if [ "$HARDENED" != 'y' ] ; then
