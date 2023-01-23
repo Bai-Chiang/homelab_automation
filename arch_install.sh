@@ -259,6 +259,7 @@ if [ "$SELINUX" == y ] ; then
     BASE_PKGS=$(echo $BASE_PKGS | sed 's/base /base-selinux /')
     BASE_PKGS=$(echo $BASE_PKGS | sed 's/base-devel /base-devel-selinux /')
     BASE_PKGS=$(echo $BASE_PKGS | sed 's/sudo /sudo-selinux /')
+    BASE_PKGS=$(echo $BASE_PKGS | sed 's/openssh /openssh-selinux /')
     BASE_PKGS="$BASE_PKGS archlinux-keyring"
 fi
 
@@ -387,9 +388,11 @@ if [ "$HARDENED" = y ] ; then
     echo "Editing mkinitcpio ..."
     sed -i '/^HOOKS=/ s/ keyboard//' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/ udev//' /mnt/etc/mkinitcpio.conf
+    sed -i '/^HOOKS=/ s/ keymap//' /mnt/etc/mkinitcpio.conf
+    sed -i '/^HOOKS=/ s/ consolefont//' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/base/base systemd keyboard/' /mnt/etc/mkinitcpio.conf
-    sed -i '/^HOOKS=/ s/autodetect/autodetect sd-vconsole/' /mnt/etc/mkinitcpio.conf
-    sed -i '/^HOOKS=/ s/block/block sd-encrypt/' /mnt/etc/mkinitcpio.conf
+    #sed -i '/^HOOKS=/ s/autodetect/autodetect sd-vconsole/' /mnt/etc/mkinitcpio.conf
+    sed -i '/^HOOKS=/ s/block/sd-vconsole block sd-encrypt/' /mnt/etc/mkinitcpio.conf
     if [ "$CRYPTKEY" = y ] ; then
         sed -i '/^MODULES=/ s/(/(vfat /' /mnt/etc/mkinitcpio.conf
     fi
@@ -630,7 +633,11 @@ read -p "Do you want to enable ssh? [y/N] " IS_SSH
 : "${IS_SSH:=n}"
 IS_SSH="${IS_SSH,,}"
 if [ "$IS_SSH" = y ] ; then
-    arch-chroot /mnt pacman --noconfirm -S --needed openssh
+    if [ "$SELINUX" != y ] ; then
+        arch-chroot /mnt pacman --noconfirm -S --needed openssh
+    else
+        arch-chroot /mnt pacman --noconfirm -S --needed openssh-selinux
+    fi
     arch-chroot /mnt systemctl enable sshd.service
     echo " Enabled sshd.service"
     echo "ssh port? (22)"
