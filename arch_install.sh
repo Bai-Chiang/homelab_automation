@@ -565,7 +565,7 @@ Target = usr/lib/modules/*/vmlinuz
 Target = usr/lib/initcpio/*
 
 [Action]
-Description = Signing Kernel for SecureBoot
+Description = Signing Unified Kernel Images for SecureBoot
 When = PostTransaction
 Exec = /usr/bin/bash -c 'for ENTRY in /boot/EFI/Linux/*.efi ; do /usr/bin/sbsign --key /etc/efi-keys/db.key --cert /etc/efi-keys/db.crt --output "/efi/EFI/Linux/${ENTRY##*/}" "/boot/EFI/Linux/${ENTRY##*/}" ; done'
 Depends = sbsigntools
