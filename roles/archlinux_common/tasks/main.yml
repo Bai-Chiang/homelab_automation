@@ -86,6 +86,8 @@
       - { regexp: '^RUSTFLAGS=', line: 'RUSTFLAGS="-C opt-level=3 -C target-cpu=native"', backrefs: no, insertafter: '^#RUSTFLAGS=' }
       - { regexp: '^MAKEFLAGS=', line: 'MAKEFLAGS="-j$(nproc)"', backrefs: no, insertafter: '^#MAKEFLAGS=' }
   
+  - import_tasks: snapper.yml
+
   become: yes
 
 

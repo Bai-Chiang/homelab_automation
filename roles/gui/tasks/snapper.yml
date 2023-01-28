@@ -1,0 +1,39 @@
+---
+- name: check /etc/snapper/configs/home
+  ansible.builtin.stat:
+    path: /etc/snapper/configs/home
+  register: snapper_home
+
+- name: Create snapper for /home/{{ ansible_user_id }} (systemd-homed)
+  ansible.builtin.shell: snapper -c home create-config /home/{{ ansible_user_id }}
+  args:
+    executable: /usr/bin/bash
+  when:
+    - not snapper_home.stat.exists
+    - homed
+
+- name: Create snapper for /home (non systemd-homed)
+  ansible.builtin.shell: snapper -c home create-config /home
+  args:
+    executable: /usr/bin/bash
+  when:
+    - not snapper_home.stat.exists
+    - not homed
+
+- name: Edit /etc/snapper/configs/home
+  ansible.builtin.lineinfile:
+    path: /etc/snapper/configs/home
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: '^TIMELINE_CREATE=',        line: 'TIMELINE_CREATE="yes"' }
+    - { regexp: '^TIMELINE_CLEANUP=',       line: 'TIMELINE_CLEANUP="yes"' }
+    - { regexp: '^NUMBER_MIN_AGE=',         line: 'NUMBER_MIN_AGE="1800"' }
+    - { regexp: '^NUMBER_LIMIT=',           line: 'NUMBER_LIMIT="10"' }
+    - { regexp: '^NUMBER_LIMIT_IMPORTANT=', line: 'NUMBER_LIMIT_IMPORTANT="10"' }
+    - { regexp: '^TIMELINE_MIN_AGE=',       line: 'TIMELINE_MIN_AGE="1800"' }
+    - { regexp: '^TIMELINE_LIMIT_HOURLY=',  line: 'TIMELINE_LIMIT_HOURLY="5"' }
+    - { regexp: '^TIMELINE_LIMIT_DAILY=',   line: 'TIMELINE_LIMIT_DAILY="7"' }
+    - { regexp: '^TIMELINE_LIMIT_WEEKLY=',  line: 'TIMELINE_LIMIT_WEEKLY="0"' }
+    - { regexp: '^TIMELINE_LIMIT_MONTHLY=', line: 'TIMELINE_LIMIT_MONTHLY="0"' }
+    - { regexp: '^TIMELINE_LIMIT_YEARLY=',  line: 'TIMELINE_LIMIT_YEARLY="0"' }

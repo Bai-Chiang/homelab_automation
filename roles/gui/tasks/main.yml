@@ -37,6 +37,7 @@
       enabled: yes
     when: '"cups" in other_pkgs'
 
+  - import_tasks: snapper.yml
   become: yes
 
 - import_tasks: dotfiles.yml  

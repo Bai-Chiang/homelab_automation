@@ -1,0 +1,12 @@
+[Trigger]
+Operation = Upgrade
+Operation = Install
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Depends = rsync
+Description = Backing up /efi...
+When = PostTransaction
+Exec = /usr/bin/rsync --archive --delete /efi/ /.efibackup
