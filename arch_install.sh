@@ -5,16 +5,21 @@ BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
+# minimal example
+KERNEL_PKGS="linux"
+BASE_PKGS="base linux-firmware sudo"
+FS_PKGS="dosfstools btrfs-progs"
+
 ## server example
 #KERNEL_PKGS="linux-hardened"
 #FS_PKGS="dosfstools btrfs-progs"
-#OTHER_KERNEL_CMD="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
+#KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 # desktop example
-KERNEL_PKGS="linux"
-FS_PKGS="dosfstools e2fsprogs btrfs-progs"
-OTHER_PKGS="man-db vim"
-OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
+#KERNEL_PKGS="linux"
+#FS_PKGS="dosfstools e2fsprogs btrfs-progs"
+#OTHER_PKGS="man-db vim"
+#OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
 
 
 ######################################################
@@ -27,9 +32,9 @@ If you activate it, you will be given a chance to install the glorious Arch Linu
 However, there is no guarantee of success.
 There is also no guarantee of your existing data safety.
 "
-read -p "Ready? " READY
+read -p "Ready? " start_install
 
-if [ -n "$READY" ] ; then
+if [[ -n $start_install ]] ; then
     exit 1
 fi
 
@@ -40,26 +45,29 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Verify_the_boot_mode
 ######################################################
 "
-if [ -e /sys/firmware/efi/efivars ] ; then
+if [[ -e /sys/firmware/efi/efivars ]] ; then
     echo "UEFI mode OK."
 else
     echo "System not booted in UEFI mode!"
     exit 1
 fi
 echo -e "\n"
-read -p "Do you want to set up secure boot with your own key and encrypt root partition? [Y/n] " HARDENED
-: "${HARDENED:=y}"
-HARDENED="${HARDENED,,}"
+read -p "Do you want to set up secure boot with your own key? [Y/n] " secure_boot
+secure_boot="${secure_boot:-y}"
+secure_boot="${secure_boot,,}"
+
 # check the firmware is in the setup mode
-if [ "$HARDENED" = y ] ; then
-    SETUP_MODE=$(bootctl status | grep -E "Secure Boot.*setup" | wc -l)
-    if [ "$SETUP_MODE" -ne 1 ] ; then
+if [[ $secure_boot == y ]] ; then
+    # bootctl status output should have
+    # Secure Boot: disabled (setup)
+    setup_mode=$(bootctl status | grep -E "Secure Boot.*setup" | wc -l)
+    if [[ $setup_mode -ne 1 ]] ; then
         echo "The firmware is not in the setup mode. Please check BIOS."
-        read -p "Continue without secure boot? [y/N] " CONTINUE
-        : "${CONTINUE:=n}"
-        CONTINUE="${CONTINUE,,}"
-        if [ "$CONTINUE" = y ] ; then
-            HARDENED="n"
+        read -p "Continue without secure boot? [y/N] " keep_going
+        keep_going="${keep_going:-n}"
+        keep_going="${keep_going,,}"
+        if [[ keep_going == y ]] ; then
+            secure_boot="n"
         else
             exit 1
         fi
@@ -74,7 +82,7 @@ echo "
 ######################################################
 "
 ping -c 1 archlinux.org > /dev/null
-if [ $? -ne 0 ] ; then
+if [[ $? -ne 0 ]] ; then
     echo "Please check the internet connection."
     exit 1
 else
@@ -97,12 +105,12 @@ echo "
 ######################################################
 "
 efibootmgr
-EFI_BOOT_ID=" "
-while [ -n "$EFI_BOOT_ID" ]; do
+efi_boot_id=" "
+while [[ -n $efi_boot_id ]]; do
     echo -e "\nDo you want to delete any boot entries?: "
-    read -p "Enter boot number (empty to skip): " EFI_BOOT_ID
-    if [ -n "$EFI_BOOT_ID" ] ; then
-        efibootmgr -b $EFI_BOOT_ID -B
+    read -p "Enter boot number (empty to skip): " efi_boot_id
+    if [[ -n $efi_boot_id ]] ; then
+        efibootmgr -b $efi_boot_id -B
     fi
 done
 
@@ -112,46 +120,53 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks
 ######################################################
 "
-DEVICES=$(lsblk --nodeps --paths --list --noheadings --sort=size --output=name,size,model | grep --invert-match "loop" | cat --number)
+devices=$(lsblk --nodeps --paths --list --noheadings --sort=size --output=name,size,model | grep --invert-match "loop" | cat --number)
 
-DEVICE_ID=" "
-while [ -n "$DEVICE_ID" ]; do
+device_id=" "
+while [[ -n $device_id ]]; do
     echo -e "Choose device to format:"
-    echo "$DEVICES"
-    read -p "Enter a number (empty to skip): " DEVICE_ID
-    if [ -n "$DEVICE_ID" ] ; then
-        DEVICE=$(echo "$DEVICES" | awk "\$1 == $DEVICE_ID { print \$2}")
-        fdisk "$DEVICE"
+    echo "$devices"
+    read -p "Enter a number (empty to skip): " device_id
+    if [[ -n $device_id ]] ; then
+        device=$(echo "$devices" | awk "\$1 == $device_id { print \$2}")
+        fdisk "$device"
     fi
 done
-PARTITIONS=$(lsblk --paths --list --noheadings --output=name,size,model | grep --invert-match "loop" | cat --number)
+
+partitions=$(lsblk --paths --list --noheadings --output=name,size,model | grep --invert-match "loop" | cat --number)
 
 # EFI partition
 echo -e "\n\nTell me the EFI partition number:"
-echo "$PARTITIONS"
-read -p "Enter a number: " EFI_ID
-EFI_PART=$(echo "$PARTITIONS" | awk "\$1 == $EFI_ID { print \$2}")
+echo "$partitions"
+read -p "Enter a number: " efi_id
+efi_part=$(echo "$partitions" | awk "\$1 == $efi_id { print \$2}")
 
 # root partition
 echo -e "\n\nTell me the root partition number:"
-echo "$PARTITIONS"
-read -p "Enter a number: " ROOT_ID
-ROOT_PART=$(echo "$PARTITIONS" | awk "\$1 == $ROOT_ID { print \$2}")
+echo "$partitions"
+read -p "Enter a number: " root_id
+root_part=$(echo "$partitions" | awk "\$1 == $root_id { print \$2}")
+
 # Wipe existing LUKS header
-cryptsetup erase $ROOT_PART 2> /dev/null
-cryptsetup luksDump $ROOT_PART 2> /dev/null
-wipefs --all $ROOT_PART 2> /dev/null
+# https://wiki.archlinux.org/title/Dm-crypt/Drive_preparation#Wipe_LUKS_header
+# Erase all keys
+cryptsetup erase $root_part 2> /dev/null
+# Make sure there is no active slots left
+cryptsetup luksDump $root_part 2> /dev/null
+# Remove LUKS header to prevent cryptsetup from detecting it
+wipefs --all $root_part 2> /dev/null
 
 # swap partition
 # swap is important, see [In defence of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html)
 echo -e "\n\nTell me the swap partition number:"
-echo "$PARTITIONS"
-read -p "Enter a number: " SWAP_ID
-SWAP_PART=$(echo "$PARTITIONS" | awk "\$1 == $SWAP_ID { print \$2}") || SWAP_PART=""
+echo "$partitions"
+read -p "Enter a number: " swap_id
+swap_part=$(echo "$partitions" | awk "\$1 == $swap_id { print \$2}") || swap_part=""
+
 # Wipe existing LUKS header
-cryptsetup erase $SWAP_PART 2> /dev/null
-cryptsetup luksDump $SWAP_PART 2> /dev/null
-wipefs --all $SWAP_PART 2> /dev/null
+cryptsetup erase $swap_part 2> /dev/null
+cryptsetup luksDump $swap_part 2> /dev/null
+wipefs --all $swap_part 2> /dev/null
 
 
 echo "
@@ -162,83 +177,89 @@ echo "
 "
 # EFI partition
 echo "Formatting EFI partition ..."
-echo "Running command: mkfs.fat -n boot -F 32 $EFI_PART"
-mkfs.fat -n boot -F 32 "$EFI_PART"
+echo "Running command: mkfs.fat -n boot -F 32 $efi_part"
+# create fat32 partition with name(label) boot
+mkfs.fat -n boot -F 32 "$efi_part"
 
 # swap partition
 echo "Formatting swap partition ..."
-echo "Running command: mkswap -L swap $SWAP_PART"
-mkswap -L swap "$SWAP_PART"
+echo "Running command: mkswap -L swap $swap_part"
+# create swap partition with label swap
+mkswap -L swap "$swap_part"
 
 
-if [ "$HARDENED" = y ] ; then
-    echo "
+echo "
 ######################################################
 # Encrypt the root partion
 # https://wiki.archlinux.org/title/Dm-crypt/Device_encryption
 ######################################################
 "
-    echo -e "Do you want to create a key file on the efi partition to automatically unlock the root partition on boot?\nThis could be used with the setup that the boot partition on an external flash drive, such that the system could autounlock on boot. But without the flash drive the system cannot boot and root partition is encrypted. It's not recommended if both efi and root partition on the same device, it would make the encryption meanless. Since the key file is on the unencrypted efi partition, anyone could easily the key file and decrypt the root partition.\nIf choose n then it will ask you for a encryption password."
-    read -p "[y/N] " CRYPTKEY
-    : "${CRYPTKEY:=n}"
-    CRYPTKEY="${CRYPTKEY,,}"
-    if [ "$CRYPTKEY" != y ] ; then
-        # passphrase
-        echo -e "\nRunning cryptsetup ..."
-        cryptsetup --type luks2 --verify-passphrase --sector-size 4096 --verbose luksFormat "$ROOT_PART"
-        echo -e "\nDecrypting root partition ..."
-        cryptsetup open "$ROOT_PART" cryptroot
-    else
+read -p "Do you want to encrypt root partition? [Y/n] " encrypt_root
+encrypt_root="${encrypt_root:-y}"
+encrypt_root="${encrypt_root,,}"
+if [[ $encrypt_root == y ]] ; then
+    echo -e "\nDo you want to create a key file on the efi partition to automatically unlock the root partition on boot?\nThis could be used with the setup that the boot partition on an external flash drive, such that the system could autounlock on boot. But without the flash drive the system cannot boot and root partition is encrypted. It's not recommended if both efi and root partition on the same device, it would make the encryption meanless. Since the key file is on the unencrypted efi partition, anyone could easily the key file and decrypt the root partition.\nIf choose n then it will ask you for a encryption password."
+    read -p "[y/N] " cryptkey
+    cryptkey="${cryptkey:-n}"
+    cryptkey="${cryptkey,,}"
+    if [[ $cryptkey == y ]] ; then
         # create keyfile
+        # https://wiki.archlinux.org/title/Dm-crypt/Device_encryption#Creating_a_keyfile_with_random_characters
         echo -e "\nCreating keyfile ..."
-        mount "$EFI_PART" /mnt
+        mount "$efi_part" /mnt
         dd bs=512 count=4 if=/dev/random of=/mnt/rootkeyfile iflag=fullblock
         chmod 600 /mnt/rootkeyfile
         echo -e "\nRunning cryptsetup ..."
-        cryptsetup --type luks2 --verify-passphrase --sector-size=4096 --key-file=/mnt/rootkeyfile --verbose luksFormat "$ROOT_PART"
-        cryptsetup open "$ROOT_PART" cryptroot --key-file /mnt/rootkeyfile
-        umount "$EFI_PART"
+        cryptsetup --type luks2 --verify-passphrase --sector-size=4096 --key-file=/mnt/rootkeyfile --verbose luksFormat "$root_part"
+        cryptsetup open "$root_part" cryptroot --key-file /mnt/rootkeyfile
+        umount "$efi_part"
+    else
+        # passphrase
+        echo -e "\nRunning cryptsetup ..."
+        # SSD usually report their sector size as 512 bytes, even though they use larger sector size.
+        # So add --sector-size 4096 force create a LUKS2 container with 4K sector size.
+        # If the sector size is wrong cryptsetup will abort with an error.
+        # To re-encrypt with correct sector size see
+        # https://wiki.archlinux.org/title/Advanced_Format#dm-crypt
+        cryptsetup --type luks2 --verify-passphrase --sector-size 4096 --verbose luksFormat "$root_part"
+        echo -e "\nDecrypting root partition ..."
+        cryptsetup open "$root_part" cryptroot
     fi
-    ROOT_BLOCK=$ROOT_PART
-    ROOT_PART=/dev/mapper/cryptroot
+    # e.g. boot_block=/dev/sdX2
+    root_block=$root_part
+    root_part=/dev/mapper/cryptroot
 else
-    ROOT_BLOCK=$ROOT_PART
+    root_block=$root_part
 fi
 
 
 # format root partition
 echo -e "\n\nFormatting root partition ..."
-echo "Running command: mkfs.btrfs -L ArchLinux -f $ROOT_PART"
-mkfs.btrfs -L ArchLinux -f "$ROOT_PART"
+echo "Running command: mkfs.btrfs -L ArchLinux -f $root_part"
+# create root partition with label ArchLinux
+mkfs.btrfs -L ArchLinux -f "$root_part"
 # create subvlumes
 echo "Creating btrfs subvolumes ..."
-mount "$ROOT_PART" /mnt
+mount "$root_part" /mnt
 btrfs subvolume create /mnt/@
 btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@snapshots
 btrfs subvolume create /mnt/@var_log
 btrfs subvolume create /mnt/@pacman_pkgs
-mkdir /mnt/@/{boot,home,.snapshots}
+mkdir /mnt/@/{efi,home,.snapshots}
 mkdir -p /mnt/@/var/log
 mkdir -p /mnt/@/var/cache/pacman/pkg
-if [ "$HARDENED" = y ] ; then
-    mkdir /mnt/@/efi
-fi
-umount "$ROOT_PART"
+umount "$root_part"
 
 # mount all partitions
 echo -e "\nMounting all partitions ..."
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$ROOT_PART" /mnt
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$ROOT_PART" /mnt/home
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@snapshots "$ROOT_PART" /mnt/.snapshots
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@var_log "$ROOT_PART" /mnt/var/log
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@pacman_pkgs "$ROOT_PART" /mnt/var/cache/pacman/pkg
-if [ "$HARDENED" = y ] ; then
-    mount "$EFI_PART" /mnt/efi
-else
-    mount "$EFI_PART" /mnt/boot
-fi
-swapon "$SWAP_PART"
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$root_part" /mnt
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$root_part" /mnt/home
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@snapshots "$root_part" /mnt/.snapshots
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@var_log "$root_part" /mnt/var/log
+mount -o "$BTRFS_MOUNT_OPTS",subvol=@pacman_pkgs "$root_part" /mnt/var/cache/pacman/pkg
+mount "$efi_part" /mnt/efi
+swapon "$swap_part"
 
 
 echo "
@@ -247,11 +268,12 @@ echo "
 # https://github.com/archlinuxhardened/selinux#binary-repository
 ######################################################
 "
-read -p "Do you want to enable SELinux repo? [y/N] " SELINUX
-: "${SELINUX:=n}"
-SELINUX="${SELINUX,,}"
+read -p "Do you want to enable SELinux repo? [y/N] " selinux
+selinux="${selinux:-n}"
+selinux="${selinux,,}"
 
-if [ "$SELINUX" == y ] ; then
+if [[ $selinux == y ]] ; then
+    # Add SELinux repository
     echo "[selinux]" >> /etc/pacman.conf
     echo "Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux" >> /etc/pacman.conf
     echo "SigLevel = PackageOptional" >> /etc/pacman.conf
@@ -315,24 +337,24 @@ echo "
 "
 echo -e "Setting network ..."
 echo -e "\n\nPlease tell me the hostname:"
-read HOSTNAME
-echo "$HOSTNAME" > /mnt/etc/hostname
+read hostname
+echo "$hostname" > /mnt/etc/hostname
 echo -e "\nWhich network manager do you want to use?\n\t1\tsystemd-networkd\n\t2\tNetworkManger"
-read -p "Please enter a number: " NETWORKMANAGER
-if [ "$NETWORKMANAGER" -eq 1 ] ; then
+read -p "Please enter a number: " networkmanager
+if [[ $networkmanager -eq 1 ]] ; then
     echo -e "Copying iso network configuration ..."
     cp /etc/systemd/network/20-ethernet.network /mnt/etc/systemd/network/20-ethernet.network
     echo "Enabling systemd-resolved.service and systemd-networkd.service ..."
     arch-chroot /mnt systemctl enable systemd-resolved.service
     arch-chroot /mnt systemctl enable systemd-networkd.service
-    read -p "Install and enable iwd (for WiFi) ? [y/N] " INSTALL_IWD
-    : "${INSTALL_IWD:=n}"
-    INSTALL_IWD="${INSTALL_IWD,,}"
-    if [ "$INSTALL_IWD" = y ] ; then
+    read -p "Install and enable iwd (for WiFi) ? [y/N] " install_iwd
+    install_iwd="${install_iwd:-n}"
+    INSTALL_IWD="${install_iwd,,}"
+    if [[ $install_iwd == y ]] ; then
         arch-chroot /mnt pacman --noconfirm -S iwd
         arch-chroot /mnt systemctl enable iwd.service
     fi
-elif [ "$NETWORKMANAGER" -eq 2 ] ; then
+elif [[ "$networkmanager" -eq 2 ]] ; then
     echo "Installing NetworkManager and wpa_supplicant ..."
     arch-chroot /mnt pacman --noconfirm -S networkmanager wpa_supplicant
     echo "Enabling systemd-resolved.service and NetworkManager.service and wpa_supplicant.service ..."
@@ -345,12 +367,13 @@ else
 fi
 
 
-
-partprobe &> /dev/null    # reload partition table
+# reload partition table
+partprobe &> /dev/null
+# wait for partition table update
 sleep 1
-ROOT_UUID=$(lsblk -dno UUID $ROOT_BLOCK)
-EFI_UUID=$(lsblk -dno UUID $EFI_PART)
-if [ "$HARDENED" = y ] ; then
+root_uuid=$(lsblk -dno UUID $root_block)
+efi_uuid=$(lsblk -dno UUID $efi_part)
+if [[ $encrypt_root == y ]] ; then
     echo "
 ######################################################
 # Disk encryption
@@ -358,27 +381,29 @@ if [ "$HARDENED" = y ] ; then
 ######################################################
 "
     # kernel cmdline parameters for encrypted root partition
-    KERNEL_CMD="root=/dev/mapper/cryptroot"
+    kernel_cmd="root=/dev/mapper/cryptroot"
 
     # /etc/crypttab.initramfs for root
     echo -e "\nConfiguring /etc/crypttab.iniramfs for encrypted root ..."
-    if [ "$CRYPTKEY" = y ] ; then
-        echo "cryptroot  UUID=$ROOT_UUID  rootkeyfile:UUID=$EFI_UUID  password-echo=no,x-systemd.device-timeout=0,keyfile-timeout=5s,timeout=0,no-read-workqueue,no-write-workqueue,discard"  >>  /mnt/etc/crypttab.initramfs
+    if [[ $cryptkey == y ]] ; then
+        echo "cryptroot  UUID=$root_uuid  rootkeyfile:UUID=$efi_uuid  password-echo=no,x-systemd.device-timeout=0,keyfile-timeout=5s,timeout=0,no-read-workqueue,no-write-workqueue,discard"  >>  /mnt/etc/crypttab.initramfs
     else
-        echo "cryptroot  UUID=$ROOT_UUID  -  password-echo=no,x-systemd.device-timeout=0,timeout=0,no-read-workqueue,no-write-workqueue,discard"  >>  /mnt/etc/crypttab.initramfs
+        echo "cryptroot  UUID=$root_uuid  -  password-echo=no,x-systemd.device-timeout=0,timeout=0,no-read-workqueue,no-write-workqueue,discard"  >>  /mnt/etc/crypttab.initramfs
     fi
 
     # /etc/crypttab for swap
     echo -e "Configuring /etc/crypttab.iniramfs for encrypted swap ..."
-    swapoff $SWAP_PART
-    # create a persistent partition name for swap
+    swapoff $swap_part
+    # create a persistent partition name (UUID or label) for swap
     # read [this](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption#UUID_and_LABEL) for reason creating a 1MiB size ext2 filesystem
-    mkfs.ext2 -F -F -L cryptswap $SWAP_PART 1M
+    mkfs.ext2 -F -F -L cryptswap $swap_part 1M
+    # reload partition table
     sleep 1
-    partprobe &> /dev/null    # reload partition table
+    partprobe &> /dev/null
+    # wait for partition table update
     sleep 1
-    SWAP_UUID=$(lsblk -dno UUID $SWAP_PART)
-    echo "cryptswap  UUID=$SWAP_UUID  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
+    swap_uuid=$(lsblk -dno UUID $swap_part)
+    echo "cryptswap  UUID=$swap_uuid  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
     # change /etc/fstab swap entry
     sed -i "/swap/ s:^UUID=[a-zA-Z0-9-]*\s:/dev/mapper/cryptswap  :" /mnt/etc/fstab
     #fi
@@ -391,22 +416,23 @@ if [ "$HARDENED" = y ] ; then
     sed -i '/^HOOKS=/ s/ keymap//' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/ consolefont//' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/base/base systemd keyboard/' /mnt/etc/mkinitcpio.conf
-    #sed -i '/^HOOKS=/ s/autodetect/autodetect sd-vconsole/' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/block/sd-vconsole block sd-encrypt/' /mnt/etc/mkinitcpio.conf
-    if [ "$CRYPTKEY" = y ] ; then
-        sed -i '/^MODULES=/ s/(/(vfat /' /mnt/etc/mkinitcpio.conf
+    if [[ $cryptkey == y ]] ; then
+        sed -i '/^MODULES=/ s/()/(vfat)/' /mnt/etc/mkinitcpio.conf
     fi
 else
-    KERNEL_CMD="root=UUID=$ROOT_UUID"
+    kernel_cmd="root=UUID=$root_uuid"
 fi
 
 # btrfs as root 
 # https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
-KERNEL_CMD="$KERNEL_CMD rootfstype=btrfs rootflags=subvol=/@ rw"
+kernel_cmd="$kernel_cmd rootfstype=btrfs rootflags=subvol=/@ rw"
 # modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
 # https://wiki.archlinux.org/title/PC_speaker#Globally
-KERNEL_CMD="$KERNEL_CMD modprobe.blacklist=pcspkr $OTHER_KERNEL_CMD"
+kernel_cmd="$kernel_cmd modprobe.blacklist=pcspkr $KERNEL_PARAMETERS"
 
+# Fallback kernel cmdline parameters (without SELinux, VFIO)
+echo "$kernel_cmd" > /mnt/etc/kernel/cmdline_fallback
 
 echo "
 ######################################################
@@ -414,9 +440,9 @@ echo "
 # https://wiki.archlinux.org/title/SELinux#Enable_SELinux_LSM
 ######################################################
 "
-if [ "$SELINUX" == y ] ; then
+if [[ $selinux == y ]] ; then
     echo "Adding SELinux LSM to kernel parameter ..."
-    KERNEL_CMD="$KERNEL_CMD lsm=landlock,lockdown,yama,integrity,selinux,bpf"
+    kernel_cmd="$kernel_cmd lsm=landlock,lockdown,yama,integrity,selinux,bpf"
     echo "Adding SELinux repo ..."
     echo "[selinux]" >> /mnt/etc/pacman.conf
     echo "Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux" >> /mnt/etc/pacman.conf
@@ -432,17 +458,19 @@ echo "
 # https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#Enabling_IOMMU
 ######################################################
 "
-read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " ENABLE_VFIO
-: "${ENABLE_VFIO:=n}"
-ENABLE_VFIO="${ENABLE_VFIO,,}"
-if [ "$ENABLE_VFIO" = y ] ; then
-    if [ $(echo "$UCODE_PKG" | grep "intel" | wc -l ) -ge 1 ] ; then
+read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " vfio
+vfio="${vfio:-n}"
+vfio="${vfio,,}"
+if [[ $vfio == y ]] ; then
+    if [[ $(grep -e 'vendor_id.*GenuineIntel' /proc/cpuinfo | wc -l) -ge 1 ]] ; then
         # for intel cpu
-        KERNEL_CMD="$KERNEL_CMD intel_iommu=on iommu=pt"
+        kernel_cmd="$kernel_cmd intel_iommu=on iommu=pt"
     else
         # amd cpu
-        KERNEL_CMD="$KERNEL_CMD iommu=pt"
+        kernel_cmd="$kernel_cmd iommu=pt"
     fi
+    # load vfio-pci module early
+    # https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#mkinitcpio
     sed -i '/^MODULES=/ s/)/ vfio_pci vfio vfio_iommu_type1 vfio_virqfd)/' /mnt/etc/mkinitcpio.conf
 fi
 
@@ -453,15 +481,15 @@ echo "
 # https://wiki.archlinux.org/title/Unified_kernel_image
 ######################################################
 "
-arch-chroot /mnt mkdir -p /boot/EFI/Linux
+arch-chroot /mnt mkdir -p /efi/EFI/Linux
 for KERNEL in $KERNEL_PKGS
 do 
     # Add line ALL_microcode=(/boot/*-ucode.img)
-    sed -i '\|^ALL_kver=.*|a ALL_microcode=(/boot/*-ucode.img)' /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    # Add Arch splash screen and add PRESET_uki=
-    sed -i "s|^#default_options=.*|default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\ndefault_uki=\"/boot/EFI/Linux/ArchLinux-$KERNEL.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i "s|^fallback_options=.*|fallback_options=\"-S autodetect\"\\nfallback_uki=\"/boot/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    # comment out PRESET_image=
+    sed -i '/^ALL_kver=.*/a ALL_microcode=(/boot/*-ucode.img)' /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    # Add Arch splash screen and add default_uki= and fallback_uki=
+    sed -i "s|^#default_options=.*|default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\ndefault_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i "s|^fallback_options=.*|fallback_options=\"-S autodetect --cmdline /etc/kernel/cmdline_fallback\"\\nfallback_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    # comment out default_image= and fallback_image=
     sed -i "s|^default_image=.*|#&|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
     sed -i "s|^fallback_image=.*|#&|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
 done
@@ -470,115 +498,58 @@ done
 rm /mnt/efi/initramfs-*.img 2>/dev/null
 rm /mnt/boot/initramfs-*.img 2>/dev/null
 
-echo "$KERNEL_CMD" > /mnt/etc/kernel/cmdline
-if [ "$HARDENED" != 'y' ] ; then
-    echo "Regenerating the initramfs ..."
-    arch-chroot /mnt mkinitcpio -P
-fi
+echo "$kernel_cmd" > /mnt/etc/kernel/cmdline
+echo "Regenerating the initramfs ..."
+arch-chroot /mnt mkinitcpio -P
 
 
-if [ "$HARDENED" = y ] ; then
+if [[ $secure_boot == y ]] ; then
     echo "
 ######################################################
 # Secure boot setup
 # https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot
 ######################################################
 "
-    echo "Configuring secure boot ..."
-    arch-chroot /mnt bash <<'EOF'
-# preparation
-echo "Preparing ..."
-pacman --noconfirm -S efitools sbsigntools
-mkdir /etc/efi-keys
-cd /etc/efi-keys
+    arch-chroot /mnt pacman --noconfirm -S sbctl
+    echo "Creating keys ..."
+    arch-chroot /mnt sbctl create-keys
 
-# create GUID for owner identification
-echo "Creating GUID for owner identification ..."
-uuidgen --random > GUID.txt
-
-# generate platform key
-echo "Generating platform key ..."
-openssl req -newkey rsa:4096 -nodes -keyout PK.key -new -x509 -sha256 -days 3650 -subj "/CN=my Platform Key/" -out PK.crt
-openssl x509 -outform DER -in PK.crt -out PK.cer
-cert-to-efi-sig-list -g "$(< GUID.txt)" PK.crt PK.esl
-sign-efi-sig-list -g "$(< GUID.txt)" -k PK.key -c PK.crt PK PK.esl PK.auth
-
-# generate key exchange key
-echo "Generating key exchange key ..."
-openssl req -newkey rsa:4096 -nodes -keyout KEK.key -new -x509 -sha256 -days 3650 -subj "/CN=my Key Exchange Key/" -out KEK.crt
-openssl x509 -outform DER -in KEK.crt -out KEK.cer
-cert-to-efi-sig-list -g "$(< GUID.txt)" KEK.crt KEK.esl
-sign-efi-sig-list -g "$(< GUID.txt)" -k PK.key -c PK.crt KEK KEK.esl KEK.auth
-
-# Database key
-echo "Generating database key ..."
-openssl req -newkey rsa:4096 -nodes -keyout db.key -new -x509 -sha256 -days 3650 -subj "/CN=my Signature Database key/" -out db.crt
-openssl x509 -outform DER -in db.crt -out db.cer
-cert-to-efi-sig-list -g "$(< GUID.txt)" db.crt db.esl
-sign-efi-sig-list -g "$(< GUID.txt)" -k KEK.key -c KEK.crt db db.esl db.auth
-
-# enroll these keys into firmware
-echo "Enrolling these keys into firmware ..."
-mkdir -p /etc/secureboot/keys/{db,dbx,KEK,PK}
-cp /etc/efi-keys/PK.auth /etc/secureboot/keys/PK/
-cp /etc/efi-keys/KEK.auth /etc/secureboot/keys/KEK/
-cp /etc/efi-keys/db.auth /etc/secureboot/keys/db/
-
-# enroll your keys
-echo "Enrolling your keys ..."
-chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}*
-sbkeysync --verbose
-
-# enroll your PK
-echo "Enrolling your platform key ..."
-efi-updatevar -f /etc/secureboot/keys/PK/PK.auth PK
-sbkeysync --verbose --pk
-EOF
-
-    echo -e "\n\n"
-    read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [y/N] " ADD_MS_CERT
-    : "${ADD_MS_CERT:=n}"
-    ADD_MS_CERT="${ADD_MS_CERT,,}"
-    if [ "$ADD_MS_CERT" = y ] ; then
-        echo "Adding Microsoft's certificate to the database ..."
-        arch-chroot /mnt bash <<'EOF'
-cd /etc/efi-keys
-echo "Downloading MS cert ..."
-curl -O https://www.microsoft.com/pkiops/certs/MicCorUEFCA2011_2011-06-27.crt
-sbsiglist --owner 77fa9abd-0359-4d32-bd60-28f4e78f784b --type x509 --output MS_UEFI_db.esl MicCorUEFCA2011_2011-06-27.crt
-sign-efi-sig-list -a -g 77fa9abd-0359-4d32-bd60-28f4e78f784b -k KEK.key -c KEK.crt db MS_UEFI_db.esl add_MS_UEFI_db.auth
-echo "Adding MS UEFI cert to firmware ..."
-cp /etc/efi-keys/add_MS_UEFI_db.auth /etc/secureboot/keys/db/
-chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}*
-sbkeysync --verbose
-EOF
-    fi
-
-    echo "Adding pacman hooks ..."
-    mkdir -p /mnt/etc/pacman.d/hooks
-    cat >> /mnt/etc/pacman.d/hooks/99-secureboot.hook <<'EOF'
-[Trigger]
-Operation = Install
-Operation = Upgrade
-Type = Path
-Target = usr/lib/modules/*/vmlinuz
-Target = usr/lib/initcpio/*
-
-[Action]
-Description = Signing Unified Kernel Images for SecureBoot
-When = PostTransaction
-Exec = /usr/bin/bash -c 'for ENTRY in /boot/EFI/Linux/*.efi ; do /usr/bin/sbsign --key /etc/efi-keys/db.key --cert /etc/efi-keys/db.crt --output "/efi/EFI/Linux/${ENTRY##*/}" "/boot/EFI/Linux/${ENTRY##*/}" ; done'
-Depends = sbsigntools
-EOF
-
-    # sign the unified kernel image
-    arch-chroot /mnt mkdir -p /efi/EFI/Linux
-    if [ "$SELINUX" != y ] ; then
-        arch-chroot /mnt pacman --noconfirm -S systemd
+    echo "Enroll keys ..."
+    read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [y/N] " ms_cert
+    ms_cert="${ms_cert:-n}"
+    ms_cert="${ms_cert,,}"
+    if [[ $ms_cert == n ]] ; then
+        arch-chroot /mnt sbctl enroll-keys 2>&1
     else
-        arch-chroot /mnt pacman --noconfirm -S systemd-selinux
+        arch-chroot /mnt sbctl enroll-keys --microsoft 2>&1
+    fi
+    # Ignore any error and force enroll keys
+    # I need --yes-this-might-brick-my-machine for libvirt virtual machines
+    if [[ $? -ne 0 ]] ; then
+        read -p "Ignore error and enroll key anyway? [y/N] " force_enroll
+        force_enroll="${force_enroll:-n}"
+        force_enroll="${force_enroll,,}"
+        if [[ $force_enroll == y ]] ; then
+            if [[ $ms_cert == n ]] ; then
+                arch-chroot /mnt sbctl enroll-keys --yes-this-might-brick-my-machine
+            else
+                arch-chroot /mnt sbctl enroll-keys --microsoft --yes-this-might-brick-my-machine
+            fi
+        else
+            echo "Did not enroll any keys"
+            echo "Now chroot into new system and enroll keys manully with"
+            echo "sbctl enroll-keys"
+            echo "exit the chroot to continue installation"
+            arch-chroot /mnt
+        fi
     fi
 
+    echo "Signing unified kernel image ..."
+    for KERNEL in $KERNEL_PKGS
+    do 
+        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/ArchLinux-$KERNEL.efi"
+        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/ArchLinux-$KERNEL-fallback.efi"
+    done
 fi
 
 echo "
@@ -587,22 +558,23 @@ echo "
 # https://wiki.archlinux.org/title/Unified_kernel_image#Directly_from_UEFI
 ######################################################
 "
-EFI_DEV=$(lsblk --noheadings --output PKNAME $EFI_PART)
-EFI_PART_NUM=$(echo $EFI_PART | grep -Eo '[0-9]+$')
+efi_dev=$(lsblk --noheadings --output PKNAME $efi_part)
+efi_part_num=$(echo $efi_part | grep -Eo '[0-9]+$')
 arch-chroot /mnt pacman --noconfirm -S --needed efibootmgr
+
+echo "Creating UEFI boot entries for each unified kernel image ..."
 for KERNEL in $KERNEL_PKGS
-do
-    arch-chroot /mnt efibootmgr --create --disk /dev/${EFI_DEV} --part ${EFI_PART_NUM} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
-    arch-chroot /mnt efibootmgr --create --disk /dev/${EFI_DEV} --part ${EFI_PART_NUM} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
+do 
+    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
+    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
 done
 
-echo -e "\n"
 arch-chroot /mnt efibootmgr
 echo -e "\n\nDo you want to change boot order?: "
-read -p "Enter boot order XXXX,XXXX (empty to skip): " BOOT_ORDER
-if [ -n "$BOOT_ORDER" ] ; then
+read -p "Enter boot order XXXX,XXXX (empty to skip): " boot_order
+if [[ -n $boot_order ]] ; then
     echo -e "\n"
-    arch-chroot /mnt efibootmgr --bootorder ${BOOT_ORDER}
+    arch-chroot /mnt efibootmgr --bootorder ${boot_order}
     echo -e "\n"
 fi
 
@@ -613,11 +585,11 @@ echo "
 # https://wiki.archlinux.org/title/Podman#Rootless_Podman
 ######################################################
 "
-if [[ "$KERNEL_PKGS" == *"linux-hardened"* ]]; then
-    read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [y/N] " ENABLE_USER_NS_UNPRIVILEGED
-    : "${ENABLE_USER_NS_UNPRIVILEGED:=n}"
-    ENABLE_USER_NS_UNPRIVILEGED="${ENABLE_USER_NS_UNPRIVILEGED,,}"
-    if [ "$ENABLE_USER_NS_UNPRIVILEGED" = y ] ; then
+if [[ $KERNEL_PKGS == *"linux-hardened"* ]]; then
+    read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [y/N] " enable_user_ns_unprivileged
+    enable_user_ns_unprivileged="${enable_user_ns_unprivileged:-n}"
+    enable_user_ns_unprivileged="${enable_user_ns_unprivileged,,}"
+    if [[ $enable_user_ns_unprivileged == y ]] ; then
         echo "kernel.unprivileged_userns_clone=1" >> /mnt/etc/sysctl.d/unprivileged_user_namespace.conf
     fi
 fi
@@ -629,11 +601,11 @@ echo "
 # https://wiki.archlinux.org/title/OpenSSH#Server_usage
 ######################################################
 "
-read -p "Do you want to enable ssh? [y/N] " IS_SSH
-: "${IS_SSH:=n}"
-IS_SSH="${IS_SSH,,}"
-if [ "$IS_SSH" = y ] ; then
-    if [ "$SELINUX" != y ] ; then
+read -p "Do you want to enable ssh? [y/N] " enable_ssh
+enable_ssh="${enable_ssh:-n}"
+enable_ssh="${enable_ssh,,}"
+if [[ $enable_ssh == y ]] ; then
+    if [[ $selinux == n ]] ; then
         arch-chroot /mnt pacman --noconfirm -S --needed openssh
     else
         arch-chroot /mnt pacman --noconfirm -S --needed openssh-selinux
@@ -641,9 +613,9 @@ if [ "$IS_SSH" = y ] ; then
     arch-chroot /mnt systemctl enable sshd.service
     echo " Enabled sshd.service"
     echo "ssh port? (22)"
-    read SSH_PORT
-    : "${SSH_PORT:=22}"
-    sed -i "s/^#Port.*/Port ${SSH_PORT}/" /mnt/etc/ssh/sshd_config
+    read ssh_port
+    ssh_port="${ssh_port:-22}"
+    sed -i "s/^#Port.*/Port ${ssh_port}/" /mnt/etc/ssh/sshd_config
 fi
 
 
@@ -657,13 +629,13 @@ arch-chroot /mnt pacman --noconfirm -S firewalld
 arch-chroot /mnt systemctl enable firewalld.service
 echo "Set default firewall zone to drop."
 arch-chroot /mnt firewall-offline-cmd --set-default-zone=drop
-if [ "$IS_SSH" = y ] ; then
+if [ "$enable_ssh" = y ] ; then
     echo "modify default ssh service with new port."
-    sed "/port=/s/port=\"22\"/port=\"${SSH_PORT}\"/" /mnt/usr/lib/firewalld/services/ssh.xml  > /mnt/etc/firewalld/services/ssh.xml
+    sed "/port=/s/port=\"22\"/port=\"${ssh_port}\"/" /mnt/usr/lib/firewalld/services/ssh.xml  > /mnt/etc/firewalld/services/ssh.xml
     #arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service=ssh
-    echo "ssh allow ip address (example 192.168.1.0/24)"
-    read SSH_FROM
-    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${SSH_FROM}' service name='ssh' accept"
+    echo -e "\nssh allow source ip address (example 192.168.1.0/24)"
+    read ssh_source
+    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ssh_source}' service name='ssh' accept"
 fi
 
 
@@ -676,25 +648,24 @@ echo "
 # add wheel group to sudoer
 sed -i '/^# %wheel ALL=(ALL:ALL) ALL/ s/# //' /mnt/etc/sudoers
 
-read -p "Do you want to create user with systemd-homed? [y/N] " IS_HOMED
-: "${IS_HOMED:=n}"
-IS_HOMED="${IS_HOMED,,}"
-if [ "$IS_HOMED" = y ] ; then
+read -p "Do you want to create user with systemd-homed? [y/N] " homed
+homed="${homed:-n}"
+homed="${homed,,}"
+if [[ $homed == y ]] ; then
     cp "$(pwd)/homed.sh" /mnt/root/homed.sh
     echo "Created /root/homed.sh Run it after reboot to create systemd-homed user, which can't be done in chroot environment."
     echo "Enter root password (/root/homed.sh can disable root account after you setup systemd-homed user)"
     arch-chroot /mnt passwd
 
-
 else
-    read -p "Tell me your username: " USERNAME
-    arch-chroot /mnt useradd -m -G wheel "$USERNAME"
-    arch-chroot /mnt passwd "$USERNAME"
+    read -p "Tell me your username: " username
+    arch-chroot /mnt useradd -m -G wheel "$username"
+    arch-chroot /mnt passwd "$username"
 
-    read -p "Do you want to disable root account? [Y/n] " IS_ROOT_DISABLE
-    : "${IS_ROOT_DISABLE:=n}"
-    IS_ROOT_DISABLE="${IS_ROOT_DISABLE,,}"
-    if [ "$IS_ROOT_DISABLE" = y ] ; then
+    read -p "Do you want to disable root account? [Y/n] " disable_root
+    disable_root="${disable_root:-n}"
+    disable_root="${disable_root,,}"
+    if [[ $disable_root == y ]] ; then
         # https://wiki.archlinux.org/title/Sudo#Disable_root_login
         echo "Disabling root ..."
         arch-chroot /mnt passwd -d root
