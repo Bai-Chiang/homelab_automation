@@ -292,7 +292,7 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Install_essential_packages
 ######################################################
 "
-pacstrap -K /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS efibootmgr
+pacstrap -K /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS
 
 
 echo "
@@ -571,7 +571,7 @@ done
 
 arch-chroot /mnt efibootmgr
 echo -e "\n\nDo you want to change boot order?: "
-read -p "Enter boot order XXXX,XXXX (empty to skip): " boot_order
+read -p "Enter boot order (empty to skip): " boot_order
 if [[ -n $boot_order ]] ; then
     echo -e "\n"
     arch-chroot /mnt efibootmgr --bootorder ${boot_order}
