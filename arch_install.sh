@@ -252,12 +252,19 @@ mkdir -p /mnt/@/var/cache/pacman/pkg
 umount "$root_part"
 
 # mount all partitions
-echo -e "\nMounting all partitions ..."
+echo -e "\nMounting all partitions ...\n"
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$root_part" /mnt
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$root_part" /mnt/home
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@snapshots "$root_part" /mnt/.snapshots
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@var_log "$root_part" /mnt/var/log
-mount -o "$BTRFS_MOUNT_OPTS",subvol=@pacman_pkgs "$root_part" /mnt/var/cache/pacman/pkg
+read -p "Do you want to add nodev,nosuid,noexec mount options to /home? [Y/n] " secure_mount_opts
+secure_mount_opts="${secure_mount_opts:-y}"
+secure_mount_opts="${secure_mount_opts,,}"
+if [[ $secure_mount_opts == y ]] ; then
+    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@home "$root_part" /mnt/home
+else
+    mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$root_part" /mnt/home
+fi
+mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@snapshots "$root_part" /mnt/.snapshots
+mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@var_log "$root_part" /mnt/var/log
+mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@pacman_pkgs "$root_part" /mnt/var/cache/pacman/pkg
 mount "$efi_part" /mnt/efi
 swapon "$swap_part"
 
