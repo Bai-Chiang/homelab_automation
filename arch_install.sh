@@ -252,15 +252,16 @@ mkdir -p /mnt/@/var/cache/pacman/pkg
 umount "$root_part"
 
 # mount all partitions
-echo -e "\nMounting all partitions ...\n"
+echo -e "\nMounting all partitions ..."
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$root_part" /mnt
-read -p "Do you want to add nodev,nosuid,noexec mount options to /home? [Y/n] " secure_mount_opts
-secure_mount_opts="${secure_mount_opts:-y}"
-secure_mount_opts="${secure_mount_opts,,}"
-if [[ $secure_mount_opts == y ]] ; then
+echo -e "\nFollowing the principle of least privilege, file systems should be mounted with the most restrictive mount options possible (without losing functionality).\nDo you want to add noexec mount options to /home? It may breaks some programs\nhttps://wiki.archlinux.org/title/Security#Mount_options\n"
+read -p "Add noexec mount options to /home? [Y/n] " noexec_home
+noexec_home="${noexec_home:-y}"
+noexec_home="${noexec_home,,}"
+if [[ $noexec_home == y ]] ; then
     mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@home "$root_part" /mnt/home
 else
-    mount -o "$BTRFS_MOUNT_OPTS",subvol=@home "$root_part" /mnt/home
+    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid",subvol=@home "$root_part" /mnt/home
 fi
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@snapshots "$root_part" /mnt/.snapshots
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@var_log "$root_part" /mnt/var/log
