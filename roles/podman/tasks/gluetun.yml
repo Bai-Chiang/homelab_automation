@@ -2,34 +2,30 @@
 - name: setsebool -P container_use_devices=true
   ansible.posix.seboolean:
     name: container_use_devices
-    state: yes
-    persistent: yes
+    state: true
+    persistent: true
   when: ansible_selinux.status == "enabled"
-  become: yes
+  become: true
 
 - name: setsebool -P domain_kernel_load_modules=true
   ansible.posix.seboolean:
     name: domain_kernel_load_modules
-    state: yes
-    persistent: yes
+    state: true
+    persistent: true
   when: ansible_selinux.status == "enabled"
-  become: yes
+  become: true
 
-- block:
-  - name: gluetun.service
-    ansible.builtin.template:
-      src: gluetun.service.j2
-      dest: "/home/{{ podman_user.name }}/.config/systemd/user/gluetun.service"
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0600'
+- name: gluetun.service
+  ansible.builtin.template:
+    src: gluetun.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/gluetun.service"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: systemctl --user enable --now gluetun.service
-    ansible.builtin.systemd:
-      name: gluetun
-      enabled: yes
-      state: started
-      scope: user
-
-  become: yes
+- name: systemctl --user enable --now gluetun.service
+  ansible.builtin.systemd: name=gluetun enabled=true state=started scope=user
+  become: true
   become_user: "{{ podman_user.name }}"

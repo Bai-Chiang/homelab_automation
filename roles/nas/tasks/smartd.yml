@@ -1,8 +1,7 @@
 ---
 - name: pacman -S smartmontools
-  community.general.pacman:
-    name: smartmontools
-    state: present
+  community.general.pacman: name=smartmontools state=present
+  become: true
 
 - name: /etc/smartd.conf
   ansible.builtin.lineinfile:
@@ -10,6 +9,7 @@
     regexp: '^DEVICESCAN'
     line: "DEVICESCAN -m <nomailer> -M daily -M exec /usr/local/bin/smartd_notify.sh -s {{ smartd_time }}"
     state: present
+  become: true
 
 - name: /usr/local/bin/smart_notify.sh
   ansible.builtin.template:
@@ -18,9 +18,9 @@
     owner: root
     group: root
     mode: '0700'
+  become: true
 
 - name: systemctl enable smartd.service
-  ansible.builtin.systemd:
-    name: smartd
-    enabled: yes
+  ansible.builtin.systemd: name=smartd enabled=true
+  become: true
 

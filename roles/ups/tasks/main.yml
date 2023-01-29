@@ -1,68 +1,68 @@
 ---
-- block:
-  - name: pacman -S nut
-    community.general.pacman:
-      name: nut
-      state: present
-  
-  - name: /etc/nut/ups.conf
-    ansible.builtin.blockinfile:
-      path: /etc/nut/ups.conf
-      block: |
-        [myups]
-          driver = usbhid-ups
-          port = auto
-      state: present
-  
-  - name: Change UPS device permission
-    ansible.builtin.template:
-      src: 50-ups.rules.j2
-      dest: /etc/udev/rules.d/50-ups.rules
-      owner: root
-      group: root
-      mode: '0644'
-  
-  - name: /etc/nut/upsd.users
-    ansible.builtin.blockinfile:
-      path: /etc/nut/upsd.users
-      block: |
-        [admin]
-          password = {{ ups_password }}
-          upsmon primary
-          actions = SET
-          instcmds = ALL
-      state: present
-  
-  - name: /etc/nut/upsmon.conf
-    ansible.builtin.blockinfile:
-      path: /etc/nut/upsmon.conf
-      block: |
-        MONITOR myups@localhost 1 admin {{ ups_password }} primary
-        NOTIFYCMD /usr/local/bin/ups_notify.sh
-        NOTIFYFLAG ONLINE SYSLOG+EXEC
-        NOTIFYFLAG ONBATT SYSLOG+EXEC
-        NOTIFYFLAG LOWBATT SYSLOG+EXEC
-        NOTIFYFLAG FSD SYSLOG+EXEC
-        NOTIFYFLAG SHUTDOWN SYSLOG+EXEC
-        NOTIFYFLAG REPLBATT SYSLOG+EXEC
-        NOTIFYFLAG NOCOMM SYSLOG+EXEC
-      state: present
-      create: yes
-  
-  - name: /usr/local/bin/ups_notify.sh
-    ansible.builtin.template:
-      src: ups_notify.sh.j2
-      dest: /usr/local/bin/ups_notify.sh
-      owner: root
-      group: root
-      mode: '0700'
-  
-  - name: systemctl enable nut-server.service nut-monitor.service
-    ansible.builtin.systemd:
-      name: "{{ item }}"
-      enabled: yes
-    loop:
-      - nut-server
-      - nut-monitor
+- name: pacman -S nut
+  community.general.pacman: name=nut state=present
+  become: true
 
-  become: yes
+- name: /etc/nut/ups.conf
+  ansible.builtin.blockinfile:
+    path: /etc/nut/ups.conf
+    block: |
+      [myups]
+        driver = usbhid-ups
+        port = auto
+    state: present
+  become: true
+
+- name: Change UPS device permission
+  ansible.builtin.template:
+    src: 50-ups.rules.j2
+    dest: /etc/udev/rules.d/50-ups.rules
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: /etc/nut/upsd.users
+  ansible.builtin.blockinfile:
+    path: /etc/nut/upsd.users
+    block: |
+      [admin]
+        password = {{ ups_password }}
+        upsmon primary
+        actions = SET
+        instcmds = ALL
+    state: present
+  become: true
+
+- name: /etc/nut/upsmon.conf
+  ansible.builtin.blockinfile:
+    path: /etc/nut/upsmon.conf
+    block: |
+      MONITOR myups@localhost 1 admin {{ ups_password }} primary
+      NOTIFYCMD /usr/local/bin/ups_notify.sh
+      NOTIFYFLAG ONLINE SYSLOG+EXEC
+      NOTIFYFLAG ONBATT SYSLOG+EXEC
+      NOTIFYFLAG LOWBATT SYSLOG+EXEC
+      NOTIFYFLAG FSD SYSLOG+EXEC
+      NOTIFYFLAG SHUTDOWN SYSLOG+EXEC
+      NOTIFYFLAG REPLBATT SYSLOG+EXEC
+      NOTIFYFLAG NOCOMM SYSLOG+EXEC
+    state: present
+    create: true
+  become: true
+
+- name: /usr/local/bin/ups_notify.sh
+  ansible.builtin.template:
+    src: ups_notify.sh.j2
+    dest: /usr/local/bin/ups_notify.sh
+    owner: root
+    group: root
+    mode: '0700'
+  become: true
+
+- name: systemctl enable nut-server.service nut-monitor.service
+  ansible.builtin.systemd: name={{ item }} enabled=true
+  loop:
+    - nut-server
+    - nut-monitor
+  become: true

@@ -16,7 +16,5 @@
 
 !/arch_install.sh
 !/fedora_post_install.sh
-!/create_vm.sh
-!/9p.sh
 !/homed.sh
 !/iommu.sh

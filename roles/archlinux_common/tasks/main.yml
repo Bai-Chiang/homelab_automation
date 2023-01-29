@@ -1,95 +1,77 @@
 ---
-- block:
+- name: Add time servers
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/timesyncd.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: "{{ item.insertafter }}"
+  loop:
+    - { regexp: '^NTP=', insertafter: '^#\s*NTP=', line: NTP=0.arch.pool.ntp.org 1.arch.pool.ntp.org 2.arch.pool.ntp.org 3.arch.pool.ntp.org }
+    - { regexp: '^FallbackNTP=', insertafter: '^#\s*FallbackNTP=', line: FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.fr.pool.ntp.org }
+  become: true
 
-  - name: Add time servers
-    ansible.builtin.lineinfile:
-      path: /etc/systemd/timesyncd.conf
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-      insertafter: "{{ item.insertafter }}"
-    loop:
-      - { regexp: '^NTP=', insertafter: '^#\s*NTP=', line: NTP=0.arch.pool.ntp.org 1.arch.pool.ntp.org 2.arch.pool.ntp.org 3.arch.pool.ntp.org }
-      - { regexp: '^FallbackNTP=', insertafter: '^#\s*FallbackNTP=', line: FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.fr.pool.ntp.org }
+- name: systemctl enable --now systemd-timesyncd.service
+  ansible.builtin.systemd: name=systemd-timesyncd state=started enabled=true
+  become: true
 
-  - name: systemctl enable --now systemd-timesyncd.service
-    ansible.builtin.systemd: name=systemd-timesyncd state=started enabled=yes
+- name: Enable pacman parallel downloads
+  ansible.builtin.lineinfile:
+    path: /etc/pacman.conf
+    regexp: '^ParallelDownloads ='
+    line: ParallelDownloads = 5
+    insertafter: '^#\s*ParallelDownloads = 5'
+  become: true
 
-  #- name: Disable bell sound
-  #  ansible.builtin.lineinfile:
-  #    path: "{{ item.path }}"
-  #    regexp: "{{ item.regexp }}"
-  #    line: "{{ item.line }}"
-  #    insertafter: "{{ item.insertafter }}"
-  #  loop:
-  #    - { path: /etc/inputrc, regexp: '^set bell-style', insertafter: '^#\s*set bell-style', line: set bell-style none }
-  #    - { path: /etc/profile, regexp: '^export LESS', insertafter: '#\s*export LESS', line: 'export LESS="$LESS -Q"' }
+- name: pacman -S reflector
+  community.general.pacman: name=reflector state=present
+  become: true
+  when: ansible_architecture == 'x86_64'
 
-  - name: Enable pacman parallel downloads
-    ansible.builtin.lineinfile:
-      path: /etc/pacman.conf
-      regexp: '^ParallelDownloads ='
-      line: ParallelDownloads = 5
-      insertafter: '^#\s*ParallelDownloads = 5'
+- name: Configure reflector
+  ansible.builtin.lineinfile:
+    path: /etc/xdg/reflector/reflector.conf
+    regexp: '^--country'
+    line: "--country {{ reflector_country }}"
+    insertafter: '^#\s*--country'
+  become: true
+  when: ansible_architecture == 'x86_64'
 
-  - name: pacman -S reflector
-    community.general.pacman: name=reflector state=present
-    when: ansible_architecture == 'x86_64'
+- name: systemctl enable reflector.service
+  ansible.builtin.systemd: name=reflector enabled=true
+  become: true
+  when: ansible_architecture == 'x86_64'
 
-  - name: Configure reflector
-    ansible.builtin.lineinfile:
-      path: /etc/xdg/reflector/reflector.conf
-      regexp: '^--country'
-      line: "--country {{ reflector_country }}"
-      insertafter: '^#\s*--country'
-    when: ansible_architecture == 'x86_64'
+- name: systemctl enable --now reflector.timer
+  ansible.builtin.systemd: name=reflector.timer enabled=true state=started
+  become: true
+  when: ansible_architecture == 'x86_64'
 
-  - name: systemctl enable reflector.service
-    ansible.builtin.systemd: name=reflector enabled=yes
-    when: ansible_architecture == 'x86_64'
+- name: pacman -S pacman-contrib for paccache
+  community.general.pacman: name=pacman-contrib state=present
+  become: true
 
-  - name: systemctl enable --now reflector.timer
-    ansible.builtin.systemd: name=reflector.timer enabled=yes state=started
-    when: ansible_architecture == 'x86_64'
+- name: systemctl enable --now paccache.timer
+  ansible.builtin.systemd: name=paccache.timer enabled=true state=started
+  become: true
 
-  - name: pacman -S pacman-contrib for paccache
-    community.general.pacman: name=pacman-contrib state=present
+- name: systemctl enable --now fstrim.timer
+  ansible.builtin.systemd: name=fstrim.timer enabled=true state=started
+  become: true
 
-  - name: systemctl enable --now paccache.timer
-    ansible.builtin.systemd: name=paccache.timer enabled=yes state=started
+- name: Optimize AUR building CFLAGS
+  ansible.builtin.lineinfile:
+    path: /etc/makepkg.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backrefs: "{{ item.backrefs }}"
+    insertafter: "{{ item.insertafter }}"
+  loop:
+    - { regexp: '^(CFLAGS=.*-march=).*( -pipe.*)', line: '\1native -O3\2', backrefs: true, insertafter: '' }
+    - { regexp: '^RUSTFLAGS=', line: 'RUSTFLAGS="-C opt-level=3 -C target-cpu=native"', backrefs: false, insertafter: '^#RUSTFLAGS=' }
+    - { regexp: '^MAKEFLAGS=', line: 'MAKEFLAGS="-j$(nproc)"', backrefs: false, insertafter: '^#MAKEFLAGS=' }
+  become: true
 
-  - name: systemctl enable --now fstrim.timer
-    ansible.builtin.systemd: name=fstrim.timer enabled=yes state=started
-
-  #- name: pacman -S ufw
-  #  community.general.pacman:
-  #    name: ufw
-  #    state: present
-
-  #- name: ufw default incoming rule
-  #  community.general.ufw: default=deny direction=incoming
-
-  #- name: ufw default routed rule
-  #  community.general.ufw: default=deny direction=routed
-
-  #- name: systemctl enable --now ufw.service
-  #  ansible.builtin.systemd: name=ufw.service enabled=yes state=started 
-
-  - name: Optimize AUR building CFLAGS
-    ansible.builtin.lineinfile:
-      path: /etc/makepkg.conf
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-      backrefs: "{{ item.backrefs }}"
-      insertafter: "{{ item.insertafter }}"
-    loop:
-      - { regexp: '^(CFLAGS=.*-march=).*( -pipe.*)', line: '\1native -O3\2', backrefs: yes, insertafter: '' }
-      - { regexp: '^RUSTFLAGS=', line: 'RUSTFLAGS="-C opt-level=3 -C target-cpu=native"', backrefs: no, insertafter: '^#RUSTFLAGS=' }
-      - { regexp: '^MAKEFLAGS=', line: 'MAKEFLAGS="-j$(nproc)"', backrefs: no, insertafter: '^#MAKEFLAGS=' }
-  
-  - import_tasks: snapper.yml
-
-  become: yes
-
+- import_tasks: snapper.yml
 
 - name: Create paru directory
   ansible.builtin.file:

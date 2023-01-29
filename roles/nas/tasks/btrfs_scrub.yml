@@ -6,6 +6,7 @@
     owner: root
     group: root
     mode: '0700'
+  become: true
 
 - name: Create btrfs-scrub@.service.d
   ansible.builtin.file:
@@ -15,6 +16,7 @@
     group: root
     mode: '0755'
   loop: "{{ btrfs_scrub_path }}"
+  become: true
 
 - name: Create btrfs-scrub@.timer.d
   ansible.builtin.file:
@@ -24,6 +26,7 @@
     group: root
     mode: '0755'
   loop: "{{ btrfs_scrub_path }}"
+  become: true
 
 - name: Modify btrfs-scrub service to send email when finished
   ansible.builtin.template:
@@ -33,6 +36,7 @@
     group: root
     mode: '0644'
   loop: "{{ btrfs_scrub_path }}"
+  become: true
   
 - name: Modify btrfs-scrub timer
   ansible.builtin.template:
@@ -42,9 +46,9 @@
     group: root
     mode: '0644'
   loop: "{{ btrfs_scrub_path }}"
+  become: true
 
 - name: systemctl enable btrfs-scrub@.timer
-  ansible.builtin.systemd:
-    name: btrfs-scrub@{{ item.escape }}.timer
-    enabled: yes
+  ansible.builtin.systemd: name=btrfs-scrub@{{ item.escape }}.timer enabled=true
   loop: "{{ btrfs_scrub_path }}"
+  become: true

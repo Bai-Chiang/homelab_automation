@@ -1,7 +1,7 @@
 ---
 - name: Install flatpak
   community.general.pacman: name=flatpak state=present
-  become: yes
+  become: true
 
 - name: Add flathub repo
   community.general.flatpak_remote:
@@ -18,8 +18,5 @@
     method: user
 
 - name: systemctl enable --user flatpak-update.timer
-  ansible.builtin.systemd:
-    name: flatpak-update.timer
-    enabled: yes
-    scope: user
+  ansible.builtin.systemd: name=flatpak-update.timer enabled=true scope=user
 

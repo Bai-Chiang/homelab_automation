@@ -1,0 +1,15 @@
+---
+- name: dnf install dnf-automatic
+  ansible.builtin.dnf: name=dnf-automatic state=present
+  become: true
+
+- name: Apply updates when available
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/automatic.conf
+    regexp: '^apply_updates'
+    line: "apply_updates = yes"
+  become: true
+
+- name: systemctl enable dnf-automatic.timer
+  ansible.builtin.systemd: name=dnf-automatic.timer enabled=true state=started
+  become: true

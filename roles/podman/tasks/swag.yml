@@ -1,42 +1,33 @@
 ---
 - name: container config direcoty
   ansible.builtin.file:
-    path: "/home/{{ podman_user }}/container_configs/swag"
+    path: "{{ podman_user.container_configs_dir }}/swag"
     state: directory
-    owner: "{{ podman_user }}"
-    group: "{{ podman_user }}"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
     mode: '0700'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
 - name: swag.service
   ansible.builtin.template:
     src: swag.service.j2
-    dest: /etc/systemd/system/swag.service
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: systemctl --user daemon-reload
-  ansible.builtin.systemd:
-    daemon_reload: yes
-    scope: user
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/swag.service"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
 - name: systemctl --user enable swag.service
-  ansible.builtin.systemd:
-    name: swag
-    enabled: yes
-    scope: user
+  ansible.builtin.systemd: name=swag enabled=true scope=user
 
-- name: Allow ufw incoming rules for web interface
-  community.general.ufw:
-    route: yes
-    rule: allow
-    interface_in: "{{ static_nic }}"
-    from_ip: "{{ item }}"
-    to_ip: any
-    proto: tcp
-    port: 443
-    comment: "Allow access web interface from {{ item }}"
-  when: ansible_facts['os_family'] == "Archlinux" or ansible_facts['os_family'] == "Debian"
-  become: yes
-  loop: "{{ allow_web_from }}"
-
+- name: Set firewall rules for incoming connection
+  ansible.posix.firewalld:
+    rich_rule: "{{ item }}"
+    zone: "{{ firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ podman_user.swag_firewall_rules }}"
+  become: true

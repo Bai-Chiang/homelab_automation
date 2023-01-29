@@ -3,11 +3,13 @@
   ansible.builtin.stat:
     path: /etc/snapper/configs/home
   register: snapper_home
+  become: true
 
 - name: Create snapper for /home/{{ ansible_user_id }} (systemd-homed)
   ansible.builtin.shell: snapper -c home create-config /home/{{ ansible_user_id }}
   args:
     executable: /usr/bin/bash
+  become: true
   when:
     - not snapper_home.stat.exists
     - homed
@@ -16,6 +18,7 @@
   ansible.builtin.shell: snapper -c home create-config /home
   args:
     executable: /usr/bin/bash
+  become: true
   when:
     - not snapper_home.stat.exists
     - not homed
@@ -37,3 +40,4 @@
     - { regexp: '^TIMELINE_LIMIT_WEEKLY=',  line: 'TIMELINE_LIMIT_WEEKLY="0"' }
     - { regexp: '^TIMELINE_LIMIT_MONTHLY=', line: 'TIMELINE_LIMIT_MONTHLY="0"' }
     - { regexp: '^TIMELINE_LIMIT_YEARLY=',  line: 'TIMELINE_LIMIT_YEARLY="0"' }
+  become: true

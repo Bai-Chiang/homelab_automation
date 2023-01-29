@@ -1,53 +1,57 @@
 ---
-- block:
-  - name: Install libvirt packages
-    community.general.pacman:
-      name:
-        # libvirt
-        - qemu-desktop
-        - libvirt
-        - virt-manager
-        # default NAT/DHCP networking support
-        - iptables-nft
-        - dnsmasq
-        - dmidecode
-        # bridged networking support
-        - bridge-utils
-        # UEFI support
-        - edk2-ovmf
-      state: present
+- name: Install libvirt packages
+  community.general.pacman:
+    name:
+      # libvirt
+      - qemu-desktop
+      - libvirt
+      - virt-manager
+      # default NAT/DHCP networking support
+      - iptables-nft
+      - dnsmasq
+      - dmidecode
+      # bridged networking support
+      - bridge-utils
+      # UEFI support
+      - edk2-ovmf
+    state: present
+  become: true
 
-  - name: Get file system type of /var/lib/libvirt/images
-    ansible.builtin.command: stat --file-system --format=%T /var/lib/libvirt/images
-    register: libvirt_images_fstype
-    changed_when: false
+- name: Get file system type of /var/lib/libvirt/images
+  ansible.builtin.command: stat --file-system --format=%T /var/lib/libvirt/images
+  become: true
+  register: libvirt_images_fstype
+  changed_when: false
 
-  - name: Disable copy-on-write for /var/lib/libvirt/images
-    ansible.builtin.file:
-      path: /var/lib/libvirt/images
-      attributes: '+C'
-      state: directory
-    when: libvirt_images_fstype.stdout == 'btrfs'
+- name: Disable copy-on-write for /var/lib/libvirt/images
+  ansible.builtin.file:
+    path: /var/lib/libvirt/images
+    attributes: '+C'
+    state: directory
+  become: true
+  when: libvirt_images_fstype.stdout == 'btrfs'
 
-  - name: Add user to libvirt group (non systemd-homed)
-    ansible.builtin.user:
-      name: "{{ ansible_user_id }}"
-      groups: libvirt
-      append: yes
-    when: not homed
+- name: Add user to libvirt group (non systemd-homed)
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: libvirt
+    append: true
+  become: true
+  when: not homed
 
-  - name: Add user to libvirt group (systemd-homed)
-    community.general.homectl:
-      name: "{{ ansible_user_id }}"
-      password: "{{ ansible_become_password }}"
-      memberof: "{{ ansible_user_id }},wheel,libvirt"
-    when: homed
+- name: Add user to libvirt group (systemd-homed)
+  community.general.homectl:
+    name: "{{ ansible_user_id }}"
+    password: "{{ ansible_become_password }}"
+    memberof: "{{ ansible_user_id }},wheel,libvirt"
+  become: true
+  when: homed
 
-  - name: systemctl enable --now libvirtd.service
-    ansible.builtin.systemd: name=libvirtd.service enabled=yes state=started
+- name: systemctl enable --now libvirtd.service
+  ansible.builtin.systemd: name=libvirtd.service enabled=true state=started
+  become: true
 
-  - name: systemctl start virtlogd.service
-    ansible.builtin.systemd: name=virtlogd.service state=started
-
-  become: yes
+- name: systemctl start virtlogd.service
+  ansible.builtin.systemd: name=virtlogd.service state=started
+  become: true
 

@@ -1,16 +1,13 @@
 ---
-- block:
-  - name: pacman -S msmtp
-    community.general.pacman:
-      name: msmtp
-      state: present
-  
-  - name: msmtp user config
-    ansible.builtin.template:
-      src: msmtprc.j2
-      dest: /root/.msmtprc
-      owner: root
-      group: root
-      mode: '0600'
+- name: pacman -S msmtp
+  community.general.pacman: name=msmtp state=present
+  become: true
 
-  become: yes
+- name: msmtp user config
+  ansible.builtin.template:
+    src: msmtprc.j2
+    dest: /root/.msmtprc
+    owner: root
+    group: root
+    mode: '0600'
+  become: true

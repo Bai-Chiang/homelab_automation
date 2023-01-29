@@ -1,14 +1,14 @@
 ---
 - name: pacman -S nfs-utils
-  community.general.pacman:
-    name: nfs-utils
-    state: present
+  community.general.pacman: name=nfs-utils state=present
+  become: true
 
 - name: Create NFS directories
   ansible.builtin.file:
     path: "{{ item.bind }}"
     state: directory
   loop: "{{ nfs_mount_point }}"
+  become: true
 
 - name: Add bind mount to /etc/fstab
   ansible.builtin.lineinfile:
@@ -17,6 +17,7 @@
     line: "{{ item.target }}  {{item.bind }}  none  bind  0 0"
     state: present
   loop: "{{ nfs_mount_point }}"
+  become: true
 
 - name: add root mount to /etc/exports
   ansible.builtin.lineinfile:
@@ -24,6 +25,7 @@
     regexp: "^{{ nfs_root }}\\s+"
     line: "{{ nfs_root }}  {{ nfs_root_ip_opt }}"
     state: present
+  become: true
 
 - name: add other mount points to /etc/exports
   ansible.builtin.lineinfile:
@@ -32,6 +34,7 @@
     line: "{{ item.bind }}  {{ item.ip_opt }}"
     state: present
   loop: "{{ nfs_mount_point }}"
+  become: true
 
 #- name: Add custom NFS rule to UFW
 #  ansible.builtin.blockinfile:
@@ -41,7 +44,7 @@
 #      title=NFS server
 #      description=NFS server
 #      ports=2049/tcp
-#    create: yes
+#    create: true
 #    marker: "; NFS {mark} ANSIBLE MANAGED BLOCK"
 #
 #- name: Configure firewall for NFS
@@ -58,14 +61,13 @@
     #rich_rule: rule family="ipv4" source address="{{ item }}" port port="2049" protocol="tcp" accept
     rich_rule: rule family="ipv4" source address="{{ item }}" service name="nfs" accept
     zone: "{{ firewalld_default_zone }}"
-    permanent: yes
-    immediate: yes
+    permanent: true
+    immediate: true
     state: enabled
   loop: "{{ nfs_accept_source_ipv4 }}"
   when: nfs_accept_source_ipv4 is defined
-  become: yes
+  become: true
 
 - name: systemctl enable nfs-server.service
-  ansible.builtin.systemd:
-    name: nfs-server
-    enabled: yes
+  ansible.builtin.systemd: name=nfs-server enabled=true
+  become: true

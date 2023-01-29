@@ -1,111 +1,105 @@
 ---
-- block:
-  - name: create separate podman user
-    # disable the podman account ( don't allow login )
-    ansible.builtin.user:
-      name: "{{ podman_user.name }}"
-      uid: "{{ podman_user.uid }}"
-      password: '!'
-      password_lock: true
-      create_home: true
-      shell: "/usr/bin/nologin"
-    when: 
-      - podman_user.name != ansible_user_id
-      - podman_user.name != "root"
+- name: create separate podman user
+  # disable the podman account ( don't allow login )
+  ansible.builtin.user:
+    name: "{{ podman_user.name }}"
+    uid: "{{ podman_user.uid }}"
+    password: '!'
+    password_lock: true
+    create_home: true
+    shell: "/usr/bin/nologin"
+  become: true
+  when: 
+    - podman_user.name != ansible_user_id
+    - podman_user.name != "root"
 
-  #- name: Get {{ podman_user.name }} info
-  #  ansible.builtin.getent:
-  #    database: passwd
-  #    key: "{{ podman_user.name }}"
-  #- ansible.builtin.debug:
-  #    var: ansible_facts.getent_passwd
+- name: Check lingering
+  stat:
+    path: "/var/lib/systemd/linger/{{ podman_user.name }}"
+  register: podman_user_lingering
+  become: true
+  when:
+    - podman_user.enable_lingering
+    - podman_user.name != "root"
 
-  - name: Check lingering
-    stat:
-      path: "/var/lib/systemd/linger/{{ podman_user.name }}"
-    register: podman_user_lingering
-    when:
-      - podman_user.enable_lingering
-      - podman_user.name != "root"
+- name: Enable lingering
+  command: "loginctl enable-linger {{ podman_user.name }}"
+  become: true
+  when:
+    - podman_user.enable_lingering
+    - podman_user.name != "root"
+    - not podman_user_lingering.stat.exists
 
-  - name: Enable lingering
-    command: "loginctl enable-linger {{ podman_user.name }}"
-    when:
-      - podman_user.enable_lingering
-      - podman_user.name != "root"
-      - not podman_user_lingering.stat.exists
+- name: /etc/subuid
+  ansible.builtin.lineinfile:
+    line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
+    regexp: "^{{ podman_user.name }}"
+    dest: /etc/subuid
+    create: true
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: ansible_distribution == "Archlinux"
 
-  - name: /etc/subuid
-    ansible.builtin.lineinfile:
-      line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
-      regexp: "^{{ podman_user.name }}"
-      dest: /etc/subuid
-      create: true
-      owner: root
-      group: root
-      mode: '0644'
-    when: ansible_facts['os_family'] == "Archlinux"
+- name: Set /etc/subgid
+  ansible.builtin.lineinfile:
+    line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
+    regexp: "^{{ podman_user.name }}"
+    dest: /etc/subgid
+    create: true
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: ansible_distribution == "Archlinux"
 
-  - name: Set /etc/subgid
-    ansible.builtin.lineinfile:
-      line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
-      regexp: "^{{ podman_user.name }}"
-      dest: /etc/subgid
-      create: true
-      owner: root
-      group: root
-      mode: '0644'
-    when: ansible_facts['os_family'] == "Archlinux"
+- name: setup container configs directory
+  ansible.builtin.file:
+    path: "{{ podman_user.container_configs_dir }}"
+    state: directory
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
 
-  - name: setup container configs directory
-    ansible.builtin.file:
-      path: "{{ podman_user.container_configs_dir }}"
-      state: directory
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0700'
+# install acl package for ansible to become other unprivileged user
+- name: dnf install acl
+  ansible.builtin.dnf: name=acl state=present
+  become: true
+  when: ansible_distribution == "Fedora"
 
-  # install acl package for ansible to become other unprivileged user
-  - name: dnf install acl
-    ansible.builtin.dnf:
-      name: acl
-      state: present
-    when: ansible_facts['os_family'] == "RedHat"
-  become: yes
+- name: setup systemd user directory
+  ansible.builtin.file:
+    path: "/home/{{ podman_user.name }}/.config/systemd/user"
+    state: directory
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-- block:
-  - name: setup systemd user directory
-    ansible.builtin.file:
-      path: "/home/{{ podman_user.name }}/.config/systemd/user"
-      state: directory
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0700'
+- name: create podman-system-prune.service/timer
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/{{ item }}"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  loop:
+    - podman-system-prune.service
+    - podman-system-prune.timer
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: create podman-system-prune.service/timer
-    ansible.builtin.template:
-      src: "{{ item }}.j2"
-      dest: "/home/{{ podman_user.name }}/.config/systemd/user/{{ item }}"
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0600'
-    loop:
-      - podman-system-prune.service
-      - podman-system-prune.timer
+- name: systemctl --user enable podman-system-prune.timer
+  ansible.builtin.systemd: name=podman-system-prune.timer enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: systemctl --user enable podman-system-prune.timer
-    ansible.builtin.systemd:
-      name: "podman-system-prune.timer"
-      enabled: yes
-      scope: user
-
-  - name: systemctl --user enable podman-auto-update.timer
-    ansible.builtin.systemd:
-      name: "podman-auto-update.timer"
-      enabled: yes
-      scope: user
-
-  become: yes
+- name: systemctl --user enable podman-auto-update.timer
+  ansible.builtin.systemd: name=podman-auto-update.timer enabled=true scope=user
+  become: true
   become_user: "{{ podman_user.name }}"
 
 - include_tasks: "{{ container }}.yml"

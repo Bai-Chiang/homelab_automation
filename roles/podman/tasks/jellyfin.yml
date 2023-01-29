@@ -1,37 +1,35 @@
 ---
-- block:
-  - name: jellyfin container config direcoty
-    ansible.builtin.file:
-      path: "{{ podman_user.container_configs_dir }}/jellyfin"
-      state: directory
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0700'
-
-  - name: jellyfin.service
-    ansible.builtin.template:
-      src: jellyfin.service.j2
-      dest: "/home/{{ podman_user.name }}/.config/systemd/user/jellyfin.service"
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0600'
-
-  - name: systemctl --user enable jellyfin.service
-    ansible.builtin.systemd:
-      name: jellyfin
-      enabled: yes
-      scope: user
-
-  become: yes
+- name: jellyfin container config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.container_configs_dir }}/jellyfin"
+    state: directory
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
   become_user: "{{ podman_user.name }}"
 
+- name: jellyfin.service
+  ansible.builtin.template:
+    src: jellyfin.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/jellyfin.service"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable jellyfin.service
+  ansible.builtin.systemd: name=jellyfin enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
 
 - name: Set firewall rules for Jellyfin web interface
   ansible.posix.firewalld:
     rich_rule: "{{ item }}"
     zone: "{{ firewalld_default_zone }}"
-    permanent: yes
-    immediate: yes
+    permanent: true
+    immediate: true
     state: enabled
   loop: "{{ podman_user.jellyfin_firewall_rules }}"
-  become: yes
+  become: true

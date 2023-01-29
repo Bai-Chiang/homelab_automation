@@ -35,10 +35,12 @@ ExecStart=/usr/bin/podman run \
     lscr.io/linuxserver/jellyfin:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
+    --time=10 \
     --cidfile=%t/%n.ctr-id
 ExecStopPost=/usr/bin/podman rm \
-    -f \
+    --force \
     --ignore \
+    --time=10 \
     --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all

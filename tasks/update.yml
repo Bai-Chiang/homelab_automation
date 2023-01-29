@@ -1,21 +1,21 @@
 ---
 - name: pacman -Syu
   community.general.pacman:
-    update_cache: yes
-    upgrade: yes
-  become: yes
-  when: ansible_facts['os_family'] == "Archlinux"
+    update_cache: true
+    upgrade: true
+  become: true
+  when: ansible_distribution == "Archlinux"
 
 - name: apt update && apt dist-upgrade
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     upgrade: dist
-  become: yes
-  when: ansible_facts['os_family'] == "Debian"
+  become: true
+  when: ansible_distribution == "Debian"
 
 - name: dnf update
   ansible.builtin.dnf:
     name: "*"
     state: latest
-  become: yes
-  when: ansible_facts['os_family'] == "RedHat"
+  become: true
+  when: ansible_distribution == "Fedora"

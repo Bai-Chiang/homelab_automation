@@ -1,9 +1,2 @@
 ---
-- include_tasks: archlinux.yml
-  when: ansible_facts['os_family'] == "Archlinux"
-
-- include_tasks: debian.yml
-  when: ansible_facts['os_family'] == "Debian"
-
-- include_tasks: fedora.yml
-  when: ansible_facts['os_family'] == "RedHat"
+- include_tasks: "{{ ansible_distribution }}.yml"

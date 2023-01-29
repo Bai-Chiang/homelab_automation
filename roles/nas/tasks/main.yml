@@ -1,19 +1,16 @@
 ---
-- block:
+- import_tasks: raid.yml
+  when: crypttab_entries is defined
 
-  - import_tasks: raid.yml
-    when: crypttab_entries is defined
+- import_tasks: btrfs_scrub.yml
+  when: btrfs_scrub_path is defined
 
-  - import_tasks: btrfs_scrub.yml
-    when: btrfs_scrub_path is defined
+- import_tasks: smartd.yml
+  when: smartd_time is defined
 
-  - import_tasks: smartd.yml
-    when: smartd_time is defined
+- import_tasks: nfs.yml
+  when: nfs_mount_point is defined
 
-  - import_tasks: nfs.yml
-    when: nfs_mount_point is defined
+- include_tasks: samba.yml
+  when: smb_passwd is defined
 
-  - include_tasks: samba.yml
-    when: smb_passwd is defined
-
-  become: yes

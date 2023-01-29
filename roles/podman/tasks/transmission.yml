@@ -1,27 +1,25 @@
 ---
-- block:
-  - name: transmission container config direcoty
-    ansible.builtin.file:
-      path: "{{ podman_user.container_configs_dir }}/transmission"
-      state: directory
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0700'
+- name: transmission container config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.container_configs_dir }}/transmission"
+    state: directory
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: transmission.service
-    ansible.builtin.template:
-      src: transmission.service.j2
-      dest: "/home/{{ podman_user.name }}/.config/systemd/user/transmission.service"
-      owner: "{{ podman_user.name }}"
-      group: "{{ podman_user.name }}"
-      mode: '0600'
+- name: transmission.service
+  ansible.builtin.template:
+    src: transmission.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/transmission.service"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: systemctl --user enable --now transmission.service
-    ansible.builtin.systemd:
-      name: transmission.service
-      enabled: yes
-      state: started
-      scope: user
-
-  become: yes
+- name: systemctl --user enable --now transmission.service
+  ansible.builtin.systemd: name=transmission.service enabled=true state=started scope=user
+  become: true
   become_user: "{{ podman_user.name }}"

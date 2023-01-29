@@ -1,60 +1,59 @@
 ---
-- block:
-  - name: syncthing container config direcoty
-    ansible.builtin.file:
-      path: "{{ podman_user.container_configs_dir }}/syncthing"
-      state: directory
-      owner: "{{ podman_user.name}}"
-      group: "{{ podman_user.name }}"
-      mode: '0700'
+- name: syncthing container config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.container_configs_dir }}/syncthing"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: syncthing.service
-    ansible.builtin.template:
-      src: syncthing.service.j2
-      dest: "/home/{{ podman_user.name }}/.config/systemd/user/syncthing.service"
-      owner: "{{ podman_user.name}}"
-      group: "{{ podman_user.name }}"
-      mode: '0600'
+- name: syncthing.service
+  ansible.builtin.template:
+    src: syncthing.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/syncthing.service"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: systemctl --user enable --now syncthing.service
-    ansible.builtin.systemd:
-      name: syncthing
-      enabled: yes
-      state: started
-      scope: user
-
-  become: yes
+- name: systemctl --user enable --now syncthing.service
+  ansible.builtin.systemd: name=syncthing enabled=true state=started scope=user
+  become: true
   become_user: "{{ podman_user.name }}"
 
 
-- block:
-  # 22000/tcp    Syncthing Listening port
-  - name: add syncthing firewalld service file syncthing.xml
-    ansible.builtin.copy:
-      content: |
-        <?xml version="1.0" encoding="utf-8"?>
-        <service>
-          <short>Syncthing</short>
-          <description>Syncthing</description>
-          <port protocol="tcp" port="22000"/>
-        </service>
-      dest: /etc/firewalld/services/syncthing.xml
-      owner: root
-      group: root
-      mode: '0644'
-    register: syncthing_firewalld_file
+# 22000/tcp    Syncthing Listening port
+- name: add syncthing firewalld service file syncthing.xml
+  ansible.builtin.copy:
+    content: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <service>
+        <short>Syncthing</short>
+        <description>Syncthing</description>
+        <port protocol="tcp" port="22000"/>
+      </service>
+    dest: /etc/firewalld/services/syncthing.xml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: syncthing_firewalld_file
 
-  - name: Reload firewalld when syncthing.xml changed
-    ansible.builtin.command: firewall-cmd --reload
-    when: syncthing_firewalld_file.changed
+- name: Reload firewalld when syncthing.xml changed
+  ansible.builtin.command: firewall-cmd --reload
+  become: true
+  when: syncthing_firewalld_file.changed
 
-  - name: Set firewall rules for Syncthing Listening port (TCP)
-    ansible.posix.firewalld:
-      rich_rule: rule family="ipv4" source address="{{ item }}" service name="syncthing" accept
-      zone: "{{ firewalld_default_zone }}"
-      permanent: yes
-      immediate: yes
-      state: enabled
-    loop: "{{ podman_user.syncthing_accept_source_ipv4 }}"
-    when: podman_user.syncthing_accept_source_ipv4 is defined
-  become: yes
+- name: Set firewall rules for Syncthing Listening port (TCP)
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="syncthing" accept
+    zone: "{{ firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ podman_user.syncthing_accept_source_ipv4 }}"
+  become: true
+  when: podman_user.syncthing_accept_source_ipv4 is defined

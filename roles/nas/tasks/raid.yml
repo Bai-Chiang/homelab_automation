@@ -1,9 +1,8 @@
 ---
 - name: Install cryptsetup
-  ansible.builtin.apt:
-    pkg: cryptsetup
-    state: latest
-  when: ansible_facts['os_family'] == "Debian"
+  ansible.builtin.apt: pkg=cryptsetup state=latest
+  become: true
+  when: ansible_distribution == "Debian"
   
 - name: Edit /etc/crypttab
   ansible.builtin.lineinfile:
@@ -12,6 +11,7 @@
     line: "{{ item.device_mapper_name}}    UUID={{ item.UUID }}    {{ item.keyfile }}"
     state: present
   loop: "{{ crypttab_entries }}"
+  become: true
 
 - name: Create mount points
   ansible.builtin.file:
@@ -21,6 +21,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   loop: "{{ fstab_entries }}"
+  become: true
 
 - name: Edit /etc/fstab
   ansible.builtin.lineinfile:
@@ -29,4 +30,5 @@
     line: "{{ item.device }}    {{ item.mount_point }}    {{ item.fs }}    {{ item.mount_opts }}    0 0 "
     state: present
   loop: "{{ fstab_entries }}"
+  become: true
 

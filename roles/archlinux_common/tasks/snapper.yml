@@ -2,6 +2,7 @@
 - name: check /etc/snapper directory 
   ansible.builtin.stat:
     path: /etc/snapper
+  become: true
   register: snapper_dir
 
 - name: pacman.conf NoExtract = etc/cron.daily/snapper etc/cron.hourly/snapper
@@ -10,6 +11,7 @@
     regexp: '^NoExtract'
     line: NoExtract = etc/cron.daily/snapper etc/cron.hourly/snapper
     insertafter: '^#\s*NoExtract'
+  become: true
   when: not snapper_dir.stat.exists
 
 - name: pacman -S snapper snap-pac rsync
@@ -19,6 +21,7 @@
       - snap-pac
       - rsync
     state: present
+  become: true
 
 - name: Create snapper for /
   ansible.builtin.shell: |
@@ -31,6 +34,7 @@
     chmod -R 750 /.snapshots
   args:
     executable: /usr/bin/bash
+  become: true
   when: not snapper_dir.stat.exists
 
 - name: Edit /etc/snapper/configs/root
@@ -50,12 +54,15 @@
     - { regexp: '^TIMELINE_LIMIT_WEEKLY=',  line: 'TIMELINE_LIMIT_WEEKLY="0"' }
     - { regexp: '^TIMELINE_LIMIT_MONTHLY=', line: 'TIMELINE_LIMIT_MONTHLY="0"' }
     - { regexp: '^TIMELINE_LIMIT_YEARLY=',  line: 'TIMELINE_LIMIT_YEARLY="0"' }
+  become: true
   
 - name: systemctl enable snapper-timeline.timer
-  ansible.builtin.systemd: name=snapper-timeline.timer enabled=yes
+  ansible.builtin.systemd: name=snapper-timeline.timer enabled=true
+  become: true
 
 - name: systemctl enable snapper-cleanup.timer
-  ansible.builtin.systemd: name=snapper-cleanup.timer enabled=yes
+  ansible.builtin.systemd: name=snapper-cleanup.timer enabled=true
+  become: true
 
 - name: Create /etc/pacman.d/hooks/ if it does not exist
   ansible.builtin.file:
@@ -64,6 +71,7 @@
     owner: root
     group: root
     mode: '0755'
+  become: true
 
 - name: zz-signed_uki_backup.hook
   ansible.builtin.copy:
@@ -72,3 +80,4 @@
     owner: root
     group: root
     mode: '0644'
+  become: true

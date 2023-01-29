@@ -1,64 +1,64 @@
 ---
-- block:
-  - name: unifi-controller container config direcoty
-    ansible.builtin.file:
-      path: "{{ podman_user.container_configs_dir }}/unifi-controller"
-      state: directory
-      owner: "{{ podman_user.name}}"
-      group: "{{ podman_user.name }}"
-      mode: '0700'
-
-  - name: unifi-controller.service
-    ansible.builtin.template:
-      src: unifi-controller.service.j2
-      dest: "/home/{{ podman_user.name }}/.config/systemd/user/unifi-controller.service"
-      owner: "{{ podman_user.name}}"
-      group: "{{ podman_user.name }}"
-      mode: '0600'
-
-  - name: systemctl --user enable --now unifi-controller.service
-    ansible.builtin.systemd:
-      name: unifi-controller
-      state: started
-      enabled: yes
-      scope: user
-
-  become: yes
+- name: unifi-controller container config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.container_configs_dir }}/unifi-controller"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
   become_user: "{{ podman_user.name }}"
 
-- block:
-  # 3478/udp    UniFi STUN port 
-  # 10001/udp   UniFi AP discovery
-  # 8080/tcp    UniFi device communication
-  - name: add unifi firewalld service file unifi.xml
-    ansible.builtin.copy:
-      content: |
-        <?xml version="1.0" encoding="utf-8"?>
-        <service>
-          <short>UniFi</short>
-          <description>UniFi controller.</description>
-          <port protocol="udp" port="3478"/>
-          <port protocol="udp" port="10001"/>
-          <port protocol="tcp" port="8080"/>
-        </service>
-      dest: /etc/firewalld/services/unifi.xml
-      owner: root
-      group: root
-      mode: '0644'
-    register: unifi_firewalld_file
+- name: unifi-controller.service
+  ansible.builtin.template:
+    src: unifi-controller.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/unifi-controller.service"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: Reload firewalld when unifi.xml changed
-    ansible.builtin.command: firewall-cmd --reload
-    when: unifi_firewalld_file.changed
+- name: systemctl --user enable --now unifi-controller.service
+  ansible.builtin.systemd: name=unifi-controller state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
 
-  - name: Enable firewall rules for UniFi
-    ansible.posix.firewalld:
-      rich_rule: rule family="ipv4" source address="{{ item }}" service name="unifi" accept
-      zone: "{{ firewalld_default_zone }}"
-      permanent: yes
-      immediate: yes
-      state: enabled
-    loop: "{{ podman_user.unifi_accept_source_ipv4 }}"
-    when: podman_user.unifi_accept_source_ipv4 is defined
 
-  become: yes
+# 3478/udp    UniFi STUN port 
+# 10001/udp   UniFi AP discovery
+# 8080/tcp    UniFi device communication
+- name: add unifi firewalld service file unifi.xml
+  ansible.builtin.copy:
+    content: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <service>
+        <short>UniFi</short>
+        <description>UniFi controller.</description>
+        <port protocol="udp" port="3478"/>
+        <port protocol="udp" port="10001"/>
+        <port protocol="tcp" port="8080"/>
+      </service>
+    dest: /etc/firewalld/services/unifi.xml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: unifi_firewalld_file
+
+- name: Reload firewalld when unifi.xml changed
+  ansible.builtin.command: firewall-cmd --reload
+  become: true
+  when: unifi_firewalld_file.changed
+
+- name: Enable firewall rules for UniFi
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="unifi" accept
+    zone: "{{ firewalld_default_zone }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ podman_user.unifi_accept_source_ipv4 }}"
+  become: true
+  when: podman_user.unifi_accept_source_ipv4 is defined
+

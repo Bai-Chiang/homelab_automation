@@ -6,27 +6,3 @@
   loop_control:
     loop_var: podman_user
 
-#- ansible.builtin.debug:
-#    msg: "gluetun" in container.name
-#  loop: "{{ podman_containers }}"
-#  loop_control:
-#    loop_var: container
-
-#- include_tasks: "{{ container.name }}.yml"
-#  loop: "{{ podman_containers }}"
-#  loop_control:
-#    loop_var: container
-
-
-#  - block:
-#    - name: systemctl --user daemon-reload
-#      ansible.builtin.systemd:
-#        daemon_reload: yes
-#        scope: user
-#    become: yes
-#    become_user: "{{ podman_user }}"
-#  
-#  loop: "{{ podman_list }}"
-#  loop_control:
-#    loop_var: podman_user
-#

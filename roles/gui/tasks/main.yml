@@ -1,56 +1,59 @@
 ---
-- block:
-  - name: Install GPU driver
-    community.general.pacman: name={{ gpu_drivers }} state=present
+- name: Install GPU driver
+  community.general.pacman: name={{ gpu_drivers }} state=present
+  become: true
 
-  - name: Install shell packages
-    community.general.pacman: name={{ shell_pkgs }} state=present
+- name: Install shell packages
+  community.general.pacman: name={{ shell_pkgs }} state=present
+  become: true
 
-  - name: change shell (non systemd-homed)
-    ansible.builtin.user:
-      name: "{{ ansible_user_id }}"
-      shell: "{{ default_shell }}"
-    when: not homed
+- name: change shell (non systemd-homed)
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: "{{ default_shell }}"
+  become: true
+  when: not homed
 
-  - name: change shell (systemd-homed)
-    community.general.homectl:
-      name: "{{ ansible_user_id }}"
-      password: "{{ ansible_become_password }}"
-      shell: "{{ default_shell }}"
-    when: homed
+- name: change shell (systemd-homed)
+  community.general.homectl:
+    name: "{{ ansible_user_id }}"
+    password: "{{ ansible_become_password }}"
+    shell: "{{ default_shell }}"
+  become: true
+  when: homed
 
-  - name: Install audio packages
-    community.general.pacman: name={{ audio_pkgs }} state=present
+- name: Install audio packages
+  community.general.pacman: name={{ audio_pkgs }} state=present
+  become: true
 
-  - name: Install WM packages
-    community.general.pacman: name={{ wm_pkgs }} state=present
+- name: Install WM packages
+  community.general.pacman: name={{ wm_pkgs }} state=present
+  become: true
 
-  - name: Install font packages
-    community.general.pacman: name={{ fonts_pkgs }} state=present
+- name: Install font packages
+  community.general.pacman: name={{ fonts_pkgs }} state=present
+  become: true
 
-  - name: Install other packages
-    community.general.pacman: name={{ other_pkgs }} state=present
+- name: Install other packages
+  community.general.pacman: name={{ other_pkgs }} state=present
+  become: true
 
-  - name: systemctl enable cups.socket
-    ansible.builtin.systemd:
-      name: cups.socket
-      enabled: yes
-    when: '"cups" in other_pkgs'
+- name: systemctl enable cups.socket
+  ansible.builtin.systemd: name=cups.socket enabled=true
+  become: true
+  when: '"cups" in other_pkgs'
 
-  - import_tasks: snapper.yml
-  become: yes
+- name: Install notification server
+  community.general.pacman: name=mako state=present
+  become: true
+
+- import_tasks: snapper.yml
 
 - import_tasks: dotfiles.yml  
 - import_tasks: flatpak.yml
 
-- name: Install notification server
-  community.general.pacman: name=mako state=present
-  become: yes
-
 - name: systemctl --user daemon-reload
-  ansible.builtin.systemd:
-    daemon_reload: yes
-    scope: user
+  ansible.builtin.systemd: daemon_reload=true scope=user
 
 - name: Create screenshots directories
   ansible.builtin.file:

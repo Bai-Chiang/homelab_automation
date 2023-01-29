@@ -1,64 +1,64 @@
 ---
-- block:
-  - name: Allow access only for some users
-    ansible.builtin.lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: '^AllowUsers'
-      line: AllowUsers {{ ssh_allowusers }}
-      insertafter: '#\s*AllowUsers'
-      validate: /usr/sbin/sshd -T -f %s
-    #notify: restart sshd
-    when: ssh_allowusers is defined
+- name: Allow access only for some users
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^AllowUsers'
+    line: AllowUsers {{ ssh_allowusers }}
+    insertafter: '#\s*AllowUsers'
+    validate: /usr/sbin/sshd -T -f %s
+  become: true
+  when: ssh_allowusers is defined
 
-  - name: Set host key
-    ansible.builtin.lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: '^HostKey'
-      line: "HostKey /etc/ssh/ssh_host_{{ ssh_hostkey }}_key"
-      insertafter: '#\s*HostKey'
-      validate: /usr/sbin/sshd -T -f %s
+- name: Set host key
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^HostKey'
+    line: "HostKey /etc/ssh/ssh_host_{{ ssh_hostkey }}_key"
+    insertafter: '#\s*HostKey'
+    validate: /usr/sbin/sshd -T -f %s
+  become: true
 
-  - name: Set ssh port
-    ansible.builtin.lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: '^Port'
-      line: "Port {{ ansible_port }}"
-      insertafter: '#\s*Port'
-      validate: /usr/sbin/sshd -T -f %s
-    #notify: restart sshd
+#- name: Set ssh port
+#  ansible.builtin.lineinfile:
+#    path: /etc/ssh/sshd_config
+#    regexp: '^Port'
+#    line: "Port {{ ansible_port }}"
+#    insertafter: '#\s*Port'
+#    validate: /usr/sbin/sshd -T -f %s
+#  become: true
 
-  - name: Force public key authentication
-    ansible.builtin.lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-      insertafter: "{{ item.insertafter }}"
-      validate: /usr/sbin/sshd -T -f %s
-    loop:
-      - { regexp: '^PasswordAuthentication', line: PasswordAuthentication no, insertafter: '#\s*PasswordAuthentication' }
-      - { regexp: '^KbdInteractiveAuthentication', line: KbdInteractiveAuthentication no, insertafter: '^KbdInteractiveAuthentication' }
-      - { regexp: '^AuthenticationMethods', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication' }
+- name: Force public key authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: "{{ item.insertafter }}"
+    validate: /usr/sbin/sshd -T -f %s
+  loop:
+    - { regexp: '^PasswordAuthentication', line: PasswordAuthentication no, insertafter: '#\s*PasswordAuthentication' }
+    - { regexp: '^KbdInteractiveAuthentication', line: KbdInteractiveAuthentication no, insertafter: '^KbdInteractiveAuthentication' }
+    - { regexp: '^AuthenticationMethods', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication' }
+  become: true
 
-  #- name: Add custom ssh rule to UFW
-  #  ansible.builtin.blockinfile:
-  #    path: /etc/ufw/applications.d/ufw-custom
-  #    block: | 
-  #      [SSH-custom]
-  #      title=SSH server
-  #      description=SSH server
-  #      ports={{ ansible_port }}/tcp
-  #    create: yes
-  #    marker: "; SSH {mark} ANSIBLE MANAGED BLOCK"
+#- name: Add custom ssh rule to UFW
+#  ansible.builtin.blockinfile:
+#    path: /etc/ufw/applications.d/ufw-custom
+#    block: | 
+#      [SSH-custom]
+#      title=SSH server
+#      description=SSH server
+#      ports={{ ansible_port }}/tcp
+#    create: true
+#    marker: "; SSH {mark} ANSIBLE MANAGED BLOCK"
 
-  - name: Firewall rule for ssh
-    ansible.posix.firewalld:
-      rich_rule: rule family="ipv4" source address="{{ item }}" service name="ssh" accept
-      permanent: yes
-      immediate: yes
-      state: enabled
-    loop: "{{ ssh_accept_source_ipv4 }}"
-    when: ssh_accept_source_ipv4 is defined
-
-  become: yes
+- name: Firewall rule for ssh
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="ssh" accept
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ ssh_accept_source_ipv4 }}"
+  become: true
+  when: ssh_accept_source_ipv4 is defined
 
 
