@@ -8,10 +8,13 @@
     - import_tasks: tasks/update.yml
 
   roles:
-    - common
+    - archlinux_common
+    - openssh
     - networkd_static
+    - nas
     - msmtp
     - auto-update
-    - nas
+    - ups
+
     - podman
 

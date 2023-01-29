@@ -1,10 +1,13 @@
 ---
-# Whether the home directory is mounted using systemd-homed
-homed: true
-
-firewalld_default_zone: drop
-
+###############################################################################
+# roles/common
 reflector_country: us
+
+###############################################################################
+# roles/gui
+
+# Whether the home directory is mounted using systemd-homed
+homed: false
 
 gpu_drivers:
   - mesa
@@ -22,7 +25,6 @@ wm_pkgs:
   - sway
   - swaylock
   - swayidle
-  - dmenu
   - waybar
   - xdg-utils
   - xdg-desktop-portal
@@ -55,33 +57,32 @@ other_pkgs:
   - pass
   - neofetch
 
-  - rsync
-  - usbutils
   - brightnessctl   # screen brightness
-
   - nm-connection-editor
   - system-config-printer
   - gscan2pdf
-  - yt-dlp
 
 flatpak_pkgs:
   - com.github.tchx84.Flatseal
-  - org.kde.dolphin
-  - org.kde.okular
   - io.mpv.Mpv
-  - org.kde.gwenview
   - io.gitlab.librewolf-community
   - org.mozilla.firefox
 
-  - org.keepassxc.KeePassXC
-  - org.libreoffice.LibreOffice
 
-  - com.valvesoftware.Steam
-  - com.usebottles.bottles
+###############################################################################
+# roles/podman
+TZ: "US/Eastern"
+
+podman_users:
+  - name: tux
+    uid: 1000
+    enable_lingering: false
+    podman_system_prune_timer: daily
+    container_configs_dir: "/home/tux/container_configs"
+    containers:
+      - syncthing
+    syncthing_data_dirs:
+      - { src: /home/tux/data, dest: /data }
 
 
-
-libvirt_headless: false
-libvirt_bridge: true
-libvirt_NAT: true
 
