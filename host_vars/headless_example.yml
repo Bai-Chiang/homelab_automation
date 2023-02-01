@@ -32,6 +32,8 @@ static_dns: 192.168.122.1
 msmtp_provider: gmail
 msmtp_host: smtp.gmail.com
 msmtp_port: 587
+msmtp_tls: "on"
+msmtp_tls_starttls: "on"
 msmtp_from: username@gmail.com
 msmtp_to: account@domain.com
 msmtp_user: username
