@@ -521,6 +521,7 @@ if [[ $secure_boot == y ]] ; then
     arch-chroot /mnt pacman --noconfirm -S sbctl
     echo "Creating keys ..."
     arch-chroot /mnt sbctl create-keys
+    arch-chroot /mnt chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}*
 
     echo "Enroll keys ..."
     read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [y/N] " ms_cert
