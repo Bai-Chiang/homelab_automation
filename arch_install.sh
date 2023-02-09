@@ -7,7 +7,7 @@ TIMEZONE="US/Eastern"
 
 # minimal example
 KERNEL_PKGS="linux"
-BASE_PKGS="base linux-firmware sudo"
+BASE_PKGS="base sudo linux-firmware"
 FS_PKGS="dosfstools btrfs-progs"
 
 ## server example
