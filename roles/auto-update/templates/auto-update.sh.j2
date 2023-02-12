@@ -5,7 +5,7 @@ TO="{{ msmtp_to }}"
 
 # Check need reboot
 NUM_PKG=$(/usr/bin/checkupdates | grep -E 'linux|systemd' | wc -l)
-if [ $NUM_PKG -eq 0 ] ; then
+if [[ $NUM_PKG -eq 0 ]] ; then
     NEED_REBOOT=0
 else
     NEED_REBOOT=1
@@ -15,13 +15,13 @@ fi
 # systemctl is-active return 0 if at least one is active
 /usr/bin/systemctl is-active --quiet --all "btrfs-scrub@*.service"
 BTRFS_SCRUB_EXIT=$?
-if [ $BTRFS_SCRUB_EXIT -eq 0 ] ; then
+if [[ $BTRFS_SCRUB_EXIT -eq 0 ]] ; then
     UPDATE_MSG="btrfs-scrub is running. Skipped update.\n"
 else
     # Update system
     UPDATE_MSG="# pacman -Syu\n$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
     UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
-    if [ $NEED_REBOOT -eq 1 ] ; then
+    if [[ $NEED_REBOOT -eq 1 ]] ; then
         UPDATE_MSG="${UPDATE_MSG}\n\n# systemctl reboot"
     fi
 fi
@@ -29,27 +29,31 @@ fi
 # Update system
 UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
 UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
-if [ $NEED_REBOOT -eq 1 ] ; then
+if [[ $NEED_REBOOT -eq 1 ]] ; then
     UPDATE_MSG="${UPDATE_MSG}\n\n# systemctl reboot"
 fi
 {% endif %}
 
-# msmtp sometimes would failed to resolve domain
-# ping it first
-ping -c 1 "{{ msmtp_host }}" > /dev/null
+# write log
+echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" > /var/log/auto-update.log
 
 # send email
-echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp -t -a default
+echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp --read-recipients --account default
+while [[ $? -ne 0 ]]; do
+    # if failed try resend 5min later
+    sleep 300
+    echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp --read-recipients --account default
+done
 
 sleep 5
 
 {% if btrfs_scrub_time is defined %}
-if [ $BTRFS_SCRUB_EXIT -ne 0 ] && [ $NEED_REBOOT -eq 1 ] ; then
+if [[ $BTRFS_SCRUB_EXIT -ne 0 && $NEED_REBOOT -eq 1 ]] ; then
     # Reboot if necessary
     systemctl reboot
 fi
 {% else %}
-if [ $NEED_REBOOT -eq 1 ] ; then
+if [[ $NEED_REBOOT -eq 1 ]] ; then
     systemctl reboot
 fi
 {% endif %}
