@@ -45,7 +45,7 @@
 # the "loopback" interface. For more examples of the syntax see
 # the smb.conf man page
 ;   hosts allow = 192.168.1. 192.168.2. 127.
-   hosts allow = {{ smb_hosts_allow }}
+   hosts allow = # none
 
 # Uncomment this if you want a guest account, you must add this to /etc/passwd
 # otherwise the user "nobody" is used
@@ -235,28 +235,18 @@
 ;   printable = no
 ;   create mask = 0765
 
-[{{ ansible_user_id }}]
-   comment = {{ ansible_user_id }}'s data
-   path = /home/{{ ansible_user_id }}/data
-   valid users = {{ ansible_user_id }}
+{% for item in smb_users %}
+[{{ item.comment }}]
+   comment = {{ item.comment }}
+   path = {{ item.dir }}
+   valid users = {{ item.name }}
    public = no
    browseable = no
    printable = no
-   read only = yes
+   read only = {{ item.read_only }}
    create mask = 0664
    directory mask = 2755
    force create mode = 0644
    force directory mode = 2755
+{% endfor %}
 
-[{{ ansible_user_id }}_games]
-   comment = {{ ansible_user_id }}'s game library
-   path = /home/{{ ansible_user_id }}/data/games
-   valid users = {{ ansible_user_id }}
-   public = no
-   browseable = no
-   printable = no
-   writable = yes
-   create mask = 0664
-   directory mask = 2755
-   force create mode = 0644
-   force directory mode = 2755

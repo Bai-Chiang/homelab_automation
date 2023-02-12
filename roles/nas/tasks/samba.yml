@@ -2,6 +2,12 @@
 - name: pacman -S samba
   community.general.pacman: name=samba state=present
   become: true
+  when: ansible_distribution == "Archlinux"
+
+- name: dnf install samba
+  ansible.builtin.dnf: name=samba state=present
+  become: true
+  when: ansible_distribution == "Fedora"
 
 - name: Create /etc/samba/smb.conf
   ansible.builtin.template:
@@ -30,10 +36,38 @@
 #    comment: "Allow SMB/CIFS from {{ item }}"
 #  loop: "{{ CIFS_allow_ip }}"
 
+- name: Create samba user
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    password: '!'
+    password_lock: true
+    create_home: true
+    shell: "/usr/bin/nologin"
+  become: true
+  when: 
+    - item.name != ansible_user_id
+    - item.name != "root"
+  loop: "{{ smb_users }}"
+
 - name: Add samba user
-  shell: (echo {{ smb_passwd }}; echo {{ smb_passwd }}) | smbpasswd -s -a {{ ansible_user_id }}
+  shell: (echo {{ item.passwd }}; echo {{ item.passwd }}) | smbpasswd -s -a {{ item.name }}
   register: samba_user
   changed_when: "'Added user' in samba_user.stdout"
+  loop: "{{ smb_users }}"
+  become: true
+
+- name: Set firewall rules for samba
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="samba" accept
+    zone: "{{ firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ samba_accept_source_ipv4 }}"
+  when: samba_accept_source_ipv4 is defined
+  become: true
 
 - name: systemctl enable smb.service
   ansible.builtin.systemd: name=smb enabled=true
+  become: true
+
