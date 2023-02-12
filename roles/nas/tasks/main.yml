@@ -1,16 +1,21 @@
 ---
-- import_tasks: raid.yml
+- name: "import_tasks: raid.yml"
+  import_tasks: raid.yml
   when: crypttab_entries is defined
 
-- import_tasks: btrfs_scrub.yml
+- name: "import_tasks: btrfs_scrub.yml"
+  import_tasks: btrfs_scrub.yml
   when: btrfs_scrub_path is defined
 
-- import_tasks: smartd.yml
+- name: "import_tasks: smartd.yml"
+  import_tasks: smartd.yml
   when: smartd_time is defined
 
-- import_tasks: nfs.yml
+- name: "import_tasks: nfs.yml"
+  import_tasks: nfs.yml
   when: nfs_mount_point is defined
 
-- include_tasks: samba.yml
-  when: smb_passwd is defined
+- name: "include_tasks: samba.yml"
+  include_tasks: samba.yml
+  when: smb_users is defined
 

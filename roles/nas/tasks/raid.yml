@@ -1,8 +1,8 @@
 ---
-- name: Install cryptsetup
-  ansible.builtin.apt: pkg=cryptsetup state=latest
+- name: dnf install cryptsetup
+  ansible.builtin.dnf: name=cryptsetup state=present
   become: true
-  when: ansible_distribution == "Debian"
+  when: ansible_distribution == "Fedora"
   
 - name: Edit /etc/crypttab
   ansible.builtin.lineinfile:

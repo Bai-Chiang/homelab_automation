@@ -68,6 +68,14 @@
   when: nfs_accept_source_ipv4 is defined
   become: true
 
-- name: systemctl enable nfs-server.service
-  ansible.builtin.systemd: name=nfs-server enabled=true
+- name: systemctl enable nfsv4-server.service
+  ansible.builtin.systemd: name=nfsv4-server.service enabled=true
   become: true
+
+- name: systemctl mask rpcbind.service rpcbind.socket nfs-server.service
+  ansible.builtin.systemd: name={{ item }} enabled=false masked=true
+  become: true
+  loop:
+    - rpcbind.service
+    - rpcbind.socket
+    - nfs-server.service
