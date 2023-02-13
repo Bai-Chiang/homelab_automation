@@ -30,6 +30,10 @@ ExecStart=/usr/bin/podman run \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
+{% if transmission_user is defined %}
+    --env USER={{ transmission_user }} \
+    --env PASS={{ transmission_pass }} \
+{% endif %}
     --volume {{ podman_user.container_configs_dir }}/transmission:/config:Z \
     --volume {{ podman_user.torrents_dir }}:/downloads:Z \
     --volume {{ podman_user.torrent_files_dir }}:/watch:Z \

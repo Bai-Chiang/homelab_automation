@@ -19,8 +19,15 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
 - name: systemctl --user enable swag.service
   ansible.builtin.systemd: name=swag enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
 
 - name: Set firewall rules for incoming connection
   ansible.posix.firewalld:

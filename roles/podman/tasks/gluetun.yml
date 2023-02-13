@@ -25,6 +25,11 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
 - name: systemctl --user enable --now gluetun.service
   ansible.builtin.systemd: name=gluetun enabled=true state=started scope=user
   become: true

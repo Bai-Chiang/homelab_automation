@@ -1,7 +1,7 @@
 ---
-- name: transmission container config direcoty
+- name: thelounge container config direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.container_configs_dir }}/transmission"
+    path: "{{ podman_user.container_configs_dir }}/thelounge"
     state: directory
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
@@ -9,10 +9,10 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: transmission.service
+- name: thelounge.service
   ansible.builtin.template:
-    src: transmission.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/transmission.service"
+    src: thelounge.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/thelounge.service"
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0600'
@@ -24,7 +24,7 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: systemctl --user enable --now transmission.service
-  ansible.builtin.systemd: name=transmission.service enabled=true state=started scope=user
+- name: systemctl --user enable --now thelounge.service
+  ansible.builtin.systemd: name=thelounge.service enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
