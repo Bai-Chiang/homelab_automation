@@ -4,7 +4,7 @@ auth           on
 tls_trust_file /etc/ssl/certs/ca-certificates.crt
 logfile        /var/log/msmtp.log
 
-account        {{ msmtp_provider }}
+account        {{ msmtp_account }}
 host           {{ msmtp_host }}
 port           {{ msmtp_port }}
 tls            {{ msmtp_tls }}
@@ -13,6 +13,3 @@ from           {{ msmtp_from }}
 user           {{ msmtp_user }}
 password       {{ msmtp_password }}
 
-
-# Set a default account
-account default : {{ msmtp_provider }}

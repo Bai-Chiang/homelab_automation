@@ -1,7 +1,8 @@
 #!/usr/bin/bash
 
-SUBJECT="Auto-update $HOSTNAME $(/usr/bin/date '+%F %T')"
 TO="{{ msmtp_to }}"
+FROM="{{ msmtp_from }}"
+SUBJECT="Auto-update $HOSTNAME $(/usr/bin/date '+%F %T')"
 
 # Check need reboot
 NUM_PKG=$(/usr/bin/checkupdates | grep -E 'linux|systemd' | wc -l)
@@ -11,38 +12,43 @@ else
     NEED_REBOOT=1
 fi
 
+# Create empty auto-update.log
+echo '' > /var/log/auto-update.log
+
 {% if btrfs_scrub_time is defined %}
 # systemctl is-active return 0 if at least one is active
 /usr/bin/systemctl is-active --quiet --all "btrfs-scrub@*.service"
 BTRFS_SCRUB_EXIT=$?
 if [[ $BTRFS_SCRUB_EXIT -eq 0 ]] ; then
-    UPDATE_MSG="btrfs-scrub is running. Skipped update.\n"
+    echo "btrfs-scrub is running. Skipped update.\n" >> /var/log/auto-update.log
 else
     # Update system
-    UPDATE_MSG="# pacman -Syu\n$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
-    UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
+    echo "# pacman -Syu --noconfirm --nogrogressbar\n" >> /var/log/auto-update.log
+    /usr/bin/pacman -Syu --noconfirm --noprogressbar &>> /var/log/auto-update.log
+    echo "\n\n# checkservices -aP\n" >> /var/log/auto-update.log
+    /usr/bin/checkservices -aP &>> /var/log/auto-update.log
     if [[ $NEED_REBOOT -eq 1 ]] ; then
-        UPDATE_MSG="${UPDATE_MSG}\n\n# systemctl reboot"
+        echo "\n\n# systemctl reboot" >> /var/log/auto-update.log
     fi
 fi
 {% else %}
 # Update system
-UPDATE_MSG="$(/usr/bin/pacman -Syu --noconfirm 2>&1)"
-UPDATE_MSG="${UPDATE_MSG}\n\n# checkservices -aP\n$(/usr/bin/checkservices -aP 2>&1)\n"
+echo "# pacman -Syu --noconfirm --nogrogressbar\n" >> /var/log/auto-update.log
+/usr/bin/pacman -Syu --noconfirm --noprogressbar &>> /var/log/auto-update.log
+echo "\n\n# checkservices -aP\n" >> /var/log/auto-update.log
+/usr/bin/checkservices -aP &>> /var/log/auto-update.log
 if [[ $NEED_REBOOT -eq 1 ]] ; then
-    UPDATE_MSG="${UPDATE_MSG}\n\n# systemctl reboot"
+    echo "\n\n# systemctl reboot" >> /var/log/auto-update.log
 fi
 {% endif %}
 
-# write log
-echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" > /var/log/auto-update.log
-
 # send email
-echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp --read-recipients --account default
+update_msg="$(cat /var/log/auto-update.log)"
+echo -e "To: ${TO}\nFrom: ${FROM}\nSubject: ${SUBJECT}\n${update_msg}" | msmtp --read-recipients --read-envelope-from
 while [[ $? -ne 0 ]]; do
     # if failed try resend 5min later
     sleep 300
-    echo -e "To:${TO}\nSubject:${SUBJECT}\n\n${UPDATE_MSG}" | msmtp --read-recipients --account default
+    echo -e "To: ${TO}\nFrom: ${FROM}\nSubject: ${SUBJECT}\n${update_msg}" | msmtp --read-recipients --read-envelope-from
 done
 
 sleep 5

@@ -1,3 +1,3 @@
 #!/usr/bin/bash
 
-echo -e "To:{{ msmtp_to }}\nSubject:btrfs scrub report\n\n$(btrfs scrub status $1)" | msmtp -t -a default
+echo -e "To: {{ msmtp_to }}\nFrom: {{ msmtp_from }}\nSubject: btrfs scrub report\n\n$(btrfs scrub status $1)" | msmtp --read-recipients --read-envelope-from
