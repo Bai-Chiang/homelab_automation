@@ -71,3 +71,22 @@
   ansible.builtin.systemd: name=smb enabled=true
   become: true
 
+- name: Set SELinux file context to shared directories
+  community.general.sefcontext:
+    target: "{{ item.dir }}(/.*)?"
+    setype: samba_share_t
+    state: present
+  when: ansible_selinux.status == "enabled"
+  loop: "{{ smb_users }}"
+  become: true
+  register: samba_share_sefcontext
+
+- name: Apply SELinux file context to shared directories
+  ansible.builtin.command: "restorecon -R {{ item.dir }}"
+  when:
+    - ansible_selinux.status == "enabled"
+    - samba_share_sefcontext.changed
+  loop: "{{ smb_users }}"
+  become: true
+
+
