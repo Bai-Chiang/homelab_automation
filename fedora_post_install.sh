@@ -1,12 +1,13 @@
 #!/usr/bin/bash
 
+dnf install -y policycoreutils-python-utils
+
 # set ssh port
 echo "ssh port? (22)"
 read ssh_port
 ssh_port="${ssh_port:-22}"
 if [[ $ssh_port -ne 22 ]] ; then
     sed -i "s/^#Port.*/Port ${ssh_port}/" /etc/ssh/sshd_config
-    dnf install -y policycoreutils-python-utils
     semanage port -a -t ssh_port_t -p tcp $ssh_port
     sed "/port=/s/port=\"22\"/port=\"${ssh_port}\"/" /usr/lib/firewalld/services/ssh.xml  > /etc/firewalld/services/ssh.xml
     firewall-cmd --reload
