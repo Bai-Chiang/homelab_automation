@@ -61,11 +61,11 @@
   become: true
   when: homed
 
-- name: systemctl enable --now libvirtd.service
-  ansible.builtin.systemd: name=libvirtd.service enabled=true state=started
+- name: systemctl enable libvirtd.service
+  ansible.builtin.systemd: name=libvirtd.service enabled=true
   become: true
 
-- name: systemctl start virtlogd.service
-  ansible.builtin.systemd: name=virtlogd.service state=started
-  become: true
+#- name: systemctl start virtlogd.service
+#  ansible.builtin.systemd: name=virtlogd.service state=started
+#  become: true
 
