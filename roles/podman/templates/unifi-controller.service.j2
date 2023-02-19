@@ -29,6 +29,10 @@ ExecStart=/usr/bin/podman run \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
     --network host \
+    --publish 127.0.0.1:8443:8443/tcp \
+    --publish 3478:3478/udp \
+    --publish 10001:10001/udp \
+    --publish 8080:8080/tcp \
     --volume {{ podman_user.container_configs_dir }}/unifi-controller:/config:Z \
     lscr.io/linuxserver/unifi-controller:latest
 ExecStop=/usr/bin/podman stop \

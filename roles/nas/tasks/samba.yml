@@ -56,6 +56,27 @@
   loop: "{{ smb_users }}"
   become: true
 
+- name: Modify samba firewalld service file samba.xml
+  ansible.builtin.copy:
+    content: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <service>
+        <short>Samba</short>
+        <description>Modified samba server only accept 445/tcp port.</description>
+        <port protocol="tcp" port="445"/>
+      </service>
+    dest: /etc/firewalld/services/samba.xml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: samba_firewalld_file
+
+- name: Reload firewalld when samba.xml changed
+  ansible.builtin.command: firewall-cmd --reload
+  become: true
+  when: samba_firewalld_file.changed
+
 - name: Set firewall rules for samba
   ansible.posix.firewalld:
     rich_rule: rule family="ipv4" source address="{{ item }}" service name="samba" accept

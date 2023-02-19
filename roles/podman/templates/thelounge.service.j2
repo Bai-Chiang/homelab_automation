@@ -25,7 +25,7 @@ ExecStart=/usr/bin/podman run \
     --uidmap 0:1:1000 \
     --uidmap 1001:1001:64536 \
     --name thelounge \
-    --publish 9000:9000 \
+    --publish 127.0.0.1:9000:9000 \
     --volume {{ podman_user.container_configs_dir }}/thelounge:/var/opt/thelounge:Z \
     docker.io/thelounge/thelounge:latest
 ExecStop=/usr/bin/podman stop \

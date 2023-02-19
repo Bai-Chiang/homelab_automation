@@ -24,10 +24,10 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: systemctl --user enable --now unifi-controller.service
-  ansible.builtin.systemd: name=unifi-controller state=started enabled=true scope=user
-  become: true
-  become_user: "{{ podman_user.name }}"
+#- name: systemctl --user enable --now unifi-controller.service
+#  ansible.builtin.systemd: name=unifi-controller state=started enabled=true scope=user
+#  become: true
+#  become_user: "{{ podman_user.name }}"
 
 
 # 3478/udp    UniFi STUN port 

@@ -29,7 +29,7 @@ ExecStart=/usr/bin/podman run \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --publish 8384:8384/tcp \
+    --publish 127.0.0.1:8384:8384/tcp \
     --publish 22000:22000/tcp \
     --volume {{ podman_user.container_configs_dir }}/syncthing:/config:Z \
 {% for item in podman_user.syncthing_data_dirs %}

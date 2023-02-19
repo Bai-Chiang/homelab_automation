@@ -38,7 +38,7 @@ ExecStart=/usr/bin/podman run \
     --env FIREWALL_VPN_INPUT_PORTS={{ podman_user.gluetun_firewall_vpn_input_ports }} \
 {% endif %}
 {% if "transmission" in podman_user.containers %}
-    --publish 9091:9091/tcp \
+    --publish 127.0.0.1:9091:9091/tcp \
 {% endif %}
     docker.io/qmcgaw/gluetun
 ExecStop=/usr/bin/podman stop \
