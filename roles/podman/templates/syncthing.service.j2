@@ -1,7 +1,7 @@
-# container-syncthing.service
+# syncthing.service
 
 [Unit]
-Description=Podman container-syncthing.service
+Description=Podman syncthing.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
 After=network-online.target nss-lookup.target
@@ -31,7 +31,7 @@ ExecStart=/usr/bin/podman run \
     --env TZ={{ TZ }} \
     --publish 127.0.0.1:8384:8384/tcp \
     --publish 22000:22000/tcp \
-    --volume {{ podman_user.container_configs_dir }}/syncthing:/config:Z \
+    --volume {{ podman_user.syncthing_config_dir }}:/config:Z \
 {% for item in podman_user.syncthing_data_dirs %}
     --volume {{ item.src }}:{{ item.dest }}:rw \
 {% endfor %}

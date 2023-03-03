@@ -1,15 +1,17 @@
-# sonarr.service
+# qbittorrent.service
 
 [Unit]
-Description=Podman sonarr.service
+Description=Podman qbittorrent.service
 Documentation=man:podman-generate-systemd(1)
-Wants=network-online.target
-After=network-online.target
+Wants=network-online.target gluetun.service
+After=network-online.target gluetun.service
+Wants=gluetun.service
 RequiresMountsFor=%t/containers
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
+RestartSec=5
 TimeoutStopSec=70
 ExecStartPre=/bin/rm \
     -f %t/%n.ctr-id
@@ -24,15 +26,15 @@ ExecStart=/usr/bin/podman run \
     --uidmap 1000:0:1 \
     --uidmap 0:1:1000 \
     --uidmap 1001:1001:64536 \
-    --name=sonarr \
-    --hostname=sonarr \
+    --name=qbittorrent \
+    --network=container:gluetun \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --publish 8989:8989/tcp \
-    --volume {{ podman_user.sonarr_config_dir }}:/config:Z \
-    --volume {{ podman_user.arr_media_dir }}:/data:rw \
-    lscr.io/linuxserver/sonarr:latest
+    --env WEBUI_PORT=8081 \
+    --volume {{ podman_user.qbittorrent_config_dir }}:/config:Z \
+    --volume {{ podman_user.torrents_dir }}:/downloads:Z \
+    lscr.io/linuxserver/qbittorrent:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \

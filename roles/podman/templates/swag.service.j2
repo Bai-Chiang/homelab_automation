@@ -1,18 +1,16 @@
-# sonarr.service
+# swag.service
 
 [Unit]
-Description=Podman sonarr.service
+Description=Podman swag.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
-After=network-online.target
+After=network-online.target nss-lookup.target
 RequiresMountsFor=%t/containers
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
 TimeoutStopSec=70
-ExecStartPre=/bin/rm \
-    -f %t/%n.ctr-id
 ExecStart=/usr/bin/podman run \
     --cidfile=%t/%n.ctr-id \
     --cgroups=no-conmon \
@@ -24,15 +22,30 @@ ExecStart=/usr/bin/podman run \
     --uidmap 1000:0:1 \
     --uidmap 0:1:1000 \
     --uidmap 1001:1001:64536 \
-    --name=sonarr \
-    --hostname=sonarr \
+    --name=swag \
+    --cap-add=NET_ADMIN \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --publish 8989:8989/tcp \
-    --volume {{ podman_user.sonarr_config_dir }}:/config:Z \
-    --volume {{ podman_user.arr_media_dir }}:/data:rw \
-    lscr.io/linuxserver/sonarr:latest
+{% if "tailscale" in podman_user.containers %}
+    --publish 127.0.0.1:4443:443 \
+{% else %}
+    --publish 443:443/tcp \
+{% endif %}
+    --volume {{ podman_user.swag_config_dir }}:/config:Z \
+    --env URL={{ podman_user.swag_domain }} \
+    --env VALIDATION=dns \
+    --env SUBDOMAINS={{ podman_user.swag_subdomains }} \
+    --env CERTPROVIDER=letsencrypt \
+    --env DNSPLUGIN=cloudflare \
+    --env EMAIL={{ podman_user.swag_email }} \
+    --env ONLY_SUBDOMAINS=true \
+    --env STAGING=false \
+    --env PROPAGATION=60 \
+{% if podman_user.swag_mods is defined %}
+    --env DOCKER_MODS={{ podman_user.swag_mods }} \
+{% endif %}
+    lscr.io/linuxserver/swag:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \

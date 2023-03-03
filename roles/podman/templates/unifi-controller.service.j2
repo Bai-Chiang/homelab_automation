@@ -1,7 +1,7 @@
-# container-unifi-controller.service
+# unifi-controller.service
 
 [Unit]
-Description=Podman container-unifi-controller.service
+Description=Podman unifi-controller.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
 After=network-online.target nss-lookup.target
@@ -33,7 +33,7 @@ ExecStart=/usr/bin/podman run \
     --publish 3478:3478/udp \
     --publish 10001:10001/udp \
     --publish 8080:8080/tcp \
-    --volume {{ podman_user.container_configs_dir }}/unifi-controller:/config:Z \
+    --volume {{ podman_user.unifi_config_dir }}:/config:Z \
     lscr.io/linuxserver/unifi-controller:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \

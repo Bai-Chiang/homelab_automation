@@ -1,18 +1,18 @@
 ---
-- name: sonarr container config direcoty
+- name: tailscale container config direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.sonarr_config_dir }}"
+    path: "{{ podman_user.tailscale_config_dir }}"
     state: directory
-    owner: "{{ podman_user.name }}"
+    owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
 
-- name: sonarr.service
+- name: tailscale.service
   ansible.builtin.template:
-    src: sonarr.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/sonarr.service"
-    owner: "{{ podman_user.name }}"
+    src: tailscale.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/tailscale.service"
+    owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'
   become: true
@@ -23,7 +23,8 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: systemctl --user enable --now sonarr.service
-  ansible.builtin.systemd: name=sonarr enabled=true state=started scope=user
+- name: systemctl --user enable tailscale.service
+  ansible.builtin.systemd: name=tailscale.service enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+

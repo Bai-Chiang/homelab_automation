@@ -1,17 +1,17 @@
 ---
-- name: sonarr container config direcoty
+- name: qbittorrent container config direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.sonarr_config_dir }}"
+    path: "{{ podman_user.qbittorrent_config_dir }}"
     state: directory
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
 
-- name: sonarr.service
+- name: qbittorrent.service
   ansible.builtin.template:
-    src: sonarr.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/sonarr.service"
+    src: qbittorrent.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/qbittorrent.service"
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0600'
@@ -23,7 +23,7 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: systemctl --user enable --now sonarr.service
-  ansible.builtin.systemd: name=sonarr enabled=true state=started scope=user
+- name: systemctl --user enable --now qbittorrent.service
+  ansible.builtin.systemd: name=qbittorrent.service enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"

@@ -1,7 +1,7 @@
-# sonarr.service
+# container-prowlarr.service
 
 [Unit]
-Description=Podman sonarr.service
+Description=Podman container-prowlarr.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
 After=network-online.target
@@ -24,15 +24,14 @@ ExecStart=/usr/bin/podman run \
     --uidmap 1000:0:1 \
     --uidmap 0:1:1000 \
     --uidmap 1001:1001:64536 \
-    --name=sonarr \
-    --hostname=sonarr \
+    --name=prowlarr \
+    --hostname=prowlarr \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --publish 8989:8989/tcp \
-    --volume {{ podman_user.sonarr_config_dir }}:/config:Z \
-    --volume {{ podman_user.arr_media_dir }}:/data:rw \
-    lscr.io/linuxserver/sonarr:latest
+    --publish 9696:9696/tcp \
+    --volume {{ podman_user.prowlarr_config_dir }}:/config:Z \
+    lscr.io/linuxserver/prowlarr:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \

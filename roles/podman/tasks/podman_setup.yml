@@ -54,14 +54,14 @@
   become: true
   when: ansible_distribution == "Archlinux"
 
-- name: setup container configs directory
-  ansible.builtin.file:
-    path: "{{ podman_user.container_configs_dir }}"
-    state: directory
-    owner: "{{ podman_user.name }}"
-    group: "{{ podman_user.name }}"
-    mode: '0700'
-  become: true
+#- name: setup container configs directory
+#  ansible.builtin.file:
+#    path: "{{ podman_user.container_configs_dir }}"
+#    state: directory
+#    owner: "{{ podman_user.name }}"
+#    group: "{{ podman_user.name }}"
+#    mode: '0700'
+#  become: true
 
 # install acl package for ansible to become other unprivileged user
 - name: dnf install acl

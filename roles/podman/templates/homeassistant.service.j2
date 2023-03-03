@@ -1,7 +1,7 @@
-# sonarr.service
+# homeassistant.service
 
 [Unit]
-Description=Podman sonarr.service
+Description=Podman homeassistant.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
 After=network-online.target
@@ -21,18 +21,13 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
-    --uidmap 1000:0:1 \
-    --uidmap 0:1:1000 \
-    --uidmap 1001:1001:64536 \
-    --name=sonarr \
-    --hostname=sonarr \
-    --env PUID=1000 \
-    --env PGID=1000 \
+    --userns keep-id:uid=1000,gid=1000 \
+    --name=homeassistant \
+    --hostname=homeassistant \
+    --publish 8123:8123/tcp \
     --env TZ={{ TZ }} \
-    --publish 8989:8989/tcp \
-    --volume {{ podman_user.sonarr_config_dir }}:/config:Z \
-    --volume {{ podman_user.arr_media_dir }}:/data:rw \
-    lscr.io/linuxserver/sonarr:latest
+    --volume {{ podman_user.homeassistant_config_dir }}:/config:Z \
+    ghcr.io/home-assistant/home-assistant:stable
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \
@@ -44,6 +39,16 @@ ExecStopPost=/usr/bin/podman rm \
     --cidfile=%t/%n.ctr-id
 Type=notify
 NotifyAccess=all
+
+# Security Features
+#PrivateTmp=yes
+#NoNewPrivileges=yes
+#ProtectSystem=strict
+#ProtectHome=yes
+#ProtectKernelTunables=yes
+#ProtectControlGroups=yes
+#PrivateMounts=yes
+#ProtectHostname=yes
 
 [Install]
 WantedBy=default.target

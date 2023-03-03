@@ -1,16 +1,17 @@
-# container-transmission.service
+# transmission.service
 
 [Unit]
-Description=Podman container-transmission.service
+Description=Podman transmission.service
 Documentation=man:podman-generate-systemd(1)
-Wants=network-online.target
+Wants=network-online.target gluetun.service
 After=network-online.target gluetun.service
-Requires=gluetun.service
+Wants=gluetun.service
 RequiresMountsFor=%t/containers
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
+RestartSec=5
 TimeoutStopSec=70
 ExecStartPre=/bin/rm \
     -f %t/%n.ctr-id
@@ -30,11 +31,11 @@ ExecStart=/usr/bin/podman run \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-{% if transmission_user is defined %}
-    --env USER={{ transmission_user }} \
-    --env PASS={{ transmission_pass }} \
+{% if podman_user.transmission_user is defined %}
+    --env USER={{ podman_user.transmission_user }} \
+    --env PASS='{{ podman_user.transmission_pass }}' \
 {% endif %}
-    --volume {{ podman_user.container_configs_dir }}/transmission:/config:Z \
+    --volume {{ podman_user.transmission_config_dir }}:/config:Z \
     --volume {{ podman_user.torrents_dir }}:/downloads:Z \
     --volume {{ podman_user.torrent_files_dir }}:/watch:Z \
     lscr.io/linuxserver/transmission:latest

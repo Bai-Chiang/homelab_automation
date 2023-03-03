@@ -1,13 +1,16 @@
 ---
-- name: jellyfin container config direcoty
+- name: jellyfin container config and data direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.container_configs_dir }}/jellyfin"
+    path: "{{ item }}"
     state: directory
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
-  become_user: "{{ podman_user.name }}"
+  loop:
+    - "{{ podman_user.jellyfin_config_dir }}"
+    - "{{ podman_user.jellyfin_cache_dir }}"
+    - "{{ podman_user.jellyfin_data_dir }}"
 
 - name: jellyfin.service
   ansible.builtin.template:
@@ -24,17 +27,7 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: systemctl --user enable jellyfin.service
-  ansible.builtin.systemd: name=jellyfin enabled=true scope=user
+- name: systemctl --user enable --now jellyfin.service
+  ansible.builtin.systemd: name=jellyfin enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
-
-- name: Set firewall rules for Jellyfin web interface
-  ansible.posix.firewalld:
-    rich_rule: "{{ item }}"
-    zone: "{{ firewalld_default_zone }}"
-    permanent: true
-    immediate: true
-    state: enabled
-  loop: "{{ podman_user.jellyfin_firewall_rules }}"
-  become: true

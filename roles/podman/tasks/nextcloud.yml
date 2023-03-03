@@ -1,0 +1,42 @@
+---
+- name: nextcloud container config and data direcoty
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  loop:
+    - "{{ podman_user.nextcloud_config_dir }}"
+    - "{{ podman_user.nextcloud_data_dir }}"
+    - "{{ podman_user.postgres_config_dir }}"
+
+
+- name: nextcloud*.service
+  ansible.builtin.template:
+    src: "{{ item }}.service.j2"
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/{{ item }}.service"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+  loop:
+    - nextcloud-pod
+    - nextcloud
+    - postgres
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now nextcloud*.service
+  ansible.builtin.systemd: name={{ item }}.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  loop:
+    - nextcloud-pod
+    - nextcloud
+    - postgres

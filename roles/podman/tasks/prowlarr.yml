@@ -1,0 +1,38 @@
+---
+- name: prowlarr container config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.prowlarr_config_dir }}"
+    state: directory
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+
+- name: '*Arrs meida direcoty'
+  ansible.builtin.file:
+    path: "{{ podman_user.arr_media_dir }}"
+    state: directory
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0755'
+  become: true
+
+- name: prowlarr.service
+  ansible.builtin.template:
+    src: prowlarr.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/prowlarr.service"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now prowlarr.service
+  ansible.builtin.systemd: name=prowlarr enabled=true state=started scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"

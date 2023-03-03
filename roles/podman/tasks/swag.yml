@@ -1,19 +1,29 @@
 ---
-- name: container config direcoty
+- name: swag container config direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.container_configs_dir }}/swag"
+    path: "{{ podman_user.swag_config_dir }}"
     state: directory
-    owner: "{{ podman_user.name }}"
+    owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
-  become_user: "{{ podman_user.name }}"
+
+- name: Allow rootless podman access 443 port
+  ansible.builtin.copy:
+    content: |
+      net.ipv4.ip_unprivileged_port_start=443
+    dest: /etc/sysctl.d/unprivileged_port_start.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: "'tailscale' not in podman_user.containers"
 
 - name: swag.service
   ansible.builtin.template:
     src: swag.service.j2
     dest: "/home/{{ podman_user.name }}/.config/systemd/user/swag.service"
-    owner: "{{ podman_user.name }}"
+    owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'
   become: true
@@ -25,16 +35,19 @@
   become_user: "{{ podman_user.name }}"
 
 - name: systemctl --user enable swag.service
-  ansible.builtin.systemd: name=swag enabled=true scope=user
+  ansible.builtin.systemd: name=swag.service enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: Set firewall rules for incoming connection
+- name: Set firewall rules for https
   ansible.posix.firewalld:
-    rich_rule: "{{ item }}"
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="https" accept
     zone: "{{ firewalld_default_zone }}"
     permanent: true
     immediate: true
     state: enabled
-  loop: "{{ podman_user.swag_firewall_rules }}"
+  loop: "{{ podman_user.https_accept_source_ipv4 }}"
   become: true
+  when: 
+    - podman_user.https_accept_source_ipv4 is defined
+    - "'tailscale' not in podman_user.containers"

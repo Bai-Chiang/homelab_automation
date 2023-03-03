@@ -1,7 +1,7 @@
-# container-gluetun.service
+# gluetun.service
 
 [Unit]
-Description=Podman container-gluetun.service
+Description=Podman gluetun.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target
 After=network-online.target
@@ -39,6 +39,9 @@ ExecStart=/usr/bin/podman run \
 {% endif %}
 {% if "transmission" in podman_user.containers %}
     --publish 127.0.0.1:9091:9091/tcp \
+{% endif %}
+{% if "qbittorrent" in podman_user.containers %}
+    --publish 8081:8081/tcp \
 {% endif %}
     docker.io/qmcgaw/gluetun
 ExecStop=/usr/bin/podman stop \
