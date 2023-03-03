@@ -595,8 +595,8 @@ echo "
 ######################################################
 "
 if [[ $KERNEL_PKGS == *"linux-hardened"* ]]; then
-    read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [y/N] " enable_user_ns_unprivileged
-    enable_user_ns_unprivileged="${enable_user_ns_unprivileged:-n}"
+    read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [Y/n] " enable_user_ns_unprivileged
+    enable_user_ns_unprivileged="${enable_user_ns_unprivileged:-y}"
     enable_user_ns_unprivileged="${enable_user_ns_unprivileged,,}"
     if [[ $enable_user_ns_unprivileged == y ]] ; then
         echo "kernel.unprivileged_userns_clone=1" >> /mnt/etc/sysctl.d/unprivileged_user_namespace.conf
