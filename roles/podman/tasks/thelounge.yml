@@ -1,13 +1,12 @@
 ---
 - name: thelounge container config direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.container_configs_dir }}/thelounge"
+    path: "{{ podman_user.thelounge_config_dir }}"
     state: directory
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
-  become_user: "{{ podman_user.name }}"
 
 - name: thelounge.service
   ansible.builtin.template:

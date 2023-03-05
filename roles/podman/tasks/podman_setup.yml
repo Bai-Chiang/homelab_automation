@@ -63,12 +63,6 @@
 #    mode: '0700'
 #  become: true
 
-# install acl package for ansible to become other unprivileged user
-- name: dnf install acl
-  ansible.builtin.dnf: name=acl state=present
-  become: true
-  when: ansible_distribution == "Fedora"
-
 - name: setup systemd user directory
   ansible.builtin.file:
     path: "/home/{{ podman_user.name }}/.config/systemd/user"

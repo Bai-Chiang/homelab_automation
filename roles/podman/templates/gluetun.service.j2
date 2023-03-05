@@ -23,7 +23,6 @@ ExecStart=/usr/bin/podman run \
     --label io.containers.autoupdate=registry \
     --name=gluetun \
     --cap-add=NET_ADMIN \
-    --cap-add=NET_RAW \
     --device=/dev/net/tun:/dev/net/tun \
     --env TZ={{ TZ }} \
     --env VPN_SERVICE_PROVIDER=custom \
@@ -43,7 +42,10 @@ ExecStart=/usr/bin/podman run \
 {% if "qbittorrent" in podman_user.containers %}
     --publish 8081:8081/tcp \
 {% endif %}
-    docker.io/qmcgaw/gluetun
+{% if "thelounge" in podman_user.containers %}
+    --publish 127.0.0.1:9000:9000/tcp \
+{% endif %}
+    ghcr.io/qdm12/gluetun
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \

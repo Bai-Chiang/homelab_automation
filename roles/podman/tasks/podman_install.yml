@@ -12,3 +12,14 @@
   ansible.builtin.dnf: name=podman state=present
   become: true
   when: ansible_distribution == "Fedora"
+
+# install acl package for ansible to become other unprivileged user
+- name: dnf install acl
+  ansible.builtin.dnf: name=acl state=present
+  become: true
+  when: ansible_distribution == "Fedora"
+
+- name: dnf install policycoreutils-python-utils
+  ansible.builtin.dnf: name=policycoreutils-python-utils state=present
+  become: true
+  when: ansible_distribution == "Fedora"
