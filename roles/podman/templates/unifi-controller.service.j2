@@ -21,6 +21,7 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
+    --dns={{ DNS }} \
     --uidmap 1000:0:1 \
     --uidmap 0:1:1000 \
     --uidmap 1001:1001:64536 \

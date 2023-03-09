@@ -17,7 +17,12 @@
     group: root
     mode: '0644'
   become: true
-  when: "'tailscale' not in podman_user.containers"
+  register: unprivileged_port_start
+
+- name: sysctl net.ipv4.ip_unprivileged_port_start=443
+  ansible.builtin.command: sysctl net.ipv4.ip_unprivileged_port_start=443
+  become: true
+  when: unprivileged_port_start is changed
 
 - name: swag.service
   ansible.builtin.template:
@@ -34,8 +39,8 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: systemctl --user enable swag.service
-  ansible.builtin.systemd: name=swag.service enabled=true scope=user
+- name: systemctl --user enable --now swag.service
+  ansible.builtin.systemd: name=swag.service enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
@@ -50,4 +55,3 @@
   become: true
   when: 
     - podman_user.https_accept_source_ipv4 is defined
-    - "'tailscale' not in podman_user.containers"

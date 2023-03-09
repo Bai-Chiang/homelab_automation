@@ -5,7 +5,7 @@ Description=Podman qbittorrent.service
 Documentation=man:podman-generate-systemd(1)
 Wants=network-online.target gluetun.service
 After=network-online.target gluetun.service
-Wants=gluetun.service
+Requires=gluetun.service
 RequiresMountsFor=%t/containers
 
 [Service]

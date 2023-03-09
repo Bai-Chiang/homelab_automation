@@ -21,14 +21,36 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
-    --userns keep-id:uid=1000,gid=1000 \
+    --uidmap 1000:0:1 \
+    --uidmap 0:1:1000 \
+    --uidmap 1001:1001:64536 \
+    --dns={{ DNS }} \
+    --env PUID=1000 \
+    --env PGID=1000 \
+    --env TZ={{ TZ }} \
     --name=jellyfin \
     --hostname=jellyfin \
     --publish 8096:8096/tcp \
     --volume {{ podman_user.jellyfin_config_dir }}:/config:Z \
-    --volume {{ podman_user.jellyfin_cache_dir }}:/cache:Z \
     --volume {{ podman_user.jellyfin_data_dir }}:/media:ro,z \
-    docker.io/jellyfin/jellyfin:latest
+    lscr.io/linuxserver/jellyfin:latest
+#ExecStart=/usr/bin/podman run \
+#    --cidfile=%t/%n.ctr-id \
+#    --cgroups=no-conmon \
+#    --rm \
+#    --sdnotify=conmon \
+#    --detach \
+#    --replace \
+#    --label io.containers.autoupdate=registry \
+#    --dns={{ DNS }} \
+#    --userns keep-id:uid=1000,gid=1000 \
+#    --name=jellyfin \
+#    --hostname=jellyfin \
+#    --publish 8096:8096/tcp \
+#    --volume {{ podman_user.jellyfin_config_dir }}:/config:Z \
+#    --volume { podman_user.jellyfin_cache_dir }:/cache:Z \
+#    --volume {{ podman_user.jellyfin_data_dir }}:/media:ro,z \
+#    docker.io/jellyfin/jellyfin:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \

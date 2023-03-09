@@ -19,6 +19,7 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
+    --dns={{ DNS }} \
     --uidmap 1000:0:1 \
     --uidmap 0:1:1000 \
     --uidmap 1001:1001:64536 \
@@ -27,11 +28,8 @@ ExecStart=/usr/bin/podman run \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-{% if "tailscale" in podman_user.containers %}
-    --publish 127.0.0.1:4443:443 \
-{% else %}
+    --network=slirp4netns:port_handler=slirp4netns \
     --publish 443:443/tcp \
-{% endif %}
     --volume {{ podman_user.swag_config_dir }}:/config:Z \
     --env URL={{ podman_user.swag_domain }} \
     --env VALIDATION=dns \
@@ -43,7 +41,7 @@ ExecStart=/usr/bin/podman run \
     --env STAGING=false \
     --env PROPAGATION=60 \
 {% if podman_user.swag_mods is defined %}
-    --env DOCKER_MODS={{ podman_user.swag_mods }} \
+    --env DOCKER_MODS='{{ podman_user.swag_mods }}' \
 {% endif %}
     lscr.io/linuxserver/swag:latest
 ExecStop=/usr/bin/podman stop \

@@ -14,22 +14,6 @@ Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=70
-#ExecStart=/usr/bin/podman run \
-#    --cidfile=%t/%n.ctr-id \
-#    --cgroups=no-conmon \
-#    --rm \
-#    --pod-id-file %t/nextcloud-pod.pod-id \
-#    --sdnotify=conmon \
-#    --detach \
-#    --replace \
-#    --label io.containers.autoupdate=registry \
-#    --name=nextcloud \
-#    --env PUID=1000 \
-#    --env PGID=1000 \
-#    --env TZ={{ TZ }} \
-#    --volume {{ podman_user.nextcloud_config_dir }}:/config:Z \
-#    --volume {{ podman_user.nextcloud_data_dir }}:/data:Z \
-#    lscr.io/linuxserver/nextcloud:latest
 ExecStart=/usr/bin/podman run \
     --cidfile=%t/%n.ctr-id \
     --cgroups=no-conmon \
@@ -39,11 +23,27 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
-    --sysctl net.ipv4.ip_unprivileged_port_start=80 \
     --name=nextcloud \
-    --volume {{ podman_user.nextcloud_data_dir }}:/var/www/html/data:Z \
-    --volume {{ podman_user.nextcloud_config_dir }}:/var/www/html:Z \
-    docker.io/library/nextcloud:latest
+    --env PUID=1000 \
+    --env PGID=1000 \
+    --env TZ={{ TZ }} \
+    --volume {{ podman_user.nextcloud_config_dir }}:/config:Z \
+    --volume {{ podman_user.nextcloud_data_dir }}:/data:Z \
+    lscr.io/linuxserver/nextcloud:latest
+#ExecStart=/usr/bin/podman run \
+#    --cidfile=%t/%n.ctr-id \
+#    --cgroups=no-conmon \
+#    --rm \
+#    --pod-id-file %t/nextcloud-pod.pod-id \
+#    --sdnotify=conmon \
+#    --detach \
+#    --replace \
+#    --label io.containers.autoupdate=registry \
+#    --sysctl net.ipv4.ip_unprivileged_port_start=80 \
+#    --name=nextcloud \
+#    --volume {{ podman_user.nextcloud_data_dir }}:/var/www/html/data:Z \
+#    --volume {{ podman_user.nextcloud_config_dir }}:/var/www/html:Z \
+#    docker.io/library/nextcloud:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \
