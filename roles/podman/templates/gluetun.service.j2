@@ -19,6 +19,7 @@ Wants=thelounge.service
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
+RestartSec=5
 TimeoutStopSec=70
 ExecStartPre=/bin/rm \
     -f %t/%n.ctr-id

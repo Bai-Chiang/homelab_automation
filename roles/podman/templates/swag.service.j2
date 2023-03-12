@@ -43,6 +43,10 @@ ExecStart=/usr/bin/podman run \
 {% if podman_user.swag_mods is defined %}
     --env DOCKER_MODS='{{ podman_user.swag_mods }}' \
 {% endif %}
+{% if podman_user.swag_CROWDSEC_API_KEY is defined %}
+    --env CROWDSEC_API_KEY='{{ podman_user.swag_CROWDSEC_API_KEY }}' \
+    --env CROWDSEC_LAPI_URL='{{ podman_user.swag_CROWDSEC_LAPI_URL }}' \
+{% endif %}
     lscr.io/linuxserver/swag:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \

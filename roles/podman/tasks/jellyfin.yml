@@ -27,3 +27,35 @@
   ansible.builtin.systemd: name=jellyfin enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+
+# 8096/tcp  jellyfin port
+- name: add jellyfin firewalld service file jellyfin.xml
+  ansible.builtin.copy:
+    content: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <service>
+        <short>Jellyfin</short>
+        <description>Jellyfin</description>
+        <port protocol="tcp" port="8096"/>
+      </service>
+    dest: /etc/firewalld/services/jellyfin.xml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: jellyfin_firewalld_file
+
+- name: Reload firewalld when jellyfin.xml changed
+  ansible.builtin.command: firewall-cmd --reload
+  become: true
+  when: jellyfin_firewalld_file.changed
+
+- name: Set firewall rules for jellyfin listening port (TCP)
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ reverse_proxy_ipv4 }}" service name="jellyfin" accept
+    zone: "{{ firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  become: true
+  when: reverse_proxy_ipv4 is defined

@@ -27,3 +27,36 @@
   ansible.builtin.systemd: name=homeassistant enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+
+
+# 8123/tcp  homeassistant port
+- name: add homeassistant firewalld service file homeassistant.xml
+  ansible.builtin.copy:
+    content: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <service>
+        <short>Homeassistant</short>
+        <description>Homeassistant</description>
+        <port protocol="tcp" port="8123"/>
+      </service>
+    dest: /etc/firewalld/services/homeassistant.xml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: homeassistant_firewalld_file
+
+- name: Reload firewalld when homeassistant.xml changed
+  ansible.builtin.command: firewall-cmd --reload
+  become: true
+  when: homeassistant_firewalld_file.changed
+
+- name: Set firewall rules for homeassistant listening port (TCP)
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ reverse_proxy_ipv4 }}" service name="homeassistant" accept
+    zone: "{{ firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  become: true
+  when: reverse_proxy_ipv4 is defined

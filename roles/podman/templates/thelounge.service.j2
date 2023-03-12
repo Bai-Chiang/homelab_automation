@@ -11,6 +11,7 @@ RequiresMountsFor=%t/containers
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
+RestartSec=5
 TimeoutStopSec=70
 ExecStartPre=/bin/rm \
     -f %t/%n.ctr-id
@@ -22,11 +23,16 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
-    --userns keep-id:uid=1000,gid=1000 \
+    --uidmap 1000:0:1 \
+    --uidmap 0:1:1000 \
+    --uidmap 1001:1001:64536 \
+    --env PUID=1000 \
+    --env PGID=1000 \
+    --env TZ={{ TZ }} \
     --name thelounge \
     --network=container:gluetun \
-    --volume {{ podman_user.thelounge_config_dir }}:/var/opt/thelounge:Z \
-    docker.io/thelounge/thelounge:latest
+    --volume {{ podman_user.thelounge_config_dir }}:/config:Z \
+    lscr.io/linuxserver/thelounge:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time 10 \
