@@ -13,3 +13,29 @@
 - name: systemctl enable dnf-automatic.timer
   ansible.builtin.systemd: name=dnf-automatic.timer enabled=true state=started
   become: true
+
+- name: dnf-autoreboot.service
+  ansible.builtin.copy:
+    src: dnf-autoreboot.service
+    dest: /etc/systemd/system/dnf-autoreboot.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: dnf-autoreboot.timer
+  ansible.builtin.template:
+    src: dnf-autoreboot.timer.j2
+    dest: /etc/systemd/system/dnf-autoreboot.timer
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd: daemon_reload=true
+  become: true
+
+- name: systemctl enable dnf-autoreboot.timer
+  ansible.builtin.systemd: name=dnf-autoreboot.timer enabled=true state=started
+  become: true

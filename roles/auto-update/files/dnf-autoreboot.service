@@ -1,0 +1,7 @@
+[Unit]
+Description=Reboot system if necessary
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash -c '/usr/bin/dnf needs-restarting -r &> /dev/null || /usr/bin/systemctl reboot'
+
