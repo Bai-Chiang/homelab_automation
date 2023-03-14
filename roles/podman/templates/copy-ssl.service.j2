@@ -1,0 +1,12 @@
+[Unit]
+Description=Copy SSL certificate to Caddy
+
+[Service]
+Restart=no
+Type=simple
+ExecStart=/usr/bin/rsync \
+    --recursive \
+    --copy-links \
+    --delete \
+    --chown=caddy:caddy \
+    {{ podman_user.letsencrypt_config_dir }}/live/  {{ podman_user.caddy_data_dir }}/ssl

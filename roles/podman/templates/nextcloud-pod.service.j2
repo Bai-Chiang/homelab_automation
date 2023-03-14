@@ -13,26 +13,26 @@ Before=nextcloud.service postgres.service
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
 TimeoutStopSec=70
-ExecStartPre=/usr/bin/podman pod create \
-    --infra-conmon-pidfile %t/nextcloud-pod.pid \
-    --pod-id-file %t/nextcloud-pod.pod-id \
-    --exit-policy=stop \
-    --replace \
-    --dns={{ DNS }} \
-    --uidmap 1000:0:1 \
-    --uidmap 0:1:1000 \
-    --uidmap 1001:1001:64536 \
-    --publish 1443:443 \
-    --name nextcloud-pod
 #ExecStartPre=/usr/bin/podman pod create \
 #    --infra-conmon-pidfile %t/nextcloud-pod.pid \
 #    --pod-id-file %t/nextcloud-pod.pod-id \
 #    --exit-policy=stop \
-#    --userns keep-id:uid=33,gid=33 \
 #    --replace \
 #    --dns={{ DNS }} \
-#    --publish 5377:80 \
+#    --uidmap 1000:0:1 \
+#    --uidmap 0:1:1000 \
+#    --uidmap 1001:1001:64536 \
+#    --publish 1443:443 \
 #    --name nextcloud-pod
+ExecStartPre=/usr/bin/podman pod create \
+    --infra-conmon-pidfile %t/nextcloud-pod.pid \
+    --pod-id-file %t/nextcloud-pod.pod-id \
+    --exit-policy=stop \
+    --userns keep-id:uid=33,gid=33 \
+    --replace \
+    --dns={{ DNS }} \
+    --publish 5377:80 \
+    --name nextcloud-pod
 ExecStart=/usr/bin/podman pod start \
     --pod-id-file %t/nextcloud-pod.pod-id
 ExecStop=/usr/bin/podman pod stop \

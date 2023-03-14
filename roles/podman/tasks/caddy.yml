@@ -1,0 +1,103 @@
+---
+- name: Allow rootless podman access 443 port
+  ansible.builtin.copy:
+    content: |
+      net.ipv4.ip_unprivileged_port_start=443
+    dest: /etc/sysctl.d/unprivileged_port_start.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: unprivileged_port_start
+
+- name: sysctl net.ipv4.ip_unprivileged_port_start=443
+  ansible.builtin.command: sysctl net.ipv4.ip_unprivileged_port_start=443
+  become: true
+  when: unprivileged_port_start is changed
+
+- name: caddy container config/data direcoty
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  loop:
+    - "{{ podman_user.caddy_config_dir }}"
+    - "{{ podman_user.caddy_data_dir }}"
+
+- name: caddy.service
+  ansible.builtin.template:
+    src: caddy.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/caddy.service"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: Caddyfile
+  ansible.builtin.copy:
+    src: Caddyfile
+    dest: "/home/{{ podman_user.name }}/Caddyfile"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: copy-ssl.service
+  ansible.builtin.template:
+    src: copy-ssl.service.j2
+    dest: "/etc/systemd/system/copy-ssl.service"
+    owner: "root"
+    group: "root"
+    mode: '0600'
+  become: true
+
+- name: copy-ssl.timer
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Copy SSL certificates to Caddy
+
+      [Timer]
+      OnCalendar=00:10:00
+
+      [Install]
+      WantedBy=timers.target
+    dest: "/etc/systemd/system/copy-ssl.timer"
+    owner: "root"
+    group: "root"
+    mode: '0600'
+  become: true
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd: daemon_reload=true
+  become: true
+
+- name: systemctl --user enable caddy.service
+  ansible.builtin.systemd: name=caddy.service enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl enable copy-ssl.timer
+  ansible.builtin.systemd: name=copy-ssl.timer enabled=true
+  become: true
+
+- name: Set firewall rules for https
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="https" accept
+    zone: "{{ firewalld_default_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ podman_user.https_accept_source_ipv4 }}"
+  become: true
+  when: 
+    - podman_user.https_accept_source_ipv4 is defined

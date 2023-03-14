@@ -1,0 +1,43 @@
+# caddy.service
+
+[Unit]
+Description=Podman caddy.service
+Documentation=man:podman-generate-systemd(1)
+Wants=network-online.target
+After=network-online.target
+RequiresMountsFor=%t/containers
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=70
+ExecStart=/usr/bin/podman run \
+    --cidfile=%t/%n.ctr-id \
+    --cgroups=no-conmon \
+    --rm \
+    --sdnotify=conmon \
+    --detach \
+    --replace \
+    --label io.containers.autoupdate=registry \
+    --userns=keep-id:uid=1000,gid=1000 \
+    --name=caddy \
+    --network=slirp4netns:port_handler=slirp4netns \
+    --publish 443:443/tcp \
+    --volume {{ podman_user.caddy_config_dir }}:/config:Z \
+    --volume {{ podman_user.caddy_data_dir }}:/data:Z \
+    --volume /home/{{ podman_user.name }}/Caddyfile:/etc/caddy/Caddyfile:Z \
+    docker.io/library/caddy:alpine
+ExecStop=/usr/bin/podman stop \
+    --ignore \
+    --time=10 \
+    --cidfile=%t/%n.ctr-id
+ExecStopPost=/usr/bin/podman rm \
+    --force \
+    --ignore \
+    --time=10 \
+    --cidfile=%t/%n.ctr-id
+Type=notify
+NotifyAccess=all
+
+[Install]
+WantedBy=default.target

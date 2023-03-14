@@ -13,26 +13,6 @@ Restart=on-failure
 TimeoutStopSec=70
 ExecStartPre=/bin/rm \
     -f %t/%n.ctr-id
-ExecStart=/usr/bin/podman run \
-    --cidfile=%t/%n.ctr-id \
-    --cgroups=no-conmon \
-    --rm \
-    --sdnotify=conmon \
-    --detach \
-    --replace \
-    --label io.containers.autoupdate=registry \
-    --uidmap 1000:0:1 \
-    --uidmap 0:1:1000 \
-    --uidmap 1001:1001:64536 \
-    --dns={{ DNS }} \
-    --env PUID=1000 \
-    --env PGID=1000 \
-    --env TZ={{ TZ }} \
-    --name=homeassistant \
-    --hostname=homeassistant \
-    --publish 8123:8123/tcp \
-    --volume {{ podman_user.homeassistant_config_dir }}:/config:Z \
-    lscr.io/linuxserver/homeassistant:latest
 #ExecStart=/usr/bin/podman run \
 #    --cidfile=%t/%n.ctr-id \
 #    --cgroups=no-conmon \
@@ -41,14 +21,35 @@ ExecStart=/usr/bin/podman run \
 #    --detach \
 #    --replace \
 #    --label io.containers.autoupdate=registry \
+#    --uidmap 1000:0:1 \
+#    --uidmap 0:1:1000 \
+#    --uidmap 1001:1001:64536 \
 #    --dns={{ DNS }} \
-#    --userns keep-id:uid=1000,gid=1000 \
+#    --env PUID=1000 \
+#    --env PGID=1000 \
+#    --env TZ={{ TZ }} \
 #    --name=homeassistant \
 #    --hostname=homeassistant \
 #    --publish 8123:8123/tcp \
-#    --env TZ={{ TZ }} \
 #    --volume {{ podman_user.homeassistant_config_dir }}:/config:Z \
-#    ghcr.io/home-assistant/home-assistant:stable
+#    lscr.io/linuxserver/homeassistant:latest
+ExecStart=/usr/bin/podman run \
+    --cidfile=%t/%n.ctr-id \
+    --cgroups=no-conmon \
+    --rm \
+    --sdnotify=conmon \
+    --detach \
+    --replace \
+    --label io.containers.autoupdate=registry \
+    --dns={{ DNS }} \
+    --userns keep-id:uid=1000,gid=1000 \
+    --user 1000:1000 \
+    --name=homeassistant \
+    --hostname=homeassistant \
+    --publish 8123:8123/tcp \
+    --env TZ={{ TZ }} \
+    --volume {{ podman_user.homeassistant_config_dir }}:/config:Z \
+    ghcr.io/home-assistant/home-assistant:stable
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \

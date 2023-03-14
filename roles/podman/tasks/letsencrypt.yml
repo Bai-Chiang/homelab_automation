@@ -1,0 +1,48 @@
+---
+- name: letsencrypt container config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.letsencrypt_config_dir }}"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+
+- name: letsencrypt.service
+  ansible.builtin.template:
+    src: letsencrypt.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/letsencrypt.service"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: letsencrypt.timer
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=letsencrypt certbot
+
+      [Timer]
+      OnCalendar=daily
+
+      [Install]
+      WantedBy=timers.target
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/letsencrypt.timer"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable letsencrypt.timer
+  ansible.builtin.systemd: name=letsencrypt.timer enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+

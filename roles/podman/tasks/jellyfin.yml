@@ -1,12 +1,15 @@
 ---
-- name: jellyfin container config direcoty
+- name: jellyfin container config and cache direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.jellyfin_config_dir }}"
+    path: "{{ item }}"
     state: directory
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
+  loop:
+    - "{{ podman_user.jellyfin_config_dir }}"
+    - "{{ podman_user.jellyfin_cache_dir }}"
 
 - name: jellyfin.service
   ansible.builtin.template:
