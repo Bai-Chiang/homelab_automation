@@ -347,6 +347,7 @@ echo -e "Setting network ..."
 echo -e "\n\nPlease tell me the hostname:"
 read hostname
 echo "$hostname" > /mnt/etc/hostname
+ln -sf /run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
 echo -e "\nWhich network manager do you want to use?\n\t1\tsystemd-networkd\n\t2\tNetworkManger"
 read -p "Please enter a number: " networkmanager
 if [[ $networkmanager -eq 1 ]] ; then
