@@ -33,6 +33,8 @@ wm_pkgs:
   - xorg-xwayland
   - python-i3ipc
   - wl-clipboard
+  - grim
+  - slurp
 
 dotfiles_repo:
   https: 'https://github.com/username/dotfiles.git'
