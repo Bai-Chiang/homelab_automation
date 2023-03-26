@@ -53,9 +53,6 @@ ExecStart=/usr/bin/podman run \
 {% if "qbittorrent" in podman_user.containers %}
     --publish 127.0.0.1:8081:8081/tcp \
 {% endif %}
-{% if "thelounge" in podman_user.containers %}
-    --publish 127.0.0.1:9000:9000/tcp \
-{% endif %}
     ghcr.io/qdm12/gluetun
 ExecStop=/usr/bin/podman stop \
     --ignore \
