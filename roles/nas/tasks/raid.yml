@@ -22,6 +22,7 @@
     regexp: "^{{ item.device_mapper_name }}"
     line: "{{ item.device_mapper_name}}    UUID={{ item.UUID }}    {{ item.keyfile }}"
     state: present
+  when: crypttab_entries is defined
   loop: "{{ crypttab_entries }}"
   become: true
 

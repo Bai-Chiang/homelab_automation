@@ -1,7 +1,7 @@
 ---
 - name: "import_tasks: raid.yml"
   import_tasks: raid.yml
-  when: crypttab_entries is defined
+  when: crypttab_entries is defined or fstab_entries is defined
 
 - name: "import_tasks: btrfs_scrub.yml"
   import_tasks: btrfs_scrub.yml
