@@ -31,7 +31,7 @@ ExecStartPre=/usr/bin/podman pod create \
     --userns keep-id:uid=33,gid=33 \
     --replace \
     --dns={{ DNS }} \
-    --publish 5377:80 \
+    --publish 4108:80 \
     --name nextcloud-pod
 ExecStart=/usr/bin/podman pod start \
     --pod-id-file %t/nextcloud-pod.pod-id
