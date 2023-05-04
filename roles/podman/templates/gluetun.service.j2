@@ -12,9 +12,6 @@ Wants=transmission.service
 {% if "qbittorrent" in podman_user.containers %}
 Wants=qbittorrent.service
 {% endif %}
-{% if "thelounge" in podman_user.containers %}
-Wants=thelounge.service
-{% endif %}
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
