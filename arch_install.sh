@@ -480,7 +480,7 @@ if [[ $vfio == y ]] ; then
     fi
     # load vfio-pci module early
     # https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#mkinitcpio
-    sed -i '/^MODULES=/ s/)/ vfio_pci vfio vfio_iommu_type1 vfio_virqfd)/' /mnt/etc/mkinitcpio.conf
+    sed -i '/^MODULES=/ s/)/ vfio_pci vfio vfio_iommu_type1)/' /mnt/etc/mkinitcpio.conf
 fi
 
 
