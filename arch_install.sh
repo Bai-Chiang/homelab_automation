@@ -1,7 +1,6 @@
 #!/usr/bin/bash
 
 UCODE_PKG="intel-ucode"
-BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
@@ -15,8 +14,9 @@ FS_PKGS="dosfstools btrfs-progs"
 #FS_PKGS="dosfstools btrfs-progs"
 #KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
-# desktop example
+## desktop example
 #KERNEL_PKGS="linux"
+#BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
 #FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 #OTHER_PKGS="man-db vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
