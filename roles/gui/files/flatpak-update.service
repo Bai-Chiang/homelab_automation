@@ -1,0 +1,14 @@
+[Unit]
+Description=Update Flatpak
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+StartLimitIntervalSec=3h
+StartLimitBurst=5
+OnFailure=failure-notification@%n
+
+[Service]
+Type=oneshot
+ExecStart=ping -c 1 flathub.org
+ExecStart=/usr/bin/flatpak update --user --noninteractive --assumeyes
+Restart=on-failure
+RestartSec=30min

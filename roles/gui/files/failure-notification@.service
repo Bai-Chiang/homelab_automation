@@ -1,0 +1,6 @@
+[Unit]
+Description=Send a notification about a failed systemd unit
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/notify-send "service %i failed"
