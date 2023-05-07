@@ -1,5 +1,5 @@
 ---
-- name: Restore my dotfiles
+- name: Restore dotfiles
   ansible.builtin.shell: |
     #!/usr/bin/bash
     git clone --bare {{ dotfiles_repo.https }} $HOME/.dotfiles
@@ -15,9 +15,13 @@
     executable: /usr/bin/bash
     creates: "{{ ansible_user_dir }}/.dotfiles/config"
 
-- name: Edit .dotfiles/config
+- name: Set ssh connection in .dotfiles/config
   ansible.builtin.lineinfile:
     path: "{{ ansible_user_dir }}/.dotfiles/config"
     regexp: '^\surl ='
     insertafter: '^\[remote'
     line: "\turl = {{ dotfiles_repo.ssh }}"
+
+- name: pacman -S openssh
+  community.general.pacman: name=openssh state=present
+  become: true
