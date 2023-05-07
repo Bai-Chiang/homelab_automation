@@ -35,6 +35,7 @@ wm_pkgs:
   - wl-clipboard
   - grim
   - slurp
+  - mako
 
 dotfiles_repo:
   https: 'https://github.com/username/dotfiles.git'

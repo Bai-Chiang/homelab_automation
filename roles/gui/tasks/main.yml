@@ -43,17 +43,11 @@
   become: true
   when: '"cups" in other_pkgs'
 
-- name: Install notification server
-  community.general.pacman: name=mako state=present
-  become: true
-
 - import_tasks: snapper.yml
 
 - import_tasks: dotfiles.yml  
-- import_tasks: flatpak.yml
 
-- name: systemctl --user daemon-reload
-  ansible.builtin.systemd: daemon_reload=true scope=user
+- import_tasks: flatpak.yml
 
 - name: Create screenshots directories
   ansible.builtin.file:
