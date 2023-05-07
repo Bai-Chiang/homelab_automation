@@ -26,12 +26,12 @@
   community.general.pacman: name={{ audio_pkgs }} state=present
   become: true
 
-- name: Install WM packages
-  community.general.pacman: name={{ wm_pkgs }} state=present
-  become: true
-
 - name: Install font packages
   community.general.pacman: name={{ fonts_pkgs }} state=present
+  become: true
+
+- name: Install WM packages
+  community.general.pacman: name={{ wm_pkgs }} state=present
   become: true
 
 - name: Install other packages

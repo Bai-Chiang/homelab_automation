@@ -5,13 +5,21 @@
   register: libvirt_images_dir
   become: true
 
+- name: Get file system type of /var/lib
+  ansible.builtin.command: stat --file-system --format=%T /var/lib
+  become: true
+  register: var_lib_fstype
+  changed_when: false
+
 - name: Create /var/lib/libvirt/images subvolume if not exist, and disable CoW
   ansible.builtin.shell: |
     mkdir -p /var/lib/libvirt
     btrfs subvolume create /var/lib/libvirt/images
     chattr +C /var/lib/libvirt/images
   become: true
-  when: not libvirt_images_dir.stat.exists
+  when:
+    - not libvirt_images_dir.stat.exists
+    - var_lib_fstype.stdout == 'btrfs'
 
 - name: Install libvirt packages
   community.general.pacman:
@@ -30,20 +38,6 @@
       - edk2-ovmf
     state: present
   become: true
-
-#- name: Get file system type of /var/lib/libvirt/images
-#  ansible.builtin.command: stat --file-system --format=%T /var/lib/libvirt/images
-#  become: true
-#  register: libvirt_images_fstype
-#  changed_when: false
-#
-#- name: Disable copy-on-write for /var/lib/libvirt/images
-#  ansible.builtin.file:
-#    path: /var/lib/libvirt/images
-#    attributes: '+C'
-#    state: directory
-#  become: true
-#  when: libvirt_images_fstype.stdout == 'btrfs'
 
 - name: Add user to libvirt group (non systemd-homed)
   ansible.builtin.user:
@@ -64,8 +58,3 @@
 - name: systemctl enable libvirtd.service
   ansible.builtin.systemd: name=libvirtd.service enabled=true
   become: true
-
-#- name: systemctl start virtlogd.service
-#  ansible.builtin.systemd: name=virtlogd.service state=started
-#  become: true
-
