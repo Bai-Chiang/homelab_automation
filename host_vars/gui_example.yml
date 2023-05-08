@@ -22,6 +22,7 @@ shell_pkgs:
 default_shell: /usr/bin/zsh
 
 wm_pkgs:
+  # sway
   - sway
   - swaylock
   - swayidle
@@ -37,8 +38,22 @@ wm_pkgs:
   - slurp
   - mako
 
+  # KDE
+  - plasma-meta
+  - plasma-wayland-session
+  - dolphin
+  - ark
+  - ffmpegthumbs
+  - kdegraphics-thumbnailers
+  - konsole
+  - phonon-qt5-vlc
+
 dotfiles_repo:
+  # https link to your dotfiles repo. This should be a public repo.
   https: 'https://github.com/username/dotfiles.git'
+
+  # ssh link to your dotfiles repo. The playbook will replace the https link with ssh link after clone all dotfiles.
+  # To push updates to GitHub,  you need to create an ssh key then add the key to your GitHub account.
   ssh: 'git@github.com:username/dotfiles.git'
 
 audio_pkgs:
@@ -46,6 +61,8 @@ audio_pkgs:
   - pipewire-alsa
   - pipewire-pulse
   - pipewire-jack
+  - wireplumber
+
   - pavucontrol
 
 fonts_pkgs:
@@ -61,7 +78,6 @@ other_pkgs:
   - neofetch
 
   - brightnessctl   # screen brightness
-  - nm-connection-editor
   - system-config-printer
   - gscan2pdf
 
