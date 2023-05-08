@@ -17,13 +17,23 @@
     remote: flathub
     method: user
 
+- name: setup systemd user directory
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user_id }}/.config/systemd/user"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0700'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
 - name: flatpak-update.service
   ansible.builtin.copy:
     src: "{{ item }}"
     dest: "/home/{{ ansible_user_id }}/.config/systemd/user/{{ item }}"
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
-    mode: '0644'
+    mode: '0600'
   loop:
     - flatpak-update.service
     - flatpak-update.timer
