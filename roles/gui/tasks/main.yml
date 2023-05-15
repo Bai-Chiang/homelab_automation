@@ -53,6 +53,4 @@
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/screenshots"
     state: directory
-  
-- include_tasks: libvirt.yml
-  when: ansible_architecture == 'x86_64'
+
