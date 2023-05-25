@@ -1,6 +1,13 @@
 ---
 ###############################################################################
 # roles/common
+# Use Reflector automatically update mirror list.
+# https://wiki.archlinux.org/title/Reflector
+#
+# reflector_country: France,Germany
+# will only use mirrors from France and Germany
+# To get all country names and codes, run
+# reflector --list-countries 
 reflector_country: us
 
 ###############################################################################
@@ -21,31 +28,32 @@ shell_pkgs:
 
 default_shell: /usr/bin/zsh
 
+# Packages for your Desktop environment or window manager.
 wm_pkgs:
-  # sway
+  # Example: sway
   - sway
   - swaylock
   - swayidle
   - waybar
   - xdg-utils
   - xdg-desktop-portal
-  - xdg-desktop-portal-wlr
-  - xdg-desktop-portal-gtk 
   - xorg-xwayland
-  - python-i3ipc
   - wl-clipboard
+  - xdg-desktop-portal-wlr
+  # Firefox file chooser needs xdg-desktop-portal-gtk
+  - xdg-desktop-portal-gtk
+  # python-i3ipc needed for https://github.com/Bai-Chiang/dotfiles/blob/main/.config/sway/inactive-windows-transparency.py
+  - python-i3ipc
+  # grim and slurp for screenshoot
   - grim
   - slurp
+  # notification daemon
   - mako
 
   # KDE
   - plasma-meta
   - plasma-wayland-session
-  - dolphin
-  - ark
-  - ffmpegthumbs
-  - kdegraphics-thumbnailers
-  - konsole
+  - sddm
   - phonon-qt5-vlc
 
 dotfiles_repo:
@@ -63,8 +71,6 @@ audio_pkgs:
   - pipewire-jack
   - wireplumber
 
-  - pavucontrol
-
 fonts_pkgs:
   - ttf-dejavu
   - noto-fonts-cjk
@@ -77,8 +83,11 @@ other_pkgs:
   - pass
   - neofetch
 
-  - brightnessctl   # screen brightness
+  # screen brightness
+  - brightnessctl
+  # printer config
   - system-config-printer
+  # scanning tool
   - gscan2pdf
 
 flatpak_pkgs:
@@ -87,21 +96,35 @@ flatpak_pkgs:
   - io.gitlab.librewolf-community
   - org.mozilla.firefox
 
+  - org.kde.dolphin
+  - org.kde.gwenview
+  - org.kde.okular
+  - org.kde.kwrite
+
 
 ###############################################################################
 # roles/podman
+
+# TZ enviroment variable for LSIO images.
 TZ: "US/Eastern"
 
+# Running podman as rootless user
+# name and uid specify the username and UID value.
+# The user will be created if not exists.
 podman_users:
   - name: tux
     uid: 1000
+
+    # enable lingering for the user will automatic start systemd user instance on start-up.
     enable_lingering: false
+
+    # The frequency of running podman system prune, in systemd-timer format.
     podman_system_prune_timer: daily
+
     container_configs_dir: "/home/tux/container_configs"
     containers:
       - syncthing
     syncthing_data_dirs:
       - { src: /home/tux/data, dest: /data }
-
 
 

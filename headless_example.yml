@@ -15,6 +15,5 @@
     - msmtp
     - auto-update
     - ups
-
     - podman
 

@@ -21,6 +21,7 @@
 
     - import_tasks: tasks/update.yml
 
+  # Check more roles under roles/ directory
   roles:
     - archlinux_common
     - gui

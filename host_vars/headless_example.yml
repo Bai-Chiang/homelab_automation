@@ -2,107 +2,217 @@
 # This file contains credentials, should be encrypted using ansible-vault
 
 ###############################################################################
+# Default firewalld zone. The arch_install.sh set default zone to drop.
 firewalld_default_zone: drop
 
 
 ###############################################################################
 #role/archlinux_common
+# Use Reflector automatically update mirror list.
+# https://wiki.archlinux.org/title/Reflector
+#
+# reflector_country: France,Germany
+# will only use mirrors from France and Germany
+# To get all country names and codes, run
+# reflector --list-countries 
 reflector_country: us
 
 
 ###############################################################################
 #role/openssh
+
+# Only allow these users connect through ssh
 ssh_allowusers: 'tux user1 user2'
+
+# Set ssh HOSTKEY algorithm
 ssh_hostkey: ed25519
+
+# ssh PORT
 ssh_port: 22
+
+# firewall rule will only allow ssh connection from these address
 ssh_accept_source_ipv4:
   - 192.168.122.1
 
 
 ###############################################################################
 #role/networkd_static
+# Static ip address with systemd-networkd
+
+# interface name
 static_nic: enp1s0
+
+# Static ip address with CIDR notation
 static_ip: 192.168.122.2/24
+
+# Gateway
 static_gateway: 192.168.122.1
+
+# DNS server
 static_dns: 192.168.122.1
 
 
 ###############################################################################
 #role/msmtp
+# https://wiki.archlinux.org/title/Msmtp
+# Simple smtp client to send email notification.
+# Using Gmail as an example.
+
+# account name
 msmtp_account: gmail
+
+# smtp server
 msmtp_host: smtp.gmail.com
+
+# smtp port
 msmtp_port: 587
+
+# Enable msmtp TLS
 msmtp_tls: "on"
+
+# Enable msmtp STARTTLS
 msmtp_tls_starttls: "on"
+
+# Your Gmail address
 msmtp_from: username@gmail.com
+
+# The email address you want to send to. Could be the same as Gmail address.
 msmtp_to: account@domain.com
+
+# Your Gmail username without @gmail.com
 msmtp_user: username
+
 # Create an app password for Gamil https://myaccount.google.com/apppasswords
 msmtp_password: GmailAppPasswd
 
 
 ###############################################################################
 #role/auto-update
+# Automatically update system and send an email notification with update result specified in roles/msmtp
+
+# The auto update time in systemd timer format.
 auto_update_time: '*-*-* 01:00:00'
 
 
 ###############################################################################
 #role/nas
+# Storage related tasks, like edit /etc/fstab file to mount disks, schedule btrfs
+# scrub jobs, S.M.A.R.T notifications, NFS and samba server, etc.
 
-# RAID
-## here UUID are the UUID of luks volume /dev/sda1
+# decrypt disks (optional)
 crypttab_entries:
+
+  # device mapper name, the decrypted volume will be /dev/mapper/cryptdisk0
   - device_mapper_name: cryptdisk0
+
+    # here UUID are the UUID of luks volume /dev/sda1
     UUID: 0a659df5-5f33-4fc9-bd20-9f32bc945f19
+
+    # path to decrypt keyfile
     keyfile: /path/to/keyfile
+
+  # another device mapper name, the decrypted volume will be /dev/mapper/cryptdisk1
   - device_mapper_name: cryptdisk1
+
+    # here UUID are the UUID of luks volume /dev/sda2
     UUID: 3195bd48-c9c5-4523-98f5-f2b14ba481aa
+
+    # path to decrypt keyfile
     keyfile: /path/to/keyfile
-# here UUID are the uuid of decrypted volume /dev/mapper/cryptdisk
+
+
+# Add entries to /etc/fstab file
 fstab_entries:
+
+  # here UUID are the uuid of decrypted volume /dev/mapper/cryptdisk0
   - device: UUID=f55c9ddb-e245-430a-a902-13f8dd688458
+
+    # The mount point
     mount_point: /home/tux/data
+
+    # filesystem type
     fs: btrfs
+
+    # mount options
     mount_opts: "noatime,compress=zstd:3,space_cache=v2,autodefrag,subvol=@data,nodev,nosuid,noexec"
+
+    # The owner, group and permission for the mount point /home/tux/data
+    # The playbook will create the mount point with this permssion if not exist.
     owner: tux
     group: tux
     mode: '0700'
 
-# Schedule btrfs scrub. Use systemd-escape -p /path/to/mountpoint to escape the path
+
+# btrfs scrub paths. Use systemd-escape -p /path/to/mountpoint to get escape path
 btrfs_scrub_path:
   - { path: '/', escape: '-' }
   - { path: '/home/tux/data', escape: 'home-tux-data' }
+
+# Schedule btrfs scrub with systemd-timer format
 btrfs_scrub_time: 'Sun *-*-* 01:00:00'
 
-# S.M.A.R.T.
+
+# schedule S.M.A.R.T. self-tests
+# https://wiki.archlinux.org/title/S.M.A.R.T.#Schedule_self-tests
+# smartd will also monitor all drives, and send email notification with information specified in roles/msmtp
 smartd_time: '(S/../.././00)'
 
-# NFS
+
+# NFS server
+# The root directory for NFSv4
 nfs_root: /srv/nfs
+
+# NFS mount points
 nfs_mount_point:
+
+  # The directory to be shared
   - target: /home/tux/data
+
+    # Bind mount address of the target. See https://wiki.archlinux.org/title/NFS#Server
     bind: /srv/nfs/data
+
+    # options for the mount point, same format as in /etc/exports
     ip_opt: '192.168.122.1(rw,sync,all_squash,anonuid=1000,anongid=1000)' }
+
+# Firewall rule, only allow NFS connection from these ip address.
 nfs_accept_source_ipv4:
   - 192.168.122.1
 
 
 ###############################################################################
 #role/ups
+# uninterruptible power supply setup
+# The email notifications will be send via roles/msmtp
+
+# To prevent "Can't claim USB device error", add a udev rule.
+# Use lsusb get vender_id:product_id
+# See https://wiki.archlinux.org/title/Network_UPS_Tools#Can't_claim_USB_device_error
 ups_vender_id: '0764'
 ups_product_id: '0423'
+
+# Set UPS password in /etc/nut/upsd.users
 ups_password: upspassword
 
 
 ###############################################################################
 # role/podman
+
+# TZ enviroment variable for LSIO images.
 TZ: "US/Eastern"
 
+# Running podman as rootless user
+# name and uid specify the username and UID value.
+# The user will be created if not exists.
 podman_users:
   - name: tux
     uid: 1000
+
+    # enable lingering for the user will automatic start systemd user instance on start-up.
     enable_lingering: true
+
+    # The frequency of running podman system prune, in systemd-timer format.
     podman_system_prune_timer: daily
+
     container_configs_dir: "/home/tux/container_confgis"
     containers:
       - syncthing
