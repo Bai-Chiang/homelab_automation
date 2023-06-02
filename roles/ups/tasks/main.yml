@@ -60,9 +60,12 @@
     mode: '0700'
   become: true
 
-- name: systemctl enable nut-server.service nut-monitor.service
+- name: systemctl enable nut-driver-enumerator.service nut-server.service nut-monitor.service nut.target nut-driver.target
   ansible.builtin.systemd: name={{ item }} enabled=true
   loop:
-    - nut-server
-    - nut-monitor
+    - nut-driver-enumerator.service
+    - nut-server.service
+    - nut-monitor.service
+    - nut.target
+    - nut-driver.target
   become: true
