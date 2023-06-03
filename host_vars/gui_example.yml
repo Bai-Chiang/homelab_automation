@@ -90,6 +90,10 @@ other_pkgs:
   # scanning tool
   - gscan2pdf
 
+  # yt-dlp
+  - yt-dlp
+  - ffmpeg
+
 flatpak_pkgs:
   - com.github.tchx84.Flatseal
   - io.mpv.Mpv
