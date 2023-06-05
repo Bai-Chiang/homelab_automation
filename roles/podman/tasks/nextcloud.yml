@@ -41,7 +41,7 @@
     - nextcloud
     - postgres
 
-# 3443/tcp  nextcloud port
+# 4108/tcp  nextcloud port
 - name: add nextcloud firewalld service file nextcloud.xml
   ansible.builtin.copy:
     content: |
@@ -49,7 +49,7 @@
       <service>
         <short>Nextcloud</short>
         <description>Nextcloud</description>
-        <port protocol="tcp" port="3443"/>
+        <port protocol="tcp" port="4108"/>
       </service>
     dest: /etc/firewalld/services/nextcloud.xml
     owner: root
