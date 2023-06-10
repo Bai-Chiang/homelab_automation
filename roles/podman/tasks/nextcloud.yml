@@ -13,33 +13,36 @@
     - "{{ podman_user.postgres_config_dir }}"
 
 
-- name: nextcloud*.service
+- name: nextcloud-pod.service nextcloud.service postgres.service nextcloud-cron.service nextcloud-cron.timer
   ansible.builtin.template:
-    src: "{{ item }}.service.j2"
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/{{ item }}.service"
+    src: "{{ item }}.j2"
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/{{ item }}"
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'
   become: true
   become_user: "{{ podman_user.name }}"
   loop:
-    - nextcloud-pod
-    - nextcloud
-    - postgres
+    - nextcloud-pod.service
+    - nextcloud.service
+    - postgres.service
+    - nextcloud-cron.service
+    - nextcloud-cron.timer
 
 - name: systemctl --user daemon-reload
   ansible.builtin.systemd: daemon_reload=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: systemctl --user enable --now nextcloud*.service
-  ansible.builtin.systemd: name={{ item }}.service state=started enabled=true scope=user
+- name: systemctl --user enable --now nextcloud-pod.service nextcloud.service postgres.service nextcloud-cron.timer
+  ansible.builtin.systemd: name={{ item }} state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   loop:
-    - nextcloud-pod
-    - nextcloud
-    - postgres
+    - nextcloud-pod.service
+    - nextcloud.service
+    - postgres.service
+    - nextcloud-cron.timer
 
 # 4108/tcp  nextcloud port
 - name: add nextcloud firewalld service file nextcloud.xml
