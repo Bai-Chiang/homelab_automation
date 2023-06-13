@@ -111,6 +111,8 @@ flatpak_pkgs:
 
 # TZ enviroment variable for LSIO images.
 TZ: "US/Eastern"
+# DNS server for podman containers. Container sometimes failed to resolve domain if DNS server is not specified.
+DNS: 9.9.9.9
 
 # Running podman as rootless user
 # name and uid specify the username and UID value.
@@ -125,10 +127,16 @@ podman_users:
     # The frequency of running podman system prune, in systemd-timer format.
     podman_system_prune_timer: daily
 
-    container_configs_dir: "/home/tux/container_configs"
+    # List of all containers running under this user.
     containers:
       - syncthing
+
+    # lscr.io/linuxserver/syncthing:latest
     syncthing_data_dirs:
       - { src: /home/tux/data, dest: /data }
+      - { src: /home/tux/other_data, dest: /other_data }
+
+    # Path to syncthing configs
+    syncthing_config_dir: "/home/tux/data/container_configs/syncthing"
 
 
