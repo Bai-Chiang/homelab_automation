@@ -8,6 +8,15 @@
   become: true
   when: ansible_distribution == "Archlinux"
 
+- name: apt install podman crun
+  ansible.builtin.apt:
+    name:
+      - podman
+      - crun
+    state: present
+  become: true
+  when: ansible_distribution == "Debian"
+
 - name: dnf install podman
   ansible.builtin.dnf: name=podman state=present
   become: true
@@ -23,3 +32,4 @@
   ansible.builtin.dnf: name=policycoreutils-python-utils state=present
   become: true
   when: ansible_distribution == "Fedora"
+

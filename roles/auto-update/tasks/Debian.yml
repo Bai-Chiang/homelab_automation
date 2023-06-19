@@ -4,7 +4,7 @@
     pkg:
       - unattended-upgrades
       - apt-listchanges
-    state: latest
+    state: present
   become: true
 
 - name: Check /etc/apt/apt.conf.d/20auto-upgrades stats
@@ -38,5 +38,6 @@
     insertafter: "{{ item.insertafter }}"
   loop:
     - { regexp: '^Unattended-Upgrade::Automatic-Reboot ', insertafter: '^//Unattended-Upgrade::Automatic-Reboot ', line: 'Unattended-Upgrade::Automatic-Reboot "true";' }
+    - { regexp: '^Unattended-Upgrade::Remove-Unused-Dependencies ', insertafter: '^//Unattended-Upgrade::Remove-Unused-Dependencies ', line: 'Unattended-Upgrade::Remove-Unused-Dependencies "true";' }
   become: true
 
