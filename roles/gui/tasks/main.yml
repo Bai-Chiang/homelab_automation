@@ -59,3 +59,9 @@
     path: "{{ ansible_user_dir }}/screenshots"
     state: directory
 
+- name: Create Ranger image previews cache directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.cache/ranger"
+    state: directory
+  when: '"ranger" in other_pkgs'
+

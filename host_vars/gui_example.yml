@@ -83,6 +83,11 @@ other_pkgs:
   - pass
   - neofetch
 
+  # ranger file manager
+  # python-pillow needed for preview images in kitty terminal
+  - ranger
+  - python-pillow
+
   # screen brightness
   - brightnessctl
   # printer config
