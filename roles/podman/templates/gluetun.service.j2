@@ -12,6 +12,9 @@ Wants=transmission.service
 {% if "qbittorrent" in podman_user.containers %}
 Wants=qbittorrent.service
 {% endif %}
+{% if "deluge" in podman_user.containers %}
+Wants=deluge.service
+{% endif %}
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
@@ -49,6 +52,9 @@ ExecStart=/usr/bin/podman run \
 {% endif %}
 {% if "qbittorrent" in podman_user.containers %}
     --publish 127.0.0.1:8081:8081/tcp \
+{% endif %}
+{% if "deluge" in podman_user.containers %}
+    --publish 127.0.0.1:8112:8112/tcp \
 {% endif %}
     ghcr.io/qdm12/gluetun:v3
 ExecStop=/usr/bin/podman stop \

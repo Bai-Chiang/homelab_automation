@@ -1,0 +1,29 @@
+---
+- name: deluge container config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.deluge_config_dir }}"
+    state: directory
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+
+- name: deluge.service
+  ansible.builtin.template:
+    src: deluge.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/deluge.service"
+    owner: "{{ podman_user.name }}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now deluge.service
+  ansible.builtin.systemd: name=deluge.service enabled=true state=started scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
