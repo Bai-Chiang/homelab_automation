@@ -58,6 +58,7 @@
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/screenshots"
     state: directory
+  when: '"grim" in wm_pkgs'
 
 - name: Create Ranger image previews cache directory
   ansible.builtin.file:
