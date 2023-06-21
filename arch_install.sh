@@ -525,8 +525,8 @@ if [[ $secure_boot == y ]] ; then
     arch-chroot /mnt chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}*
 
     echo "Enroll keys ..."
-    read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [y/N] " ms_cert
-    ms_cert="${ms_cert:-n}"
+    read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [Y/n] " ms_cert
+    ms_cert="${ms_cert:-y}"
     ms_cert="${ms_cert,,}"
     if [[ $ms_cert == n ]] ; then
         arch-chroot /mnt sbctl enroll-keys 2>&1
