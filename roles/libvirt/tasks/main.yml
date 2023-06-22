@@ -31,7 +31,7 @@
       # default NAT/DHCP networking support
       - iptables-nft
       - dnsmasq
-      - dmidecode
+      #- dmidecode
       # bridged networking support
       - bridge-utils
       # UEFI support
@@ -57,4 +57,30 @@
 
 - name: systemctl enable libvirtd.service
   ansible.builtin.systemd: name=libvirtd.service enabled=true
+  register: libvirtd
   become: true
+
+- name: systemctl start libvirtd.service virtlogd.service
+  ansible.builtin.systemd: name={{ item }} state=started
+  when: libvirtd.changed
+  become: true
+  loop:
+    - libvirtd.service
+    - virtlogd.service
+
+- name: Check default NAT is enabled or not
+  ansible.builtin.shell: virsh net-info --network default | grep '^Autostart:.*yes' | wc -l
+  become: true
+  register: libvirt_default_net
+  changed_when: false
+
+- name: Enable and start default NAT
+  ansible.builtin.shell: |
+    virsh net-autostart default
+
+    # reload firewall and start default network
+    firewall-cmd --reload
+    virsh net-start default
+  become: true
+  when: libvirt_default_net.stdout == '0'
+
