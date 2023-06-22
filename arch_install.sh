@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-UCODE_PKG="intel-ucode"
+UCODE_PKG="amd-ucode"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
@@ -11,12 +11,13 @@ FS_PKGS="dosfstools btrfs-progs"
 
 ## server example
 #KERNEL_PKGS="linux-hardened"
+#BASE_PKGS="base sudo linux-firmware python efibootmgr firewalld"
 #FS_PKGS="dosfstools btrfs-progs"
 #KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 ## desktop example
 #KERNEL_PKGS="linux"
-#BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
+#BASE_PKGS="base linux-firmware sudo python efibootmgr firewalld"
 #FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 #OTHER_PKGS="man-db vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
@@ -635,7 +636,7 @@ echo "
 # https://wiki.archlinux.org/title/firewalld
 ######################################################
 "
-arch-chroot /mnt pacman --noconfirm -S firewalld
+arch-chroot /mnt pacman --noconfirm -S --needed firewalld
 arch-chroot /mnt systemctl enable firewalld.service
 echo "Set default firewall zone to drop."
 arch-chroot /mnt firewall-offline-cmd --set-default-zone=drop
