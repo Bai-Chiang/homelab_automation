@@ -1,0 +1,37 @@
+---
+- name: |
+    Force both password and public key authentication for systemd-homed setup. While the user is unlocked run
+    homectl update username --ssh-authorized-keys=@/path/to/mounted/home/.ssh/authorized_keys
+    to enroll keys.
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: "{{ item.insertafter }}"
+    validate: /usr/sbin/sshd -T -f %s
+  loop:
+    - { regexp: '^PasswordAuthentication ', line: PasswordAuthentication yes, insertafter: '#\s*PasswordAuthentication ' }
+    - { regexp: '^PubkeyAuthentication ', line: PubkeyAuthentication yes, insertafter: '#\s*PubkeyAuthentication ' }
+    - { regexp: '^AuthenticationMethods ', line: 'AuthenticationMethods publickey,password', insertafter: '^PasswordAuthentication ' }
+    - { regexp: '^AuthorizedKeysCommandUser ', line: 'AuthorizedKeysCommandUser root', insertafter: '^AuthorizedKeysCommandUser ' }
+    - { regexp: '^AuthorizedKeysCommand ', line: 'AuthorizedKeysCommand /usr/bin/userdbctl ssh-authorized-keys %u', insertafter: '^AuthorizedKeysCommand ' }
+  become: true
+
+- name: Check ~/.ssh/authorized_keys exists or not
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/.ssh/authorized_keys"
+  register: ssh_authorized_keys_file
+
+- name: Get all public keys in ~/.ssh/authorized_keys
+  ansible.builtin.shell: "cat {{ ansible_user_dir }}/.ssh/authorized_keys"
+  changed_when: false
+  register: ssh_authorized_keys
+  when: ssh_authorized_keys_file.stat.exists
+
+- name: Enroll authorized public keys if file exist with homectl
+  community.general.homectl:
+    name: "{{ ansible_user_id }}"
+    password: "{{ ansible_become_password }}"
+    sshkeys: "{{ ssh_authorized_keys.stdout }}"
+  become: true
+  when: ssh_authorized_keys_file.stat.exists

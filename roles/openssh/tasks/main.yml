@@ -35,10 +35,11 @@
     insertafter: "{{ item.insertafter }}"
     validate: /usr/sbin/sshd -T -f %s
   loop:
-    - { regexp: '^PasswordAuthentication', line: PasswordAuthentication no, insertafter: '#\s*PasswordAuthentication' }
-    - { regexp: '^KbdInteractiveAuthentication', line: KbdInteractiveAuthentication no, insertafter: '^KbdInteractiveAuthentication' }
-    - { regexp: '^AuthenticationMethods', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication' }
+    - { regexp: '^PasswordAuthentication ', line: PasswordAuthentication no, insertafter: '#\s*PasswordAuthentication ' }
+    - { regexp: '^KbdInteractiveAuthentication ', line: KbdInteractiveAuthentication no, insertafter: '^KbdInteractiveAuthentication ' }
+    - { regexp: '^AuthenticationMethods ', line: AuthenticationMethods publickey, insertafter: '^PasswordAuthentication ' }
   become: true
+  when: not homed
 
 #- name: Add custom ssh rule to UFW
 #  ansible.builtin.blockinfile:
@@ -62,3 +63,5 @@
   when: ssh_accept_source_ipv4 is defined
 
 
+- include_tasks: "homed.yml"
+  when: homed
