@@ -15,36 +15,42 @@
   become: true
   when: unprivileged_port_start is changed
 
-- name: caddy container config/data direcoty
+- name: traefik config direcoty
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ podman_user.traefik_config_dir }}"
     state: directory
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
-  loop:
-    - "{{ podman_user.caddy_config_dir }}"
-    - "{{ podman_user.caddy_data_dir }}"
 
-- name: caddy.service
+- name: traefik static config file
+  ansible.builtin.copy:
+    src: "{{ podman_user.traefik_static_config }}"
+    dest: "{{ podman_user.traefik_config_dir }}/static_conf.yml"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+
+- name: traefik dynamic config file
+  ansible.builtin.copy:
+    src: "{{ podman_user.traefik_dynamic_config }}"
+    dest: "{{ podman_user.traefik_config_dir }}/dynamic_conf.yml"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+
+- name: traefik.service
   ansible.builtin.template:
-    src: caddy.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/caddy.service"
+    src: traefik.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/traefik.service"
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'
   become: true
   become_user: "{{ podman_user.name }}"
-
-- name: Caddyfile
-  ansible.builtin.copy:
-    src: Caddyfile
-    dest: "/home/{{ podman_user.name }}/Caddyfile"
-    owner: "{{ podman_user.name}}"
-    group: "{{ podman_user.name }}"
-    mode: '0600'
-  become: true
 
 - name: systemctl --user daemon-reload
   ansible.builtin.systemd: daemon_reload=true scope=user
@@ -81,8 +87,8 @@
   ansible.builtin.systemd: daemon_reload=true
   become: true
 
-- name: systemctl --user enable caddy.service
-  ansible.builtin.systemd: name=caddy.service enabled=true scope=user
+- name: systemctl --user enable --now traefik.service
+  ansible.builtin.systemd: name=traefik.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
