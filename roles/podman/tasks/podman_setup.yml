@@ -1,13 +1,13 @@
 ---
 - name: create separate podman user
   # disable the podman account ( don't allow login )
+  # shell: "/usr/bin/nologin"
   ansible.builtin.user:
     name: "{{ podman_user.name }}"
     uid: "{{ podman_user.uid }}"
     password: '!'
     password_lock: true
     create_home: true
-    shell: "/usr/bin/nologin"
   become: true
   when: 
     - podman_user.name != ansible_user_id
