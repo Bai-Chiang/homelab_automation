@@ -48,7 +48,9 @@
   become: true
   when: '"cups" in other_pkgs'
 
+# Asahi Linux use ext4 for /
 - import_tasks: snapper.yml
+  when: homed or ansible_architecture == 'x86_64'
 
 - import_tasks: dotfiles.yml  
 
