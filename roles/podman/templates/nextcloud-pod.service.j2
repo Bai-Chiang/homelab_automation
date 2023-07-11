@@ -18,7 +18,6 @@ TimeoutStopSec=70
 #    --pod-id-file %t/nextcloud-pod.pod-id \
 #    --exit-policy=stop \
 #    --replace \
-#    --dns={{ DNS }} \
 #    --uidmap 1000:0:1 \
 #    --uidmap 0:1:1000 \
 #    --uidmap 1001:1001:64536 \
@@ -30,7 +29,6 @@ ExecStartPre=/usr/bin/podman pod create \
     --exit-policy=stop \
     --userns keep-id:uid=33,gid=33 \
     --replace \
-    --dns={{ DNS }} \
     --publish 4108:80 \
     --name nextcloud-pod
 ExecStart=/usr/bin/podman pod start \

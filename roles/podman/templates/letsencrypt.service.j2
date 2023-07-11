@@ -10,7 +10,6 @@ Type=simple
 ExecStart=/usr/bin/podman run \
     --rm \
     --replace \
-    --dns {{ DNS }} \
     --name certbot \
     --volume {{ podman_user.letsencrypt_config_dir }}:/etc/letsencrypt:Z \
     docker.io/certbot/dns-cloudflare certonly \

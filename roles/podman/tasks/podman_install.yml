@@ -1,9 +1,9 @@
 ---
-- name: pacman -S podman fuse-overlayfs
+- name: pacman -S podman aardvark-dns
   community.general.pacman:
     name:
       - podman
-      - fuse-overlayfs
+      - aardvark-dns
     state: present
   become: true
   when: ansible_distribution == "Archlinux"
@@ -32,4 +32,13 @@
   ansible.builtin.dnf: name=policycoreutils-python-utils state=present
   become: true
   when: ansible_distribution == "Fedora"
+
+# Asahi Linux use ext4 for / therefore use default overlay fs
+- name: Set container storage driver
+  ansible.builtin.lineinfile:
+    path: /etc/containers/storage.conf
+    regexp: '^driver\s*='
+    line: 'driver = "btrfs"'
+  become: true
+  when: homed or ansible_architecture == 'x86_64'
 

@@ -31,21 +31,22 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
-    --dns={{ DNS }} \
     --name=gluetun \
     --cap-add=NET_ADMIN \
     --device=/dev/net/tun:/dev/net/tun \
     --env TZ={{ TZ }} \
     --env VPN_SERVICE_PROVIDER=custom \
     --env VPN_TYPE=wireguard \
-    --env VPN_ENDPOINT_IP={{ podman_user.gluetun_vpn_endpoint_ip }} \
-    --env VPN_ENDPOINT_PORT={{ podman_user.gluetun_vpn_endpoint_port }} \
-    --env WIREGUARD_PUBLIC_KEY={{ podman_user.gluetun_server_public_key }} \
-    --env WIREGUARD_PRIVATE_KEY={{ podman_user.gluetun_wireguard_private_key }} \
-    --env WIREGUARD_PRESHARED_KEY={{ podman_user.gluetun_wireguard_preshared_key }} \
-    --env WIREGUARD_ADDRESSES={{ podman_user.gluetun_wireguard_address }} \
+    --env VPN_ENDPOINT_IP='{{ podman_user.gluetun_vpn_endpoint_ip }}' \
+    --env VPN_ENDPOINT_PORT='{{ podman_user.gluetun_vpn_endpoint_port }}' \
+    --env WIREGUARD_PUBLIC_KEY='{{ podman_user.gluetun_server_public_key }}' \
+    --env WIREGUARD_PRIVATE_KEY='{{ podman_user.gluetun_wireguard_private_key }}' \
+{% if podman_user.gluetun_wireguard_preshared_key is defined %}
+    --env WIREGUARD_PRESHARED_KEY='{{ podman_user.gluetun_wireguard_preshared_key }}' \
+{% endif %}
+    --env WIREGUARD_ADDRESSES='{{ podman_user.gluetun_wireguard_address }}' \
 {% if podman_user.gluetun_firewall_vpn_input_ports is defined %}
-    --env FIREWALL_VPN_INPUT_PORTS={{ podman_user.gluetun_firewall_vpn_input_ports }} \
+    --env FIREWALL_VPN_INPUT_PORTS='{{ podman_user.gluetun_firewall_vpn_input_ports }}' \
 {% endif %}
 {% if "transmission" in podman_user.containers %}
     --publish 127.0.0.1:9091:9091/tcp \
@@ -56,7 +57,7 @@ ExecStart=/usr/bin/podman run \
 {% if "deluge" in podman_user.containers %}
     --publish 127.0.0.1:8112:8112/tcp \
 {% endif %}
-    ghcr.io/qdm12/gluetun:v3
+    ghcr.io/qdm12/gluetun:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \

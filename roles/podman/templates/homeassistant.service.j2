@@ -24,7 +24,6 @@ ExecStartPre=/bin/rm \
 #    --uidmap 1000:0:1 \
 #    --uidmap 0:1:1000 \
 #    --uidmap 1001:1001:64536 \
-#    --dns={{ DNS }} \
 #    --env PUID=1000 \
 #    --env PGID=1000 \
 #    --env TZ={{ TZ }} \
@@ -41,7 +40,6 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
-    --dns={{ DNS }} \
     --userns keep-id:uid=1000,gid=1000 \
     --user 1000:1000 \
     --name=homeassistant \

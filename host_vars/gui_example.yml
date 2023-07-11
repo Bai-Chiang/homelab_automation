@@ -116,8 +116,6 @@ flatpak_pkgs:
 
 # TZ enviroment variable for LSIO images.
 TZ: "US/Eastern"
-# DNS server for podman containers. Container sometimes failed to resolve domain if DNS server is not specified.
-DNS: 9.9.9.9
 
 # Running podman as rootless user
 # name and uid specify the username and UID value.
