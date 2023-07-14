@@ -33,7 +33,7 @@ ExecStart=/usr/bin/podman run \
     --env TZ={{ TZ }} \
     --env WEBUI_PORT=8081 \
     --volume {{ podman_user.qbittorrent_config_dir }}:/config:Z \
-    --volume {{ podman_user.torrents_dir }}:/downloads:Z \
+    --volume {{ podman_user.qbittorrent_downloads_dir }}:/downloads:Z \
     lscr.io/linuxserver/qbittorrent:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \

@@ -36,8 +36,8 @@ ExecStart=/usr/bin/podman run \
     --env PASS='{{ podman_user.transmission_pass }}' \
 {% endif %}
     --volume {{ podman_user.transmission_config_dir }}:/config:Z \
-    --volume {{ podman_user.torrents_dir }}:/downloads:Z \
-    --volume {{ podman_user.torrent_files_dir }}:/watch:Z \
+    --volume {{ podman_user.transmission_downloads_dir }}:/downloads:Z \
+    --volume {{ podman_user.transmission_watch_dir }}:/watch:Z \
     lscr.io/linuxserver/transmission:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \

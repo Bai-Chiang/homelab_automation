@@ -260,13 +260,13 @@ read -p "Add noexec mount options to /home? [y/N] " noexec_home
 noexec_home="${noexec_home:-n}"
 noexec_home="${noexec_home,,}"
 if [[ $noexec_home == y ]] ; then
-    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@home "$root_part" /mnt/home
+    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@home" "$root_part" /mnt/home
 else
-    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid",subvol=@home "$root_part" /mnt/home
+    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,subvol=@home" "$root_part" /mnt/home
 fi
-mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@snapshots "$root_part" /mnt/.snapshots
-mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@var_log "$root_part" /mnt/var/log
-mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec",subvol=@pacman_pkgs "$root_part" /mnt/var/cache/pacman/pkg
+mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@snapshots" "$root_part" /mnt/.snapshots
+mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@var_log" "$root_part" /mnt/var/log
+mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@pacman_pkgs" "$root_part" /mnt/var/cache/pacman/pkg
 mount "$efi_part" /mnt/efi
 swapon "$swap_part"
 
