@@ -1,0 +1,17 @@
+---
+- name: pacman -S wpa_supplicant
+  community.general.pacman: name=wpa_supplicant state=present
+  become: true
+
+- name: Copy wpa_supplicant configs
+  ansible.builtin.copy:
+    src: "{{ wpa_supplicant_configs_dir }}"
+    dest: /etc/wpa_supplicant/
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+
+- name: systemctl enable --now wpa_supplicant@{{ wireless_interface }}.service
+  ansible.builtin.systemd: name=wpa_supplicant@{{ wireless_interface }}.service state=started enabled=true
+  become: true
