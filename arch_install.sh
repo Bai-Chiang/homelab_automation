@@ -357,13 +357,13 @@ if [[ $networkmanager -eq 1 ]] ; then
     echo "Enabling systemd-resolved.service and systemd-networkd.service ..."
     arch-chroot /mnt systemctl enable systemd-resolved.service
     arch-chroot /mnt systemctl enable systemd-networkd.service
-    #read -p "Install and enable iwd (for WiFi) ? [y/N] " install_iwd
-    #install_iwd="${install_iwd:-n}"
-    #INSTALL_IWD="${install_iwd,,}"
-    #if [[ $install_iwd == y ]] ; then
-    #    arch-chroot /mnt pacman --noconfirm -S iwd
-    #    arch-chroot /mnt systemctl enable iwd.service
-    #fi
+    read -p "Install and enable iwd (for WiFi) ? [y/N] " install_iwd
+    install_iwd="${install_iwd:-n}"
+    INSTALL_IWD="${install_iwd,,}"
+    if [[ $install_iwd == y ]] ; then
+        arch-chroot /mnt pacman --noconfirm -S iwd
+        arch-chroot /mnt systemctl enable iwd.service
+    fi
 elif [[ "$networkmanager" -eq 2 ]] ; then
     echo "Installing NetworkManager and wpa_supplicant ..."
     arch-chroot /mnt pacman --noconfirm -S networkmanager wpa_supplicant
