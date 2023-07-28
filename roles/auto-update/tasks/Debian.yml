@@ -1,10 +1,6 @@
 ---
-- name: apt install unattended-upgrades apt-listchanges
-  ansible.builtin.apt:
-    pkg:
-      - unattended-upgrades
-      - apt-listchanges
-    state: present
+- name: apt install unattended-upgrades
+  ansible.builtin.apt: name=unattended-upgrades state=present
   become: true
 
 - name: Check /etc/apt/apt.conf.d/20auto-upgrades stats

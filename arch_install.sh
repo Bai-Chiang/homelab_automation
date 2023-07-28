@@ -6,7 +6,7 @@ TIMEZONE="US/Eastern"
 
 # minimal example
 KERNEL_PKGS="linux"
-BASE_PKGS="base sudo linux-firmware"
+BASE_PKGS="base sudo linux-firmware iptables-nft python"
 FS_PKGS="dosfstools btrfs-progs"
 
 ## server example

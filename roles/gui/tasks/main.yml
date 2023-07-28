@@ -39,6 +39,11 @@
   become: true
   when: '"sddm" in wm_pkgs'
 
+- name: systemctl enable gdm.service
+  ansible.builtin.systemd: name=gdm.service enabled=true
+  become: true
+  when: '"sddm" in wm_pkgs'
+
 - name: Install other packages
   community.general.pacman: name={{ other_pkgs }} state=present
   become: true

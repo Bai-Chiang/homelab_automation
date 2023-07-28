@@ -30,6 +30,7 @@ default_shell: /usr/bin/zsh
 
 # Packages for your Desktop environment or window manager.
 wm_pkgs:
+
   # Example: sway
   - sway
   - swaylock
@@ -50,11 +51,38 @@ wm_pkgs:
   # notification daemon
   - mako
 
+  # hyprland
+  - hyprland
+  - xdg-desktop-portal-hyprland
+  - xdg-desktop-portal-gtk
+  - waybar
+  - xdg-utils
+  - xorg-xwayland
+  - wl-clipboard
+  - swaylock
+  - swayidle
+  - fuzzel
+  # grim and slurp for screenshoot
+  - grim
+  - slurp
+
   # KDE
   - plasma-meta
   - plasma-wayland-session
   - sddm
   - phonon-qt5-vlc
+
+  # gnome
+  - gnome-shell
+  - xdg-desktop-portal-gnome
+  - gnome-control-center
+  - gdm
+  - nautilus
+  - gvfs
+  - gvfs-nfs
+  - gvfs-smb
+  - gnome-tweaks
+  - gnome-backgrounds
 
 dotfiles_repo:
   # https link to your dotfiles repo. This should be a public repo.
