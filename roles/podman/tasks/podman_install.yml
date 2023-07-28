@@ -8,12 +8,8 @@
   become: true
   when: ansible_distribution == "Archlinux"
 
-- name: apt install podman crun
-  ansible.builtin.apt:
-    name:
-      - podman
-      - crun
-    state: present
+- name: apt install podman
+  ansible.builtin.apt: name=podman state=present
   become: true
   when: ansible_distribution == "Debian"
 
