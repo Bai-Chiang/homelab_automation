@@ -31,3 +31,15 @@ if [[ -n $ssh_source ]]; then
 fi
 firewall-cmd --reload
 
+# raspberry pi
+# create wheel user and disable root user
+if [[ ${HOSTNAME:0:3} == rpi ]] ; then
+    read -p "Tell me your username: " username
+    useradd -m -G wheel sudo "$username"
+    passwd "$username"
+
+    echo "Disabling root ..."
+    passwd -d root
+    passwd -l root
+fi
+
