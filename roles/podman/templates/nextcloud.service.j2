@@ -43,7 +43,7 @@ ExecStart=/usr/bin/podman run \
     --name=nextcloud \
     --volume {{ podman_user.nextcloud_data_dir }}:/var/www/html/data:Z \
     --volume {{ podman_user.nextcloud_config_dir }}:/var/www/html:Z \
-    docker.io/library/nextcloud:26
+    docker.io/library/nextcloud:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \
