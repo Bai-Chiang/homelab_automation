@@ -47,5 +47,6 @@ if [[ ${HOSTNAME:0:3} == rpi ]] ; then
     echo -e "\n\nPlease tell me the hostname:"
     read hostname
     echo "$hostname" > /etc/hostname
+    echo -e "127.0.0.1\t$hostname" >> /etc/hosts
 fi
 
