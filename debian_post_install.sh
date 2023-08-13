@@ -41,5 +41,9 @@ if [[ ${HOSTNAME:0:3} == rpi ]] ; then
     echo "Disabling root ..."
     passwd -d root
     passwd -l root
+
+    echo -e "\n\nPlease tell me the hostname:"
+    read hostname
+    echo "$hostname" > /etc/hostname
 fi
 
