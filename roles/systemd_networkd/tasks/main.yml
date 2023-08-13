@@ -6,6 +6,11 @@
   become: true
   when: ansible_distribution == "Archlinux"
 
+- name: apt install systemd-resolved
+  ansible.builtin.apt: name=systemd-resolved state=present
+  become: true
+  when: ansible_distribution == "Debian"
+
 - name: Check /etc/network/interfaces on Debian
   ansible.builtin.stat:
     path: /etc/network/interfaces
@@ -30,4 +35,9 @@
 - name: systemctl enable systemd-networkd
   ansible.builtin.systemd: name=systemd-networkd enabled=true
   become: true
+
+- name: systemctl enable systemd-resolved
+  ansible.builtin.systemd: name=systemd-resolved enabled=true
+  become: true
+  when: ansible_distribution == "Debian"
     
