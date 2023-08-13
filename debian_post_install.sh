@@ -35,7 +35,7 @@ firewall-cmd --reload
 # create wheel user and disable root user
 if [[ ${HOSTNAME:0:3} == rpi ]] ; then
     read -p "Tell me your username: " username
-    useradd -m -G wheel sudo "$username"
+    useradd -m -G sudo -s /usr/bin/bash "$username"
     passwd "$username"
 
     echo "Disabling root ..."
