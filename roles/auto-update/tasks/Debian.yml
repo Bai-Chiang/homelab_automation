@@ -38,3 +38,24 @@
     - { regexp: '^Unattended-Upgrade::Remove-Unused-Dependencies ', insertafter: '^//Unattended-Upgrade::Remove-Unused-Dependencies ', line: 'Unattended-Upgrade::Remove-Unused-Dependencies "true";' }
   become: true
 
+- name: Create override directory for apt-daily-upgrade.timer
+  ansible.builtin.file:
+    path: /etc/systemd/system/apt-daily-upgrade.timer.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: auto_update_time is defined
+
+- name: Set upgrade time
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/apt-daily-upgrade.timer.d/override.conf
+    content: |
+      [Timer]
+      OnCalendar=
+      OnCalendar={{ auto_update_time }}
+      RandomizedDelaySec=0
+  become: true
+  when: auto_update_time is defined
+
