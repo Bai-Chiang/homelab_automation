@@ -34,6 +34,8 @@ firewall-cmd --reload
 # raspberry pi
 # create wheel user and disable root user
 if [[ ${HOSTNAME:0:3} == rpi ]] ; then
+    apt install sudo
+
     read -p "Tell me your username: " username
     useradd -m -G sudo -s /usr/bin/bash "$username"
     passwd "$username"
