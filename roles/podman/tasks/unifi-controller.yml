@@ -24,7 +24,7 @@
   become_user: "{{ podman_user.name }}"
 
 - name: systemctl --user enable --now unifi-controller.service
-  ansible.builtin.systemd: name=unifi-controller state=started enabled=true scope=user
+  ansible.builtin.systemd: name=unifi-controller state={{ podman_user.unifi_systemd.state }} enabled={{ podman_user.unifi_systemd.enabled }} scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 

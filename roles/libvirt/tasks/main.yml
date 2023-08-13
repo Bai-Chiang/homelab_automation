@@ -31,7 +31,7 @@
       # default NAT/DHCP networking support
       - iptables-nft
       - dnsmasq
-      #- dmidecode
+      - dmidecode
       # bridged networking support
       - bridge-utils
       # UEFI support

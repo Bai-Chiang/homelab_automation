@@ -45,3 +45,13 @@
   loop: "{{ fstab_entries }}"
   become: true
 
+- name: Set spindown timeout for disk
+  ansible.builtin.copy:
+    content: |
+      ACTION=="add|change", KERNEL=="sd[a-z]", ATTRS{queue/rotational}=="1", RUN+="/usr/bin/hdparm -S {{ hdparm_spindown }} /dev/%k"
+    dest: /etc/udev/rules.d/69-hdparm.rules
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: hdparm_spindown is defined
