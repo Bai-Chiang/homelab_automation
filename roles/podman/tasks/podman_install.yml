@@ -19,6 +19,11 @@
   when: ansible_distribution == "Fedora"
 
 # install acl package for ansible to become other unprivileged user
+- name: apt install acl
+  ansible.builtin.apt: name=acl state=present
+  become: true
+  when: ansible_distribution == "Debian"
+
 - name: dnf install acl
   ansible.builtin.dnf: name=acl state=present
   become: true

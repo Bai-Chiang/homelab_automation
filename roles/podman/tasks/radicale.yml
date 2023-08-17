@@ -1,0 +1,33 @@
+---
+- name: radicale container config/data direcoty
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  loop:
+    - "{{ podman_user.radicale_data_dir }}"
+    - "{{ podman_user.radicale_config_dir }}"
+
+- name: radicale.service
+  ansible.builtin.template:
+    src: radicale.service.j2
+    dest: "/home/{{ podman_user.name }}/.config/systemd/user/radicale.service"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now radicale.service
+  ansible.builtin.systemd: name=radicale enabled=true state=started scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+

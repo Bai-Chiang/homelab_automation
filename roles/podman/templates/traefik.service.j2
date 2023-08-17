@@ -21,7 +21,7 @@ ExecStart=/usr/bin/podman run \
     --replace \
     --label io.containers.autoupdate=registry \
     --name=traefik \
-    --network=slirp4netns:port_handler=slirp4netns \
+    --network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true \
     --publish 443:443/tcp \
     --volume {{ podman_user.traefik_config_dir }}/static_conf.yml:/etc/traefik/traefik.yml:Z \
     --volume {{ podman_user.traefik_config_dir }}/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:Z \

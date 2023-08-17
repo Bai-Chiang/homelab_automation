@@ -1,27 +1,15 @@
 ---
-- name: Delete default network configuration on Archlinux
-  ansible.builtin.file:
-    path: /etc/systemd/network/20-ethernet.network
-    state: absent
-  become: true
-  when: ansible_distribution == "Archlinux"
+- include_tasks: "{{ ansible_distribution }}-prepare.yml"
 
-- name: apt install systemd-resolved
-  ansible.builtin.apt: name=systemd-resolved state=present
+- name: "Create {{ static_nic }}.network"
+  ansible.builtin.template:
+    src: en0.network.j2
+    dest: /etc/systemd/network/{{ static_nic }}.network
+    owner: root
+    group: root
+    mode: '0644'
   become: true
-  when: ansible_distribution == "Debian"
-
-- name: Check /etc/network/interfaces on Debian
-  ansible.builtin.stat:
-    path: /etc/network/interfaces
-  register: network_interfaces
-  become: true
-  when: ansible_distribution == "Debian"
-
-- name: Remove /etc/network/interfaces on Debian
-  ansible.builtin.command: mv /etc/network/interfaces /etc/network/interfaces.save
-  become: true
-  when: ansible_distribution == "Debian" and network_interfaces.stat.exists
+  when: networkd_configs_dir is not defined
 
 - name: Copy systemd-networkd configs
   ansible.builtin.copy:
@@ -31,6 +19,7 @@
     group: root
     mode: '0644'
   become: true
+  when: networkd_configs_dir is defined
 
 - name: systemctl enable systemd-networkd
   ansible.builtin.systemd: name=systemd-networkd enabled=true
@@ -39,5 +28,4 @@
 - name: systemctl enable systemd-resolved
   ansible.builtin.systemd: name=systemd-resolved enabled=true
   become: true
-  when: ansible_distribution == "Debian"
     

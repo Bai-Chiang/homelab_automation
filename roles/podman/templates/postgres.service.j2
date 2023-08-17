@@ -27,12 +27,12 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
+    --name=postgres \
 {% if "nextcloud" in podman_user.containers %}
     --user 33:33 \
 {% else %}
     --user 1000:1000 \
 {% endif %}
-    --name=postgres \
     --volume {{ podman_user.postgres_config_dir }}:/var/lib/postgresql/data:Z \
     --env POSTGRES_DB={{ podman_user.db_name }} \
     --env POSTGRES_USER={{ podman_user.db_user }} \

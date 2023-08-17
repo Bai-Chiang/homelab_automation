@@ -1,0 +1,8 @@
+---
+- name: Delete default network configuration on Archlinux
+  ansible.builtin.file:
+    path: /etc/systemd/network/20-ethernet.network
+    state: absent
+  become: true
+  when: ansible_distribution == "Archlinux"
+

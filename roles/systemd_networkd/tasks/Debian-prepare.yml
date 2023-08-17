@@ -1,0 +1,17 @@
+---
+- name: apt install systemd-resolved
+  ansible.builtin.apt: name=systemd-resolved state=present
+  become: true
+  when: ansible_distribution == "Debian"
+
+- name: Check /etc/network/interfaces on Debian
+  ansible.builtin.stat:
+    path: /etc/network/interfaces
+  register: network_interfaces
+  become: true
+  when: ansible_distribution == "Debian"
+
+- name: Remove /etc/network/interfaces on Debian
+  ansible.builtin.command: mv /etc/network/interfaces /etc/network/interfaces.save
+  become: true
+  when: ansible_distribution == "Debian" and network_interfaces.stat.exists

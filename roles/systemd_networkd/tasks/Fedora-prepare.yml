@@ -1,0 +1,8 @@
+---
+- name: dnf install systemd-networkd
+  ansible.builtin.dnf: name=systemd-networkd state=present
+  become: true
+
+- name: systemctl disable NetworkManager
+  ansible.builtin.systemd: name=NetworkManager enabled=false
+  become: true

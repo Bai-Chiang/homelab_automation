@@ -3,6 +3,8 @@
 apt update
 apt dist-upgrade
 
+apt install vim rsync htop
+
 # install firewalld
 apt install firewalld
 

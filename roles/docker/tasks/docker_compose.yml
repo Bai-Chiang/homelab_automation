@@ -1,0 +1,10 @@
+---
+- name: Copy docker-compose.yml
+  ansible.builtin.copy:
+    src: "{{ docker_compose_file }}"
+    dest: /opt/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+

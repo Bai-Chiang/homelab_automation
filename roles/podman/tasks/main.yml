@@ -5,4 +5,5 @@
   loop: "{{ podman_users }}"
   loop_control:
     loop_var: podman_user
+  when: podman_users is defined
 
