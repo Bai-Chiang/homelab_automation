@@ -11,13 +11,14 @@ FS_PKGS="dosfstools btrfs-progs"
 
 ## server example
 #KERNEL_PKGS="linux-hardened"
-#BASE_PKGS="base sudo linux-firmware python efibootmgr iptables-nft"
+#BASE_PKGS="base sudo linux-firmware python efibootmgr firewalld"
 #FS_PKGS="dosfstools btrfs-progs"
+#OTHER_PKGS="vim"
 #KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 ## desktop example
 #KERNEL_PKGS="linux"
-#BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
+#BASE_PKGS="base linux-firmware sudo python efibootmgr firewalld"
 #FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 #OTHER_PKGS="man-db vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
@@ -255,15 +256,16 @@ umount "$root_part"
 # mount all partitions
 echo -e "\nMounting all partitions ..."
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$root_part" /mnt
-echo -e "\nFollowing the principle of least privilege, file systems should be mounted with the most restrictive mount options possible (without losing functionality).\nDo you want to add noexec mount options to /home? It may breaks some programs like flatpak.\nhttps://wiki.archlinux.org/title/Security#Mount_options\n"
-read -p "Add noexec mount options to /home? [y/N] " noexec_home
-noexec_home="${noexec_home:-n}"
-noexec_home="${noexec_home,,}"
-if [[ $noexec_home == y ]] ; then
-    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@home" "$root_part" /mnt/home
-else
-    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,subvol=@home" "$root_part" /mnt/home
-fi
+#echo -e "\nFollowing the principle of least privilege, file systems should be mounted with the most restrictive mount options possible (without losing functionality).\nDo you want to add noexec mount options to /home? It may breaks some programs like flatpak and podman.\nhttps://wiki.archlinux.org/title/Security#Mount_options\n"
+#read -p "Add noexec mount options to /home? [y/N] " noexec_home
+#noexec_home="${noexec_home:-n}"
+#noexec_home="${noexec_home,,}"
+#if [[ $noexec_home == y ]] ; then
+#    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@home" "$root_part" /mnt/home
+#else
+#    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,subvol=@home" "$root_part" /mnt/home
+#fi
+mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,subvol=@home" "$root_part" /mnt/home
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@snapshots" "$root_part" /mnt/.snapshots
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@var_log" "$root_part" /mnt/var/log
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@pacman_pkgs" "$root_part" /mnt/var/cache/pacman/pkg
