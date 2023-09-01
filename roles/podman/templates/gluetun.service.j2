@@ -35,16 +35,9 @@ ExecStart=/usr/bin/podman run \
     --cap-add=NET_ADMIN \
     --device=/dev/net/tun:/dev/net/tun \
     --env TZ={{ TZ }} \
-    --env VPN_SERVICE_PROVIDER=custom \
-    --env VPN_TYPE=wireguard \
-    --env VPN_ENDPOINT_IP='{{ podman_user.gluetun_vpn_endpoint_ip }}' \
-    --env VPN_ENDPOINT_PORT='{{ podman_user.gluetun_vpn_endpoint_port }}' \
-    --env WIREGUARD_PUBLIC_KEY='{{ podman_user.gluetun_server_public_key }}' \
-    --env WIREGUARD_PRIVATE_KEY='{{ podman_user.gluetun_wireguard_private_key }}' \
-{% if podman_user.gluetun_wireguard_preshared_key is defined %}
-    --env WIREGUARD_PRESHARED_KEY='{{ podman_user.gluetun_wireguard_preshared_key }}' \
-{% endif %}
-    --env WIREGUARD_ADDRESSES='{{ podman_user.gluetun_wireguard_address }}' \
+{% for item in podman_user.gluetun_vpn_provider_env %}
+    --env {{ item }} \
+{% endfor %}
 {% if podman_user.gluetun_firewall_vpn_input_ports is defined %}
     --env FIREWALL_VPN_INPUT_PORTS='{{ podman_user.gluetun_firewall_vpn_input_ports }}' \
 {% endif %}
