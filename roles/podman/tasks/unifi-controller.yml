@@ -58,7 +58,7 @@
 - name: Enable firewall rules for UniFi
   ansible.posix.firewalld:
     rich_rule: rule family="ipv4" source address="{{ item }}" service name="unifi" accept
-    zone: "{{ firewalld_default_zone }}"
+    #zone: "{{ firewalld_default_zone }}"
     permanent: yes
     immediate: yes
     state: enabled

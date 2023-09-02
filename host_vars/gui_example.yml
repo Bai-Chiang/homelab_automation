@@ -50,6 +50,8 @@ wm_pkgs:
   - slurp
   # notification daemon
   - mako
+  # app launcher
+  - fuzzel
 
   # hyprland
   - hyprland
@@ -94,6 +96,7 @@ dotfiles_repo:
 
 audio_pkgs:
   - pipewire
+  - pipewire-audio
   - pipewire-alsa
   - pipewire-pulse
   - pipewire-jack
@@ -115,6 +118,10 @@ other_pkgs:
   # python-pillow needed for preview images in kitty terminal
   - ranger
   - python-pillow
+
+  # bluetooth
+  - bluez
+  - bluez-utils
 
   # screen brightness
   - brightnessctl

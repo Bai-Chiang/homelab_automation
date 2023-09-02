@@ -54,7 +54,7 @@
 - name: Set firewall rules for Syncthing Listening port (TCP)
   ansible.posix.firewalld:
     rich_rule: rule family="ipv4" source address="{{ item }}" service name="syncthing" accept
-    zone: "{{ firewalld_default_zone }}"
+    #zone: "{{ firewalld_default_zone }}"
     permanent: true
     immediate: true
     state: enabled

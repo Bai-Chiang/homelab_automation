@@ -69,7 +69,7 @@
 - name: Set firewall rules for nextcloud listening port (TCP)
   ansible.posix.firewalld:
     rich_rule: rule family="ipv4" source address="{{ reverse_proxy_ipv4 }}" service name="nextcloud" accept
-    zone: "{{ firewalld_default_zone }}"
+    #zone: "{{ firewalld_default_zone }}"
     permanent: true
     immediate: true
     state: enabled

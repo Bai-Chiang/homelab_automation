@@ -3,7 +3,7 @@
 
 ###############################################################################
 # Default firewalld zone. The arch_install.sh set default zone to drop.
-firewalld_default_zone: drop
+#firewalld_default_zone: drop
 
 
 ###############################################################################

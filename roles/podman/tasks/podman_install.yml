@@ -41,5 +41,5 @@
     regexp: '^driver\s*='
     line: 'driver = "btrfs"'
   become: true
-  when: homed or ansible_architecture == 'x86_64'
+  when: ansible_architecture == 'x86_64' or homed
 

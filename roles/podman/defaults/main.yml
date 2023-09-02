@@ -1,2 +1,3 @@
 ---
-firewalld_default_zone: public
+homed: false
+#firewalld_default_zone: public
