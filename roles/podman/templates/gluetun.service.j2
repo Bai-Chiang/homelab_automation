@@ -15,6 +15,9 @@ Wants=qbittorrent.service
 {% if "deluge" in podman_user.containers %}
 Wants=deluge.service
 {% endif %}
+{% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
+Wants=autobrr.service
+{% endif %}
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
@@ -49,6 +52,14 @@ ExecStart=/usr/bin/podman run \
 {% endif %}
 {% if "deluge" in podman_user.containers %}
     --publish 127.0.0.1:8112:8112/tcp \
+{% endif %}
+{% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
+    --publish 127.0.0.1:7474:7474/tcp \
+{% endif %}
+{% if podman_user.gluetun_httpproxy %}
+    --publish 127.0.0.1:8888:8888/tcp \
+    --env HTTPPROXY=on \
+    --env HTTPPROXY_STEALTH=on \
 {% endif %}
     ghcr.io/qdm12/gluetun:latest
 ExecStop=/usr/bin/podman stop \

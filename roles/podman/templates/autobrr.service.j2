@@ -1,11 +1,15 @@
-# deluge.service
+# autobrr.service
 
 [Unit]
-Description=Podman deluge.service
+Description=Podman autobrr.service
 Documentation=man:podman-generate-systemd(1)
-Wants=network-online.target gluetun.service
-After=network-online.target gluetun.service
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+{% if "gluetun" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
+Wants=gluetun.service
+After=gluetun.service
 Requires=gluetun.service
+{% endif %}
 RequiresMountsFor=%t/containers
 
 [Service]
@@ -23,17 +27,14 @@ ExecStart=/usr/bin/podman run \
     --detach \
     --replace \
     --label io.containers.autoupdate=registry \
-    --uidmap 1000:0:1 \
-    --uidmap 0:1:1000 \
-    --uidmap 1001:1001:64536 \
-    --name=deluge \
+    --name=autobrr \
+    --userns keep-id:uid=1000,gid=1000 \
+    --user 1000:1000 \
     --network=container:gluetun \
-    --env PUID=1000 \
-    --env PGID=1000 \
-    --env TZ={{ TZ }} \
-    --volume {{ podman_user.deluge_config_dir }}:/config:Z \
-    --volume {{ podman_user.deluge_downloads_dir }}:/downloads:Z \
-    lscr.io/linuxserver/deluge:latest
+    --volume {{ podman_user.autobrr_config_dir }}:/config:Z \
+    --env TZ='US/Eastern' \
+    --env AUTOBRR__HOST=0.0.0.0 \
+    ghcr.io/autobrr/autobrr:latest
 ExecStop=/usr/bin/podman stop \
     --ignore \
     --time=10 \
