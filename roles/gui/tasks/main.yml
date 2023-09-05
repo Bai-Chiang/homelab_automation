@@ -1,4 +1,23 @@
 ---
+- name: Check ~/Downloads/ directory
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/Downloads"
+  register: downloads_dir
+
+- name: Get file system type of ~/
+  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
+  register: home_fstype
+  changed_when: false
+
+# Create ~/Downloads subvolume so it won't be included in snapshots
+- name: Create ~/Downloads subvolume (if using btrfs)
+  ansible.builtin.command:
+    cmd: "btrfs subvolume create Downloads"
+    chdir: "{{ ansible_user_dir }}"
+  when:
+    - not downloads_dir.stat.exists
+    - home_fstype.stdout == 'btrfs'
+
 - name: Install GPU driver
   community.general.pacman: name={{ gpu_drivers }} state=present
   become: true
@@ -53,9 +72,8 @@
   become: true
   when: '"cups" in other_pkgs'
 
-# Asahi Linux use ext4 for /
 - import_tasks: snapper.yml
-  when: homed or ansible_architecture == 'x86_64'
+  when: home_fstype.stdout == 'btrfs'
 
 - import_tasks: dotfiles.yml  
 
