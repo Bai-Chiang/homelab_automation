@@ -6,8 +6,8 @@
     src: en0.network.j2
     dest: /etc/systemd/network/{{ static_nic }}.network
     owner: root
-    group: root
-    mode: '0644'
+    group: systemd-network
+    mode: '0640'
   become: true
   when: networkd_configs_dir is not defined
 
@@ -16,8 +16,8 @@
     src: "{{ networkd_configs_dir }}"
     dest: /etc/systemd/network/
     owner: root
-    group: root
-    mode: '0644'
+    group: systemd-network
+    mode: '0640'
   become: true
   when: networkd_configs_dir is defined
 
