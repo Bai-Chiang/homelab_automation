@@ -72,6 +72,6 @@
   become: true
 
 # Asahi Linux use ext4 for / and don't use unified kernel image
-- import_tasks: snapper.yml
+- include_tasks: snapper.yml
   when: ansible_architecture == 'x86_64'
 

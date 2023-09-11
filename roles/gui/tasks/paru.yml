@@ -61,5 +61,7 @@
   loop:
     - { regexp: '^LocalRepo', insertafter: '^#\s*LocalRepo', line: LocalRepo = aur }
     - { regexp: '^Chroot', insertafter: '^#\s*Chroot', line: Chroot = /var/cache/paru/chroot }
-    - { regexp: '^CloneDir', insertafter: '^#\s*Chroot', line: CloneDir = /var/cache/paru/clone }
+    - { regexp: '^CloneDir', insertafter: '^Chroot', line: CloneDir = /var/cache/paru/clone }
+    - { regexp: '^PacmanConf', insertafter: '^CloneDir', line: PacmanConf = /etc/pacman.conf }
+    - { regexp: '^MakepkgConf', insertafter: '^PacmanConf', line: MakepkgConf = /etc/makepkg.conf }
   become: true
