@@ -1,0 +1,65 @@
+---
+# manually clone and install paru
+
+- name: Get file system type of /var/cache
+  ansible.builtin.command: "stat --file-system --format=%T /var/cache"
+  register: var_cache_fstype
+  changed_when: false
+
+- name: Check /var/cache/paru directory
+  ansible.builtin.stat:
+    path: "/var/cache/paru"
+  register: paru_cache_dir
+
+# Create /var/cache/paru subvolume so it won't be included in snapshots
+- name: Create /var/cache/paru subvolume (if using btrfs)
+  ansible.builtin.command:
+    cmd: "btrfs subvolume create paru"
+    chdir: "/var/cache"
+  become: true
+  when: not paru_cache_dir.stat.exists
+
+
+- name: Create paru directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0755'
+  become: true
+  loop:
+    - "/var/lib/paru"
+    - "/var/cache/paru"
+    - "/var/lib/paru/repo"
+    - "/var/cache/paru/clone"
+    - "/var/cache/paru/chroot"
+
+- name: Create empty aur.db repo file
+  ansible.builtin.file:
+    path: /var/lib/paru/repo/aur.db
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+
+- name: Add LocalRepo
+  ansible.builtin.blockinfile:
+    path: /etc/pacman.conf
+    marker: "# {mark} ANSIBLE MANAGED BLOCK aur LocalRepo"
+    block: |
+      [aur]
+      SigLevel = PackageOptional DatabaseOptional
+      Server = file:///var/lib/paru/repo
+  become: true
+
+- name: Edit /etc/paru.conf
+  ansible.builtin.lineinfile:
+    path: /etc/paru.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: "{{ item.insertafter }}"
+  loop:
+    - { regexp: '^LocalRepo', insertafter: '^#\s*LocalRepo', line: LocalRepo = aur }
+    - { regexp: '^Chroot', insertafter: '^#\s*Chroot', line: Chroot = /var/cache/paru/chroot }
+    - { regexp: '^CloneDir', insertafter: '^#\s*Chroot', line: CloneDir = /var/cache/paru/clone }
+  become: true

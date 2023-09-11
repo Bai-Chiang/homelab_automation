@@ -1,4 +1,28 @@
 ---
+- name: Check ~/.cache directory
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/.cache"
+  register: cache_dir
+
+- name: Check ~/Downloads/ directory
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/Downloads"
+  register: downloads_dir
+
+# Create ~/.cache subvolume so it won't be included in snapshots
+- name: Create ~/.cache subvolume (if using btrfs)
+  ansible.builtin.command:
+    cmd: "btrfs subvolume create .cache"
+    chdir: "{{ ansible_user_dir }}"
+  when: not cache_dir.stat.exists
+
+# Create ~/Downloads subvolume so it won't be included in snapshots
+- name: Create ~/Downloads subvolume (if using btrfs)
+  ansible.builtin.command:
+    cmd: "btrfs subvolume create Downloads"
+    chdir: "{{ ansible_user_dir }}"
+  when: not downloads_dir.stat.exists
+
 - name: check /etc/snapper/configs/home
   ansible.builtin.stat:
     path: /etc/snapper/configs/home

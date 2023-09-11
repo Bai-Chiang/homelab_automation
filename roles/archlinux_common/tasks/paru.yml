@@ -1,0 +1,10 @@
+---
+- name: Create paru directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ansible_user_dir }}/.cache/paru/clone"
+    - "{{ ansible_user_dir }}/.cache/paru/chroot"
+

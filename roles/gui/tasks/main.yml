@@ -1,22 +1,11 @@
 ---
-- name: Check ~/Downloads/ directory
-  ansible.builtin.stat:
-    path: "{{ ansible_user_dir }}/Downloads"
-  register: downloads_dir
-
 - name: Get file system type of ~/
   ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
   register: home_fstype
   changed_when: false
 
-# Create ~/Downloads subvolume so it won't be included in snapshots
-- name: Create ~/Downloads subvolume (if using btrfs)
-  ansible.builtin.command:
-    cmd: "btrfs subvolume create Downloads"
-    chdir: "{{ ansible_user_dir }}"
-  when:
-    - not downloads_dir.stat.exists
-    - home_fstype.stdout == 'btrfs'
+- import_tasks: snapper.yml
+  when: home_fstype.stdout == 'btrfs'
 
 - name: Install GPU driver
   community.general.pacman: name={{ gpu_drivers }} state=present
@@ -72,9 +61,6 @@
   become: true
   when: '"cups" in other_pkgs'
 
-- import_tasks: snapper.yml
-  when: home_fstype.stdout == 'btrfs'
-
 - import_tasks: dotfiles.yml  
 
 - import_tasks: flatpak.yml
@@ -95,4 +81,6 @@
   ansible.builtin.systemd: name=bluetooth.service enabled=true state=started
   become: true
   when: '"bluez" in other_pkgs or "bluez-utils" in other_pkgs'
+
+- import_tasks: paru.yml
 

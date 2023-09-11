@@ -75,11 +75,3 @@
 - import_tasks: snapper.yml
   when: ansible_architecture == 'x86_64'
 
-- name: Create paru directory
-  ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.cache/paru/clone"
-    state: directory
-    mode: '0755'
-
-
-
