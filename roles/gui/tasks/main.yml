@@ -82,8 +82,8 @@
   become: true
   when: '"bluez" in other_pkgs or "bluez-utils" in other_pkgs'
 
-- include_tasks: paru.yml
-  when: paru_chroot
+#- include_tasks: paru.yml
+#  when: paru_chroot
 
 - name: Create paru clone directory
   ansible.builtin.file:
