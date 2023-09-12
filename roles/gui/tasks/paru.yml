@@ -34,6 +34,7 @@
     - "/var/lib/paru/repo"
     - "/var/cache/paru/clone"
     - "/var/cache/paru/chroot"
+    - "/var/cache/paru/pkg"
 
 - name: Create empty aur.db repo file
   ansible.builtin.file:
@@ -41,6 +42,17 @@
     state: touch
     modification_time: preserve
     access_time: preserve
+
+- name: Edit CacheDir /etc/pacman.conf
+  ansible.builtin.lineinfile:
+    path: /etc/pacman.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: "{{ item.insertafter }}"
+  become: true
+  loop:
+    - { regexp: '^CacheDir\s*=\s*/var/cache/pacman/pkg/', insertafter: '^#\s*CacheDir', line: 'CacheDir    = /var/cache/pacman/pkg/' }
+    - { regexp: '^CacheDir\s*=\s*/var/cache/paru/pkg/', insertafter: '^CacheDir\s*=\s*/var/cache/pacman/pkg/', line: 'CacheDir    = /var/cache/paru/pkg/' }
 
 - name: Add LocalRepo
   ansible.builtin.blockinfile:
@@ -62,6 +74,4 @@
     - { regexp: '^LocalRepo', insertafter: '^#\s*LocalRepo', line: LocalRepo = aur }
     - { regexp: '^Chroot', insertafter: '^#\s*Chroot', line: Chroot = /var/cache/paru/chroot }
     - { regexp: '^CloneDir', insertafter: '^Chroot', line: CloneDir = /var/cache/paru/clone }
-    - { regexp: '^PacmanConf', insertafter: '^CloneDir', line: PacmanConf = /etc/pacman.conf }
-    - { regexp: '^MakepkgConf', insertafter: '^PacmanConf', line: MakepkgConf = /etc/makepkg.conf }
   become: true
