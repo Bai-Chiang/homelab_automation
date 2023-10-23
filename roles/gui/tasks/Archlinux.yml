@@ -1,0 +1,94 @@
+---
+- name: Get file system type of ~/
+  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
+  register: home_fstype
+  changed_when: false
+
+- include_tasks: snapper.yml
+  when: home_fstype.stdout == 'btrfs'
+
+- name: Install GPU driver
+  community.general.pacman: name={{ gpu_drivers }} state=present
+  become: true
+
+- name: Install shell packages
+  community.general.pacman: name={{ shell_pkgs }} state=present
+  become: true
+
+- name: change shell (non systemd-homed)
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: "{{ default_shell }}"
+  become: true
+  when: not homed
+
+- name: change shell (systemd-homed)
+  community.general.homectl:
+    name: "{{ ansible_user_id }}"
+    password: "{{ ansible_become_password }}"
+    shell: "{{ default_shell }}"
+  become: true
+  when: homed
+
+- name: Install audio packages
+  community.general.pacman: name={{ audio_pkgs }} state=present
+  become: true
+
+- name: Install font packages
+  community.general.pacman: name={{ fonts_pkgs }} state=present
+  become: true
+
+- name: Install WM packages
+  community.general.pacman: name={{ wm_pkgs }} state=present
+  become: true
+
+- name: systemctl enable sddm.service
+  ansible.builtin.systemd: name=sddm.service enabled=true
+  become: true
+  when: '"sddm" in wm_pkgs'
+
+- name: systemctl enable gdm.service
+  ansible.builtin.systemd: name=gdm.service enabled=true
+  become: true
+  when: '"gdm" in wm_pkgs'
+
+- name: Install other packages
+  community.general.pacman: name={{ other_pkgs }} state=present
+  become: true
+
+- name: systemctl enable cups.socket
+  ansible.builtin.systemd: name=cups.socket enabled=true
+  become: true
+  when: '"cups" in other_pkgs'
+
+- include_tasks: dotfiles.yml  
+
+- include_tasks: flatpak.yml
+
+- name: Create screenshots directories
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/screenshots"
+    state: directory
+  when: '"grim" in wm_pkgs'
+
+- name: Create Ranger image previews cache directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.cache/ranger"
+    state: directory
+  when: '"ranger" in other_pkgs'
+
+- name: systemctl enable --now bluetooth.service
+  ansible.builtin.systemd: name=bluetooth.service enabled=true state=started
+  become: true
+  when: '"bluez" in other_pkgs or "bluez-utils" in other_pkgs'
+
+#- include_tasks: paru.yml
+#  when: paru_chroot
+
+- name: Create paru clone directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.cache/paru/clone"
+    state: directory
+  become: true
+  when: not paru_chroot
+

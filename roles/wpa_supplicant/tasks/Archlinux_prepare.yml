@@ -1,0 +1,5 @@
+---
+- name: pacman -S wpa_supplicant
+  community.general.pacman: name=wpa_supplicant state=present
+  become: true
+

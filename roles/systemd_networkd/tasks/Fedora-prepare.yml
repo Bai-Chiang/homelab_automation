@@ -6,3 +6,15 @@
 - name: systemctl disable NetworkManager
   ansible.builtin.systemd: name=NetworkManager enabled=false
   become: true
+
+- name: systemctl start systemd-resolved
+  ansible.builtin.systemd: name=systemd-resolved state=started
+  become: true
+
+- name: ln -s /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+  ansible.builtin.file:
+    src: /run/systemd/resolve/stub-resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+  become: true
+

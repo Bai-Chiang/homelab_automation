@@ -1,4 +1,14 @@
 ---
+- name: pacman -S git
+  community.general.pacman: name=git state=present
+  become: true
+  when: ansible_distribution == "Archlinux"
+
+- name: dnf install git
+  ansible.builtin.dnf: name=git state=present
+  become: true
+  when: ansible_distribution == "Fedora"
+
 - name: Restore dotfiles
   ansible.builtin.shell: |
     #!/usr/bin/bash
@@ -7,7 +17,7 @@
        /usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME $@
     }
     # delete conflicted files
-    dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} rm {}
+    #dotfiles checkout 2>&1 | grep -E "\s+\." | awk {'print $1'} | xargs -I{} rm {}
     dotfiles checkout
     dotfiles config --local status.showUntrackedFiles no
   args:
@@ -25,3 +35,4 @@
 - name: pacman -S openssh
   community.general.pacman: name=openssh state=present
   become: true
+  when: ansible_distribution == "Archlinux"

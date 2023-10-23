@@ -1,12 +1,10 @@
 ---
-- name: pacman -S wpa_supplicant
-  community.general.pacman: name=wpa_supplicant state=present
-  become: true
+- include_tasks: "{{ ansible_distribution }}_prepare.yml"
 
 - name: Copy wpa_supplicant configs
   ansible.builtin.copy:
-    src: "{{ wpa_supplicant_configs_dir }}"
-    dest: /etc/wpa_supplicant/
+    src: "{{ wpa_supplicant_config_file }}"
+    dest: "/etc/wpa_supplicant/wpa_supplicant-{{ wireless_interface }}.conf"
     owner: root
     group: root
     mode: '0600'

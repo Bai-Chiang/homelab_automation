@@ -1,0 +1,51 @@
+---
+- name: Install shell packages
+  ansible.builtin.dnf: name={{ shell_pkgs }} state=present
+  become: true
+
+- name: change shell
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: "{{ default_shell }}"
+  become: true
+
+# Create symlink so zsh-syntax-highlighting and zsh-autosuggestions at the same location as Arch Linux
+- name: Create /usr/share/zsh/plugins directory
+  ansible.builtin.file:
+    path: /usr/share/zsh/plugins
+    state: directory
+  become: true
+
+- name: symlink zsh-syntax-highlighting and zsh-autosuggestions
+  ansible.builtin.file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  become: true
+  loop:
+    - { src: /usr/share/zsh-syntax-highlighting, dest: /usr/share/zsh/plugins/zsh-syntax-highlighting }
+    - { src: /usr/share/zsh-autosuggestions, dest: /usr/share/zsh/plugins/zsh-autosuggestions }
+
+- name: Install WM packages
+  ansible.builtin.dnf: name={{ wm_pkgs }} state=present
+  become: true
+
+- name: Install other packages
+  ansible.builtin.dnf: name={{ other_pkgs }} state=present
+  become: true
+
+- include_tasks: dotfiles.yml  
+
+- include_tasks: flatpak.yml
+
+- name: Create screenshots directories
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/screenshots"
+    state: directory
+  when: '"grim" in wm_pkgs'
+
+- name: Create Ranger image previews cache directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.cache/ranger"
+    state: directory
+  when: '"ranger" in other_pkgs'

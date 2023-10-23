@@ -1,0 +1,20 @@
+---
+- name: dnf install wpa_supplicant
+  ansible.builtin.dnf: name=wpa_supplicant state=present
+  become: true
+
+# Fedora does not have wpa_supplicant@.service create one
+- name: Create wpa_supplicant@.service
+  ansible.builtin.copy:
+    src: wpa_supplicant@fedora.service
+    dest: /etc/systemd/system/wpa_supplicant@.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+

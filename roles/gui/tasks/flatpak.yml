@@ -1,7 +1,13 @@
 ---
-- name: Install flatpak
+- name: pacman -S flatpak
   community.general.pacman: name=flatpak state=present
   become: true
+  when: ansible_distribution == "Archlinux"
+
+- name: dnf install flatpak
+  ansible.builtin.dnf: name=flatpak state=present
+  become: true
+  when: ansible_distribution == "Fedora"
 
 - name: Add flathub repo
   community.general.flatpak_remote:
