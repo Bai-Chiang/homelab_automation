@@ -1,0 +1,60 @@
+[Unit]
+Description=gluetun container
+{% if "transmission" in podman_user.containers %}
+Wants=transmission.service
+{% endif %}
+{% if "qbittorrent" in podman_user.containers %}
+Wants=qbittorrent.service
+{% endif %}
+{% if "deluge" in podman_user.containers %}
+Wants=deluge.service
+{% endif %}
+{% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
+Wants=autobrr.service
+{% endif %}
+
+[Container]
+ContainerName=gluetun
+Image=ghcr.io/qdm12/gluetun:latest
+AutoUpdate=registry
+
+AddCapability=NET_ADMIN
+AddDevice=/dev/net/tun:/dev/net/tun
+
+HostName=gluetun
+{% if "transmission" in podman_user.containers %}
+PublishPort=127.0.0.1:9091:9091/tcp
+{% endif %}
+{% if "qbittorrent" in podman_user.containers %}
+PublishPort=127.0.0.1:8081:8081/tcp
+{% endif %}
+{% if "deluge" in podman_user.containers %}
+PublishPort=127.0.0.1:8112:8112/tcp
+{% endif %}
+{% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
+PublishPort=127.0.0.1:7474:7474/tcp
+{% endif %}
+
+Environment=TZ={{ TZ }}
+{% for item in podman_user.gluetun_vpn_provider_env %}
+Environment={{ item }}
+{% endfor %}
+{% if podman_user.gluetun_firewall_vpn_input_ports is defined %}
+Environment=FIREWALL_VPN_INPUT_PORTS='{{ podman_user.gluetun_firewall_vpn_input_ports }}'
+{% endif %}
+
+{% if podman_user.gluetun_httpproxy %}
+Environment=HTTPPROXY=on
+Environment=HTTPPROXY_STEALTH=on
+PublishPort=127.0.0.1:8888:8888/tcp
+{% endif %}
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

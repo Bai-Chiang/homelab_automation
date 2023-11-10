@@ -8,10 +8,10 @@
     mode: '0700'
   become: true
 
-- name: unifi-controller.service
+- name: unifi-controller.container
   ansible.builtin.template:
-    src: unifi-controller.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/unifi-controller.service"
+    src: unifi-controller.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/unifi-controller.container"
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'

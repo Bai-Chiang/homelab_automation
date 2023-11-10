@@ -63,9 +63,9 @@
 #    mode: '0700'
 #  become: true
 
-- name: setup systemd user directory
+- name: Create podman user unit directory
   ansible.builtin.file:
-    path: "/home/{{ podman_user.name }}/.config/systemd/user"
+    path: "/home/{{ podman_user.name }}/.config/containers/systemd"
     state: directory
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"

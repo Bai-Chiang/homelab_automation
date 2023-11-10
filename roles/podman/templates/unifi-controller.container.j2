@@ -1,0 +1,33 @@
+[Unit]
+Description=UniFi controller container
+
+[Container]
+ContainerName=unifi-controller
+Image=lscr.io/linuxserver/unifi-controller:latest
+AutoUpdate=registry
+
+Volume={{ podman_user.unifi_config_dir }}:/config:Z
+
+HostName=unifi-controller
+PublishPort=127.0.0.1:8443:8443/tcp
+PublishPort=3478:3478/udp
+PublishPort=10001:10001/udp
+PublishPort=8080:8080/tcp
+
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ={{ TZ }}
+
+PodmanArgs=--uidmap 1000:0:1
+PodmanArgs=--uidmap 0:1:1000
+PodmanArgs=--uidmap 1001:1001:64536
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

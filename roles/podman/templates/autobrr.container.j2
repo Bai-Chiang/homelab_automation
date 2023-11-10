@@ -1,0 +1,33 @@
+[Unit]
+Description=autobrr container
+{% if "gluetun" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
+Wants=gluetun.service
+After=gluetun.service
+Requires=gluetun.service
+{% endif %}
+
+[Container]
+ContainerName=autobrr
+Image=ghcr.io/autobrr/autobrr:latest
+AutoUpdate=registry
+
+User=1000:1000
+UserNS=keep-id:uid=1000,gid=1000
+
+Volume={{ podman_user.autobrr_config_dir }}:/config:Z
+
+HostName=autobrr
+Network=container:gluetun
+
+Environment=TZ={{ TZ }}
+Environment=AUTOBRR__HOST=0.0.0.0
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

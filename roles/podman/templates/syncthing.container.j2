@@ -1,0 +1,34 @@
+[Unit]
+Description=Syncthing container
+
+[Container]
+ContainerName=syncthing
+Image=lscr.io/linuxserver/syncthing:latest
+AutoUpdate=registry
+
+Volume={{ podman_user.syncthing_config_dir }}:/config:Z
+{% for item in podman_user.syncthing_data_dirs %}
+Volume={{ item.src }}:{{ item.dest }}:Z
+{% endfor %}
+
+HostName=syncthing
+PublishPort=127.0.0.1:8384:8384/tcp
+PublishPort=22000:22000/tcp
+
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ={{ TZ }}
+
+PodmanArgs=--uidmap 1000:0:1
+PodmanArgs=--uidmap 0:1:1000
+PodmanArgs=--uidmap 1001:1001:64536
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

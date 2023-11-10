@@ -8,10 +8,10 @@
     mode: '0700'
   become: true
 
-- name: qbittorrent.service
+- name: qbittorrent.container
   ansible.builtin.template:
-    src: qbittorrent.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/qbittorrent.service"
+    src: qbittorrent.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/qbittorrent.container"
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0600'

@@ -1,0 +1,35 @@
+[Unit]
+Description=qBittorrent container
+Wants=gluetun.service
+After=gluetun.service
+Requires=gluetun.service
+
+[Container]
+ContainerName=qbittorrent
+Image=lscr.io/linuxserver/qbittorrent:latest
+AutoUpdate=registry
+
+Volume={{ podman_user.qbittorrent_config_dir }}:/config:Z
+Volume={{ podman_user.qbittorrent_downloads_dir }}:/downloads:Z
+
+HostName=qbittorrent
+Network=container:gluetun
+
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ={{ TZ }}
+Environment=WEBUI_PORT=8081
+
+PodmanArgs=--uidmap 1000:0:1
+PodmanArgs=--uidmap 0:1:1000
+PodmanArgs=--uidmap 1001:1001:64536
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
