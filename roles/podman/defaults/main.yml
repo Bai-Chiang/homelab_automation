@@ -1,5 +1,3 @@
 ---
 homed: false
 #firewalld_default_zone: public
-gluetun_httpproxy: false
-autobrr_gluetun_proxy: false

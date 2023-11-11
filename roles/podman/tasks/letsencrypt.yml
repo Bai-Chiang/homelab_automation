@@ -8,10 +8,10 @@
     mode: '0700'
   become: true
 
-- name: letsencrypt.service
+- name: letsencrypt.container
   ansible.builtin.template:
-    src: letsencrypt.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/letsencrypt.service"
+    src: letsencrypt.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/letsencrypt.container"
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'

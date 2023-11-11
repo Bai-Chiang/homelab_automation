@@ -1,0 +1,32 @@
+[Unit]
+Description=letsencrypt certbot container
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+
+[Container]
+ContainerName=letsencrypt-certbot
+Image=docker.io/certbot/dns-cloudflare:latest
+
+Volume={{ podman_user.letsencrypt_config_dir }}:/etc/letsencrypt:Z
+
+HostName=letsencrypt
+
+Exec=certonly \
+    --dns-cloudflare \
+    --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini \
+    --dns-cloudflare-propagation-seconds 60 \
+    --email {{ podman_user.letsencrypt_email }} \
+{% for domain in podman_user.letsencrypt_domains %}
+    --domains '{{ domain }}' \
+{% endfor %}
+    --agree-tos \
+    --keep-until-expiring \
+    --expand \
+    --non-interactive
+
+
+[Service]
+Restart=no
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
