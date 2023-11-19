@@ -43,7 +43,7 @@ Environment={{ item }}
 Environment=FIREWALL_VPN_INPUT_PORTS='{{ podman_user.gluetun_firewall_vpn_input_ports }}'
 {% endif %}
 
-{% if podman_user.gluetun_httpproxy %}
+{% if podman_user.gluetun_httpproxy is defined and podman_user.gluetun_httpproxy %}
 Environment=HTTPPROXY=on
 Environment=HTTPPROXY_STEALTH=on
 PublishPort=127.0.0.1:8888:8888/tcp
