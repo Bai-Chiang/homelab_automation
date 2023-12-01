@@ -234,18 +234,20 @@
 ;   printable = no
 ;   create mask = 0765
 
-{% for item in smb_users %}
-[{{ item.comment }}]
+{% for item in smb_share %}
+[{{ item.name }}]
    comment = {{ item.comment }}
-   path = {{ item.dir }}
-   valid users = {{ item.name }}
+   path = /srv/smb/{{ item.name }}
+   valid users = {{ item.valid_users }}
    public = no
    browseable = no
    printable = no
    read only = {{ item.read_only }}
+{% if item.read_only == 'no' %}
    create mask = 0664
    directory mask = 2755
    force create mode = 0644
    force directory mode = 2755
+{% endif %}
 {% endfor %}
 

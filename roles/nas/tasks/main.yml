@@ -17,5 +17,5 @@
 
 - name: "include_tasks: samba.yml"
   include_tasks: samba.yml
-  when: smb_users is defined
+  when: smb_share is defined
 

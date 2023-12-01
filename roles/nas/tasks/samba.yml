@@ -16,6 +16,22 @@
     validate: testparm -s %s
   become: true
 
+- name: Create samba share directories
+  ansible.builtin.file:
+    path: "/srv/smb/{{ item.name }}"
+    state: directory
+  become: true
+  loop: "{{ smb_share }}"
+
+- name: Add bind mount to /etc/fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ item.path }}\\s+/srv/smb/{{item.name }}"
+    line: "{{ item.path }}  /srv/smb/{{item.name }}  none  bind  0 0"
+    state: present
+  become: true
+  loop: "{{ smb_share }}"
+
 #- name: Add custom Samba rule to UFW
 #  ansible.builtin.blockinfile:
 #    path: /etc/ufw/applications.d/ufw-custom
@@ -41,20 +57,21 @@
     name: "{{ item.name }}"
     password: '!'
     password_lock: true
-    create_home: true
+    create_home: false
+    uid: "{{ item.uid }}"
     shell: "/usr/bin/nologin"
   become: true
-  when: 
+  when:
     - item.name != ansible_user_id
     - item.name != "root"
   loop: "{{ smb_users }}"
 
 - name: Add samba user
   shell: (echo {{ item.passwd }}; echo {{ item.passwd }}) | smbpasswd -s -a {{ item.name }}
+  become: true
   register: samba_user
   changed_when: "'Added user' in samba_user.stdout"
   loop: "{{ smb_users }}"
-  become: true
 
 - name: Modify samba firewalld service file samba.xml
   ansible.builtin.copy:
@@ -84,9 +101,9 @@
     permanent: true
     immediate: true
     state: enabled
+  become: true
   loop: "{{ samba_accept_source_ipv4 }}"
   when: samba_accept_source_ipv4 is defined
-  become: true
 
 - name: systemctl enable smb.service
   ansible.builtin.systemd: name=smb enabled=true
@@ -94,20 +111,19 @@
 
 - name: Set SELinux file context to shared directories
   community.general.sefcontext:
-    target: "{{ item.dir }}(/.*)?"
+    target: "/srv/smb/{{ item.name }}(/.*)?"
     setype: samba_share_t
     state: present
-  when: ansible_selinux.status == "enabled"
-  loop: "{{ smb_users }}"
   become: true
+  when: ansible_selinux.status == "enabled"
+  loop: "{{ smb_share }}"
   register: samba_share_sefcontext
 
 - name: Apply SELinux file context to shared directories
   ansible.builtin.command: "restorecon -R {{ item.dir }}"
+  become: true
   when:
     - ansible_selinux.status == "enabled"
     - samba_share_sefcontext.changed
-  loop: "{{ smb_users }}"
-  become: true
-
+  loop: "{{ smb_share }}"
 
