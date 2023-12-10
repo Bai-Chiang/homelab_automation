@@ -31,5 +31,8 @@ Restart=on-failure
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300
 
+# Wait 30 sec for gluetun complete
+ExecStartPre=/usr/bin/sleep 30
+
 [Install]
 WantedBy=default.target
