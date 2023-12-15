@@ -1,0 +1,27 @@
+[Unit]
+Description=traefik container
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+
+[Container]
+ContainerName=traefik
+Image=docker.io/library/traefik:v2.10
+AutoUpdate=registry
+
+Volume={{ podman_user.traefik_config_dir }}/static_conf.yml:/etc/traefik/traefik.yml:Z
+Volume={{ podman_user.traefik_config_dir }}/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:Z
+Volume={{ podman_user.traefik_config_dir }}/ssl:/etc/traefik/ssl:Z
+
+HostName=traefik
+Network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true
+PublishPort=443:443/tcp
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

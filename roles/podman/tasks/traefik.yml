@@ -42,10 +42,10 @@
     mode: '0600'
   become: true
 
-- name: traefik.service
+- name: traefik.container
   ansible.builtin.template:
-    src: traefik.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/traefik.service"
+    src: traefik.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/traefik.container"
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'
@@ -65,6 +65,7 @@
     group: "root"
     mode: '0600'
   become: true
+  register: copy_ssl_service
 
 - name: copy-ssl.timer
   ansible.builtin.copy:
@@ -87,14 +88,24 @@
   ansible.builtin.systemd: daemon_reload=true
   become: true
 
+- name: systemctl enable copy-ssl.timer
+  ansible.builtin.systemd: name=copy-ssl.timer enabled=true
+  become: true
+
+- name: systemctl start copy-ssl.service
+  ansible.builtin.systemd: name=copy-ssl.service state=started
+  become: true
+  when: copy_ssl_service.changed
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
 - name: systemctl --user enable --now traefik.service
   ansible.builtin.systemd: name=traefik.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
-
-- name: systemctl enable copy-ssl.timer
-  ansible.builtin.systemd: name=copy-ssl.timer enabled=true
-  become: true
 
 - name: Set firewall rules for https
   ansible.posix.firewalld:
