@@ -20,9 +20,9 @@ Environment=PGID=1000
 Environment=TZ={{ TZ }}
 Environment=WEBUI_PORT=8081
 
-PodmanArgs=--uidmap 1000:0:1
-PodmanArgs=--uidmap 0:1:1000
-PodmanArgs=--uidmap 1001:1001:64536
+UIDMap=1000:0:1
+UIDMap=0:1:1000
+UIDMap=1001:1001:64536
 
 
 [Service]

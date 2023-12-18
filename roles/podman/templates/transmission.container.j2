@@ -24,9 +24,9 @@ Environment=USER={{ podman_user.transmission_user }}
 Environment=PASS='{{ podman_user.transmission_pass }}'
 {% endif %}
 
-PodmanArgs=--uidmap 1000:0:1
-PodmanArgs=--uidmap 0:1:1000
-PodmanArgs=--uidmap 1001:1001:64536
+UIDMap=1000:0:1
+UIDMap=0:1:1000
+UIDMap=1001:1001:64536
 
 
 [Service]
