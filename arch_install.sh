@@ -4,6 +4,9 @@ UCODE_PKG="amd-ucode"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 TIMEZONE="US/Eastern"
 
+# zram-size option in zram-generator.conf if enabled zram.
+ZRAM_SIZE='min(ram / 2, 4096)'
+
 # minimal example
 KERNEL_PKGS="linux"
 BASE_PKGS="base sudo linux-firmware iptables-nft python"
@@ -162,13 +165,15 @@ wipefs --all $root_part 2> /dev/null
 # swap is important, see [In defence of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html)
 echo -e "\n\nTell me the swap partition number:"
 echo "$partitions"
-read -p "Enter a number: " swap_id
-swap_part=$(echo "$partitions" | awk "\$1 == $swap_id { print \$2}") || swap_part=""
+read -p "Enter a number: (If you don't want swap partition, press ENTER to skip.)" swap_id
+if [[ -n $swap_id ]] ; then
+    swap_part=$(echo "$partitions" | awk "\$1 == $swap_id { print \$2}") || swap_part=""
 
-# Wipe existing LUKS header
-cryptsetup erase $swap_part 2> /dev/null
-cryptsetup luksDump $swap_part 2> /dev/null
-wipefs --all $swap_part 2> /dev/null
+    # Wipe existing LUKS header
+    cryptsetup erase $swap_part 2> /dev/null
+    cryptsetup luksDump $swap_part 2> /dev/null
+    wipefs --all $swap_part 2> /dev/null
+fi
 
 
 echo "
@@ -184,10 +189,12 @@ echo "Running command: mkfs.fat -n boot -F 32 $efi_part"
 mkfs.fat -n boot -F 32 "$efi_part"
 
 # swap partition
-echo "Formatting swap partition ..."
-echo "Running command: mkswap -L swap $swap_part"
-# create swap partition with label swap
-mkswap -L swap "$swap_part"
+if [[ -n $swap_id ]] ; then
+    echo "Formatting swap partition ..."
+    echo "Running command: mkswap -L swap $swap_part"
+    # create swap partition with label swap
+    mkswap -L swap "$swap_part"
+fi
 
 
 echo "
@@ -256,21 +263,17 @@ umount "$root_part"
 # mount all partitions
 echo -e "\nMounting all partitions ..."
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$root_part" /mnt
-#echo -e "\nFollowing the principle of least privilege, file systems should be mounted with the most restrictive mount options possible (without losing functionality).\nDo you want to add noexec mount options to /home? It may breaks some programs like flatpak and podman.\nhttps://wiki.archlinux.org/title/Security#Mount_options\n"
-#read -p "Add noexec mount options to /home? [y/N] " noexec_home
-#noexec_home="${noexec_home:-n}"
-#noexec_home="${noexec_home,,}"
-#if [[ $noexec_home == y ]] ; then
-#    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@home" "$root_part" /mnt/home
-#else
-#    mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,subvol=@home" "$root_part" /mnt/home
-#fi
+# https://wiki.archlinux.org/title/Security#Mount_options
+# Mount file system with nodev,nosuid,noexec except /home partition.
+# /home partition does not mount with noexec to allow flatpak or podman
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,subvol=@home" "$root_part" /mnt/home
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@snapshots" "$root_part" /mnt/.snapshots
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@var_log" "$root_part" /mnt/var/log
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@pacman_pkgs" "$root_part" /mnt/var/cache/pacman/pkg
 mount "$efi_part" /mnt/efi
-swapon "$swap_part"
+if [[ -n $swap_id ]] ; then
+    swapon "$swap_part"
+fi
 
 
 echo "
@@ -404,21 +407,22 @@ if [[ $encrypt_root == y ]] ; then
     fi
 
     # /etc/crypttab for swap
-    echo -e "Configuring /etc/crypttab.iniramfs for encrypted swap ..."
-    swapoff $swap_part
-    # create a persistent partition name (UUID or label) for swap
-    # read [this](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption#UUID_and_LABEL) for reason creating a 1MiB size ext2 filesystem
-    mkfs.ext2 -F -F -L cryptswap $swap_part 1M
-    # reload partition table
-    sleep 1
-    partprobe &> /dev/null
-    # wait for partition table update
-    sleep 1
-    swap_uuid=$(lsblk -dno UUID $swap_part)
-    echo "cryptswap  UUID=$swap_uuid  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
-    # change /etc/fstab swap entry
-    sed -i "/swap/ s:^UUID=[a-zA-Z0-9-]*\s:/dev/mapper/cryptswap  :" /mnt/etc/fstab
-    #fi
+    if [[ -n $swap_id ]] ; then
+        echo -e "Configuring /etc/crypttab.iniramfs for encrypted swap ..."
+        swapoff $swap_part
+        # create a persistent partition name (UUID or label) for swap
+        # read [this](https://wiki.archlinux.org/title/Dm-crypt/Swap_encryption#UUID_and_LABEL) for reason creating a 1MiB size ext2 filesystem
+        mkfs.ext2 -F -F -L cryptswap $swap_part 1M
+        # reload partition table
+        sleep 1
+        partprobe &> /dev/null
+        # wait for partition table update
+        sleep 1
+        swap_uuid=$(lsblk -dno UUID $swap_part)
+        echo "cryptswap  UUID=$swap_uuid  /dev/urandom  swap,offset=2048" >> /mnt/etc/crypttab
+        # change /etc/fstab swap entry
+        sed -i "/swap/ s:^UUID=[a-zA-Z0-9-]*\s:/dev/mapper/cryptswap  :" /mnt/etc/fstab
+    fi
 
     # mkinitcpio
     # https://wiki.archlinux.org/title/Dm-crypt/System_configuration#mkinitcpio
@@ -436,12 +440,40 @@ else
     kernel_cmd="root=UUID=$root_uuid"
 fi
 
+
 # btrfs as root 
 # https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
 kernel_cmd="$kernel_cmd rootfstype=btrfs rootflags=subvol=/@ rw"
 # modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
 # https://wiki.archlinux.org/title/PC_speaker#Globally
 kernel_cmd="$kernel_cmd modprobe.blacklist=pcspkr $KERNEL_PARAMETERS"
+
+
+echo "
+######################################################
+# zram
+# https://wiki.archlinux.org/title/Zram
+######################################################
+"
+read -p "Do you want to enable zram, and disable zswap? [Y/n] " zram
+zram="${zram:-y}"
+zram="${zram,,}"
+if [[ $zram == y ]] ; then
+    # disable zswap
+    kernel_cmd="$kernel_cmd zswap.enabled=0"
+    # install zram-generator
+    arch-chroot /mnt pacman --noconfirm -S zram-generator
+    # Create /etc/systemd/zram-generator.conf
+    if [[ -z $ZRAM_SIZE ]] ; then
+        ZRAM_SIZE='min(ram / 2, 4096)'
+    fi
+    echo "[zram0]"                       > /mnt/etc/systemd/zram-generator.conf
+    echo "zram-size = $ZRAM_SIZE"       >> /mnt/etc/systemd/zram-generator.conf
+    echo "compression-algorithm = zstd" >> /mnt/etc/systemd/zram-generator.conf
+    echo "fs-type = swap"               >> /mnt/etc/systemd/zram-generator.conf
+    arch-chroot /mnt systemctl enable systemd-zram-setup@zram0.service
+fi
+
 
 # Fallback kernel cmdline parameters (without SELinux, VFIO)
 echo "$kernel_cmd" > /mnt/etc/kernel/cmdline_fallback
