@@ -165,7 +165,7 @@ wipefs --all $root_part 2> /dev/null
 # swap is important, see [In defence of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html)
 echo -e "\n\nTell me the swap partition number:"
 echo "$partitions"
-read -p "Enter a number: (If you don't want swap partition, press ENTER to skip.)" swap_id
+read -p "Enter a number or press ENTER to skip: " swap_id
 if [[ -n $swap_id ]] ; then
     swap_part=$(echo "$partitions" | awk "\$1 == $swap_id { print \$2}") || swap_part=""
 
@@ -265,8 +265,20 @@ echo -e "\nMounting all partitions ..."
 mount -o "$BTRFS_MOUNT_OPTS",subvol=@ "$root_part" /mnt
 # https://wiki.archlinux.org/title/Security#Mount_options
 # Mount file system with nodev,nosuid,noexec except /home partition.
-# /home partition does not mount with noexec to allow flatpak or podman
-mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,subvol=@home" "$root_part" /mnt/home
+home_mount_opts="$BTRFS_MOUNT_OPTS,nodev"
+read -p "Do you want to add noexec mount options to /home? (Adding it may breaks some programs like flatpak and podman.) [y/N] " noexec_home
+noexec_home="${noexec_home:-n}"
+noexec_home="${noexec_home,,}"
+if [[ $noexec_home == y ]] ; then
+    home_mount_opts="$home_mount_opts,noexec"
+fi
+read -p "Do you want to add nosuid mount options to /home? (Adding it may breaks some programs like distrobox.) [y/N] " nosuid_home
+nosuid_home="${nosuid_home:-n}"
+nosuid_home="${nosuid_home,,}"
+if [[ $nosuid_home == y ]] ; then
+    home_mount_opts="$home_mount_opts,nosuid"
+fi
+mount -o "$home_mount_opts,subvol=@home" "$root_part" /mnt/home
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@snapshots" "$root_part" /mnt/.snapshots
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@var_log" "$root_part" /mnt/var/log
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@pacman_pkgs" "$root_part" /mnt/var/cache/pacman/pkg
@@ -471,7 +483,6 @@ if [[ $zram == y ]] ; then
     echo "zram-size = $ZRAM_SIZE"       >> /mnt/etc/systemd/zram-generator.conf
     echo "compression-algorithm = zstd" >> /mnt/etc/systemd/zram-generator.conf
     echo "fs-type = swap"               >> /mnt/etc/systemd/zram-generator.conf
-    arch-chroot /mnt systemctl enable systemd-zram-setup@zram0.service
 fi
 
 
