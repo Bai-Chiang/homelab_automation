@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+echo -e "To: {{ msmtp_to }}\nFrom: {{ msmtp_from }}\nSubject: NUT notification\n\n$1" | msmtp --file='/etc/nut/msmtprc' --read-recipients --read-envelope-from
+

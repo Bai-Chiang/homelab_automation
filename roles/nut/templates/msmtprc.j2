@@ -1,0 +1,15 @@
+# Set default values for all following accounts.
+defaults
+auth           on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile        /etc/nut/msmtp.log
+
+account        {{ msmtp_account }}
+host           {{ msmtp_host }}
+port           {{ msmtp_port }}
+tls            {{ msmtp_tls }}
+tls_starttls   {{ msmtp_tls_starttls }}
+from           {{ msmtp_from }}
+user           {{ msmtp_user }}
+password       {{ msmtp_password }}
+

@@ -39,7 +39,7 @@
     path: /etc/nut/upsmon.conf
     block: |
       MONITOR myups@localhost 1 admin {{ ups_password }} primary
-      NOTIFYCMD /usr/local/bin/ups_notify.sh
+      NOTIFYCMD /etc/nut/nut_notify.sh
       NOTIFYFLAG ONLINE SYSLOG+EXEC
       NOTIFYFLAG ONBATT SYSLOG+EXEC
       NOTIFYFLAG LOWBATT SYSLOG+EXEC
@@ -51,12 +51,21 @@
     create: true
   become: true
 
-- name: /usr/local/bin/ups_notify.sh
+- name: msmtp config
   ansible.builtin.template:
-    src: ups_notify.sh.j2
-    dest: /usr/local/bin/ups_notify.sh
-    owner: root
-    group: root
+    src: msmtprc.j2
+    dest: /etc/nut/msmtprc
+    owner: nut
+    group: nut
+    mode: '0600'
+  become: true
+
+- name: /etc/nut/nut_notify.sh
+  ansible.builtin.template:
+    src: nut_notify.sh.j2
+    dest: /etc/nut/nut_notify.sh
+    owner: nut
+    group: nut
     mode: '0700'
   become: true
 
