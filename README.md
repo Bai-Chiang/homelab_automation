@@ -33,7 +33,7 @@ This repository is a collection of scripts and  Ansible playbooks that I used to
 
 ## Ansible playbooks
 To run Ansible playbooks locally.
-- Download necessary pacakges
+- Download necessary packages
   ```
   pacman -S --needed git ansible
   ```
@@ -48,3 +48,24 @@ To run Ansible playbooks locally.
   ```
   ansible-playbook gui_example.yml
   ```
+
+
+# Ansible roles
+Here is the brief introduction of all Ansible roles, detailed documentation of each Ansible role listed under its directory, including all Ansible variables and examples.
+All Ansible roles listed below are tested with Arch Linux.
+Some also tested with fedora or Debian.
+- [`archlinux_common`](roles/archlinux_common/) contains common/sane [post-installation configuration](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) for Arch Linux.
+- [`auto-update`](roles/auto-update/) will auto-update your system and reboot if necessary.
+  For Arch Linux it will send an email contains `pacman -Syu` log to the email address configured in [`roles/msmtp`](roles/msmtp/).
+- [`gui`](roles/gui/) related tasks, like installing GPU driver, PipeWire, desktop environment, Flatpak, restore dotfiles, and setup snapshot for your home directory.
+- [`msmtp`](roles/msmtp/) configures a simple SMTP client, used to send email notification.
+- [`nas`](roles/nas/) will edit fstab to mount extra disk and set up btrfs-scrub timer.
+  It will send btrfs scrub result and S.M.A.R.T. notification to an email address configured with [`msmtp`](roles/msmtp/).
+  It could also set up NFS ans SMB server.
+- [`podman`](roles/podman/) rootless containers that I used in my homelab. These containers could run as different users.
+- [`nut`](roles/nut/)(Network UPS Tools) also will send UPS notification email with [`msmtp`](roles/msmtp/).
+- [`openssh`](roles/openssh/) server configuration.
+- [`systemd_networkd`](roles/systemd_networkd/) configuration.
+- [`wpa_supplicant`](roles/wpa_supplicant/) WiFi setup.
+- [`libvirt`](roles/libvirt/) virtualization.
+
