@@ -2,10 +2,16 @@
 
 UCODE_PKG="amd-ucode"
 BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
+
+# Localization
+# https://wiki.archlinux.org/title/Installation_guide#Localization
+LANG='en_US.UTF-8'
+KEYMAP='us'
+# https://wiki.archlinux.org/title/Time_zone
 TIMEZONE="US/Eastern"
 
 # zram-size option in zram-generator.conf if enabled zram.
-ZRAM_SIZE='min(ram / 2, 4096)'
+ZRAM_SIZE='min(ram / 2, 4 * 1024)'
 
 # minimal example
 KERNEL_PKGS="linux"
@@ -350,10 +356,15 @@ echo "
 ######################################################
 "
 echo -e "Setting locale ..."
+# uncomment en_US.UTF-8 UTF-8
 arch-chroot /mnt sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+# uncomment other UTF-8 locales
+if [[ $LANG != 'en_US.UTF-8' ]] ; then
+    arch-chroot /mnt sed -i "s/^#$LANG UTF-8/$LANG UTF-8/" /etc/locale.gen
+fi
 arch-chroot /mnt locale-gen
-echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
-echo "KEYMAP=us" > /mnt/etc/vconsole.conf
+echo "LANG=$LANG" > /mnt/etc/locale.conf
+echo "KEYMAP=$KEYMAP" > /mnt/etc/vconsole.conf
 
 echo "
 ######################################################
@@ -731,5 +742,12 @@ else
         arch-chroot /mnt passwd
 
     fi
+fi
+
+
+echo "Now you could reboot or chroot into the new system at /mnt to do further changes."
+if [[ $selinux == y ]] ; then
+    echo "After reboot in to the new system, remember to run following command as root to label your filesystem."
+    echo -e "\nrestorecon -r /"
 fi
 

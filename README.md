@@ -3,7 +3,7 @@ This repository is a collection of scripts and  Ansible playbooks that I used to
 - [`arch_install.sh`](arch_install.sh) script will install Arch Linux, based on my installation [notes](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)).
   This script will cover the [_Pre-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Pre-installation), [_Installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Installation), and [_Configure the system_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Configure_the_system) sections.
   It will also configure OpenSSH server, firewall, and user creation.
-  Remaining [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) steps will be handle by Ansible [`roles/archlinux_common`](roles/archlinux_common).
+  Remaining [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) steps will be handle by Ansible [`roles/archlinux_common`](roles/archlinux_common) and [`roles/gui`](roles/gui/).
 
 - [`fedora_post_install.sh`](fedora_post_install.sh) and [`debian_post_install.sh`](debian_post_install.sh) will configure OpenSSH server port and firewall.
 
@@ -66,6 +66,6 @@ Some also tested with fedora or Debian.
 - [`nut`](roles/nut/)(Network UPS Tools) also will send UPS notification email with [`msmtp`](roles/msmtp/).
 - [`openssh`](roles/openssh/) server configuration.
 - [`systemd_networkd`](roles/systemd_networkd/) configuration.
-- [`wpa_supplicant`](roles/wpa_supplicant/) WiFi setup.
+- [`wpa_supplicant`](roles/wpa_supplicant/) setup when using [systemd-networkd](https://wiki.archlinux.org/title/Systemd-networkd) as network manager. __DOES NOT__ work with [NetworkManager](https://wiki.archlinux.org/title/NetworkManager).
 - [`libvirt`](roles/libvirt/) virtualization.
 
