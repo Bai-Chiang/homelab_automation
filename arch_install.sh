@@ -640,7 +640,7 @@ do
     bootnum=$(arch-chroot /mnt efibootmgr | grep  "ArchLinux-$KERNEL\s" | awk '{ print $1}')
     # Remove string 'Boot' at front
     bootnum=${bootnum##Boot}
-    # Remove string '*' at front
+    # Remove string '*' at end
     bootnum=${bootnum%%\*}
     # Add bootnum to bootorder
     if [[ -z $bootorder ]] ; then
@@ -655,7 +655,7 @@ do
     bootnum=$(arch-chroot /mnt efibootmgr | grep  "ArchLinux-$KERNEL-fallback\s" | awk '{ print $1}')
     # Remove string 'Boot' at front
     bootnum=${bootnum##Boot}
-    # Remove string '*' at front
+    # Remove string '*' at end
     bootnum=${bootnum%%\*}
     # Add bootnum to bootorder
     bootorder="$bootorder,$bootnum"
