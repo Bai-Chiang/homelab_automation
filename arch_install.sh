@@ -84,7 +84,7 @@ if [[ $secure_boot == y ]] ; then
         fi
     fi
 fi
-            
+
 
 echo "
 ######################################################
@@ -131,6 +131,7 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks
 ######################################################
 "
+umount -R /mnt
 devices=$(lsblk --nodeps --paths --list --noheadings --sort=size --output=name,size,model | grep --invert-match "loop" | cat --number)
 
 device_id=" "
@@ -629,13 +630,39 @@ efi_dev=$(lsblk --noheadings --output PKNAME $efi_part)
 efi_part_num=$(echo $efi_part | grep -Eo '[0-9]+$')
 arch-chroot /mnt pacman --noconfirm -S --needed efibootmgr
 
+bootorder=""
 echo "Creating UEFI boot entries for each unified kernel image ..."
 for KERNEL in $KERNEL_PKGS
-do 
+do
+    # Add $KERNEL to boot loader
     arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
-    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
-done
+    # Get new added boot entry BootXXXX*
+    bootnum=$(arch-chroot /mnt efibootmgr | grep  "ArchLinux-$KERNEL\s" | awk '{ print $1}')
+    # Remove string 'Boot' at front
+    bootnum=${bootnum##Boot}
+    # Remove string '*' at front
+    bootnum=${bootnum%%\*}
+    # Add bootnum to bootorder
+    if [[ -z $bootorder ]] ; then
+        bootorder="$bootnum"
+    else
+        bootorder="$bootorder,$bootnum"
+    fi
 
+    # Add $KERNEL-fallback to boot loader
+    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
+    # Get new added boot entry BootXXXX*
+    bootnum=$(arch-chroot /mnt efibootmgr | grep  "ArchLinux-$KERNEL-fallback\s" | awk '{ print $1}')
+    # Remove string 'Boot' at front
+    bootnum=${bootnum##Boot}
+    # Remove string '*' at front
+    bootnum=${bootnum%%\*}
+    # Add bootnum to bootorder
+    bootorder="$bootorder,$bootnum"
+done
+arch-chroot /mnt efibootmgr --quiet --bootorder ${bootorder}
+
+echo -e "\n\n"
 arch-chroot /mnt efibootmgr
 echo -e "\n\nDo you want to change boot order?: "
 read -p "Enter boot order (empty to skip): " boot_order
@@ -730,7 +757,7 @@ else
     arch-chroot /mnt passwd "$username"
 
     read -p "Do you want to disable root account? [Y/n] " disable_root
-    disable_root="${disable_root:-n}"
+    disable_root="${disable_root:-y}"
     disable_root="${disable_root,,}"
     if [[ $disable_root == y ]] ; then
         # https://wiki.archlinux.org/title/Sudo#Disable_root_login
@@ -745,9 +772,9 @@ else
 fi
 
 
-echo "Now you could reboot or chroot into the new system at /mnt to do further changes."
+echo -e "\n\nNow you could reboot or chroot into the new system at /mnt to do further changes.\n\n"
 if [[ $selinux == y ]] ; then
     echo "After reboot in to the new system, remember to run following command as root to label your filesystem."
-    echo -e "\nrestorecon -r /"
+    echo -e "\nrestorecon -r /\n\n"
 fi
 
