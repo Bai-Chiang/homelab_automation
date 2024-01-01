@@ -637,7 +637,7 @@ do
     # Add $KERNEL to boot loader
     arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
     # Get new added boot entry BootXXXX*
-    bootnum=$(arch-chroot /mnt efibootmgr | grep  "ArchLinux-$KERNEL\s" | awk '{ print $1}')
+    bootnum=$(efibootmgr | awk "/\sArchLinux-$KERNEL\s/ { print \$1}")
     # Remove string 'Boot' at front
     bootnum=${bootnum##Boot}
     # Remove string '*' at end
@@ -652,7 +652,7 @@ do
     # Add $KERNEL-fallback to boot loader
     arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
     # Get new added boot entry BootXXXX*
-    bootnum=$(arch-chroot /mnt efibootmgr | grep  "ArchLinux-$KERNEL-fallback\s" | awk '{ print $1}')
+    bootnum=$(efibootmgr | awk "/\sArchLinux-$KERNEL-fallback\s/ { print \$1}")
     # Remove string 'Boot' at front
     bootnum=${bootnum##Boot}
     # Remove string '*' at end
