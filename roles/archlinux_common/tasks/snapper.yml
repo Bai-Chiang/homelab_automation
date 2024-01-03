@@ -1,5 +1,5 @@
 ---
-- name: check /etc/snapper directory 
+- name: check /etc/snapper directory
   ansible.builtin.stat:
     path: /etc/snapper
   become: true

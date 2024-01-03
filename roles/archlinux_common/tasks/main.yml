@@ -71,7 +71,12 @@
     - { regexp: '^MAKEFLAGS=', line: 'MAKEFLAGS="-j$(nproc)"', backrefs: false, insertafter: '^#MAKEFLAGS=' }
   become: true
 
-# Asahi Linux use ext4 for / and don't use unified kernel image
+- name: Get file system type of /
+  ansible.builtin.command: stat --file-system --format=%T /
+  become: true
+  register: root_fstype
+  changed_when: false
+
 - include_tasks: snapper.yml
-  when: ansible_architecture == 'x86_64'
+  when: root_fstype.stdout == 'btrfs'
 

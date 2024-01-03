@@ -61,7 +61,7 @@
   become: true
   when: '"cups" in other_pkgs'
 
-- include_tasks: dotfiles.yml  
+- include_tasks: dotfiles.yml
 
 - include_tasks: flatpak.yml
 
@@ -89,6 +89,5 @@
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/.cache/paru/clone"
     state: directory
-  become: true
-  when: not paru_chroot
+  #when: not paru_chroot
 

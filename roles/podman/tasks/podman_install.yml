@@ -34,12 +34,25 @@
   become: true
   when: ansible_distribution == "Fedora"
 
-# Asahi Linux use ext4 for / therefore use default overlay fs
+- name: Get file system type of /
+  ansible.builtin.command: stat --file-system --format=%T /
+  become: true
+  register: root_fstype
+  changed_when: false
+
+- name: Get file system type of ~/
+  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
+  become: true
+  register: home_fstype
+  changed_when: false
+
 - name: Set container storage driver
   ansible.builtin.lineinfile:
     path: /etc/containers/storage.conf
     regexp: '^driver\s*='
     line: 'driver = "btrfs"'
   become: true
-  when: ansible_architecture == 'x86_64' or homed
+  when:
+    - root_fstype.stdout == 'btrfs'
+    - home_fstype.stdout == 'btrfs'
 
