@@ -638,10 +638,8 @@ do
     arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
     # Get new added boot entry BootXXXX*
     bootnum=$(efibootmgr | awk "/\sArchLinux-$KERNEL\s/ { print \$1}")
-    # Remove string 'Boot' at front
-    bootnum=${bootnum##Boot}
-    # Remove string '*' at end
-    bootnum=${bootnum%%\*}
+    # Get the hex number
+    bootnum=${bootnum:4:4}
     # Add bootnum to bootorder
     if [[ -z $bootorder ]] ; then
         bootorder="$bootnum"
@@ -653,10 +651,8 @@ do
     arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
     # Get new added boot entry BootXXXX*
     bootnum=$(efibootmgr | awk "/\sArchLinux-$KERNEL-fallback\s/ { print \$1}")
-    # Remove string 'Boot' at front
-    bootnum=${bootnum##Boot}
-    # Remove string '*' at end
-    bootnum=${bootnum%%\*}
+    # Get the hex number
+    bootnum=${bootnum:4:4}
     # Add bootnum to bootorder
     bootorder="$bootorder,$bootnum"
 done
