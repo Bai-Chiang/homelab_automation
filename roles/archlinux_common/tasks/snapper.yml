@@ -49,11 +49,11 @@
     - { regexp: '^NUMBER_LIMIT=',           line: 'NUMBER_LIMIT="10"' }
     - { regexp: '^NUMBER_LIMIT_IMPORTANT=', line: 'NUMBER_LIMIT_IMPORTANT="10"' }
     - { regexp: '^TIMELINE_MIN_AGE=',       line: 'TIMELINE_MIN_AGE="1800"' }
-    - { regexp: '^TIMELINE_LIMIT_HOURLY=',  line: 'TIMELINE_LIMIT_HOURLY="5"' }
-    - { regexp: '^TIMELINE_LIMIT_DAILY=',   line: 'TIMELINE_LIMIT_DAILY="7"' }
-    - { regexp: '^TIMELINE_LIMIT_WEEKLY=',  line: 'TIMELINE_LIMIT_WEEKLY="0"' }
-    - { regexp: '^TIMELINE_LIMIT_MONTHLY=', line: 'TIMELINE_LIMIT_MONTHLY="0"' }
-    - { regexp: '^TIMELINE_LIMIT_YEARLY=',  line: 'TIMELINE_LIMIT_YEARLY="0"' }
+    - { regexp: '^TIMELINE_LIMIT_HOURLY=',  line: "TIMELINE_LIMIT_HOURLY=\"{{ snapper_root_hourly }}\"" }
+    - { regexp: '^TIMELINE_LIMIT_DAILY=',   line: "TIMELINE_LIMIT_DAILY=\"{{ snapper_root_daily }}\"" }
+    - { regexp: '^TIMELINE_LIMIT_WEEKLY=',  line: "TIMELINE_LIMIT_WEEKLY=\"{{ snapper_root_weekly }}\"" }
+    - { regexp: '^TIMELINE_LIMIT_MONTHLY=', line: "TIMELINE_LIMIT_MONTHLY=\"{{ snapper_root_monthly }}\"" }
+    - { regexp: '^TIMELINE_LIMIT_YEARLY=',  line: "TIMELINE_LIMIT_YEARLY=\"{{ snapper_root_yearly }}\"" }
   become: true
 
 - name: systemctl enable snapper-timeline.timer
