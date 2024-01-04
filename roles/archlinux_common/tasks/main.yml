@@ -58,6 +58,11 @@
   ansible.builtin.systemd: name=fstrim.timer enabled=true state=started
   become: true
 
+- name: systemctl enable --now restorecond.service (SELinux)
+  ansible.builtin.systemd: name=restorecond.service enabled=true state=started
+  become: true
+  when: ansible_selinux.status == "enabled"
+
 - name: Optimize AUR building CFLAGS
   ansible.builtin.lineinfile:
     path: /etc/makepkg.conf
