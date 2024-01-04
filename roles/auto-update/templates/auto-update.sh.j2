@@ -1,8 +1,11 @@
 #!/usr/bin/bash
 
+
+{% if msmtp_to is defined and msmtp_from is defined %}
 TO="{{ msmtp_to }}"
 FROM="{{ msmtp_from }}"
 SUBJECT="Auto-update $HOSTNAME $(/usr/bin/date '+%F %T')"
+{% endif %}
 
 # Check need reboot
 NUM_PKG=$(/usr/bin/checkupdates | grep -E 'linux|systemd' | wc -l)
@@ -42,6 +45,7 @@ if [[ $NEED_REBOOT -eq 1 ]] ; then
 fi
 {% endif %}
 
+{% if msmtp_to is defined and msmtp_from is defined %}
 # send email
 update_msg="$(cat /var/log/auto-update.log)"
 echo -e "To: ${TO}\nFrom: ${FROM}\nSubject: ${SUBJECT}\n${update_msg}" | msmtp --read-recipients --read-envelope-from
@@ -50,6 +54,7 @@ while [[ $? -ne 0 ]]; do
     sleep 300
     echo -e "To: ${TO}\nFrom: ${FROM}\nSubject: ${SUBJECT}\n${update_msg}" | msmtp --read-recipients --read-envelope-from
 done
+{% endif %}
 
 sleep 5
 

@@ -1,6 +1,6 @@
 Common [post-installation configuration](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) for Arch Linux.
 
-## Tasks:
+## Tasks
 - Set up [time synchronization](https://wiki.archlinux.org/title/Systemd-timesyncd).
 - Enable [pacman parallel downloads](https://wiki.archlinux.org/title/Pacman#Enabling_parallel_downloads).
 - Enable [reflector](https://wiki.archlinux.org/title/Reflector) to auto update pacman mirror list.
@@ -10,7 +10,7 @@ Common [post-installation configuration](https://wiki.archlinux.org/title/User:B
 - Set up [snapper](https://wiki.archlinux.org/title/Snapper) for root partition if using btrfs.
 
 
-## `host_vars/example.yml` variables:
+## Variables
 ```yaml
 # Specify `reflector --country`
 # https://man.archlinux.org/man/reflector.1#EXAMPLES

@@ -56,7 +56,7 @@ All Ansible roles listed below are tested with Arch Linux.
 Some also tested with fedora or Debian.
 - [`archlinux_common`](roles/archlinux_common/) contains common/sane [post-installation configuration](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) for Arch Linux.
 - [`auto-update`](roles/auto-update/) will auto-update your system and reboot if necessary.
-  For Arch Linux it will send an email contains `pacman -Syu` log to the email address configured in [`roles/msmtp`](roles/msmtp/).
+  For Arch Linux it will send an email contains `pacman -Syu` log to the email address if configured in [`roles/msmtp`](roles/msmtp/).
 - [`gui`](roles/gui/) related tasks, like installing GPU driver, PipeWire, desktop environment, Flatpak, restore dotfiles, and setup snapshot for your home directory.
 - [`msmtp`](roles/msmtp/) configures a simple SMTP client, used to send email notification.
 - [`nas`](roles/nas/) will edit fstab to mount extra disk and set up btrfs-scrub timer.
