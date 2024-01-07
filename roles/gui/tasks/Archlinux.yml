@@ -3,6 +3,7 @@
   ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
   register: home_fstype
   changed_when: false
+  check_mode: false
 
 - include_tasks: snapper.yml
   when: home_fstype.stdout == 'btrfs'

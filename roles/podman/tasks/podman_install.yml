@@ -39,12 +39,14 @@
   become: true
   register: root_fstype
   changed_when: false
+  check_mode: false
 
 - name: Get file system type of ~/
   ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
   become: true
   register: home_fstype
   changed_when: false
+  check_mode: false
 
 - name: Set container storage driver
   ansible.builtin.lineinfile:

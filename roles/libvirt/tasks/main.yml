@@ -10,6 +10,7 @@
   become: true
   register: var_lib_fstype
   changed_when: false
+  check_mode: false
 
 - name: Create /var/lib/libvirt/images subvolume if not exist, and disable CoW
   ansible.builtin.shell: |
