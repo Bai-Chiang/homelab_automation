@@ -11,9 +11,11 @@ Hardening OpenSSH server
 # AllowUsers in /etc/ssh/sshd_config
 #ssh_allowusers: 'user1 user2 user3'
 
+
 # Set hostkey
 # HostKey in /etc/ssh/sshd_config
 #ssh_hostkey: ed25519
+
 
 # Only allow ssh connection from these ip address
 #ssh_accept_source_ipv4:
