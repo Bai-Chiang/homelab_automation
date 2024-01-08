@@ -16,14 +16,12 @@ Common [post-installation configuration](https://wiki.archlinux.org/title/User:B
 # https://man.archlinux.org/man/reflector.1#EXAMPLES
 # Restrict pacman mirrors to selected countries. Countries may be given by name or country code, or a mix of both.
 # Use `reflector --list-countries` get a list of available countries and country codes.
-
 reflector_country: us,France,Germany
 
 
 # Snapshot limits
 # https://wiki.archlinux.org/title/Snapper#Set_snapshot_limits
 # Default values given below
-
 #snapper_root_hourly: 5
 #snapper_root_daily: 7
 #sanpper_root_weekly: 0

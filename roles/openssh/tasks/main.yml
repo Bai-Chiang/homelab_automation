@@ -17,6 +17,7 @@
     insertafter: '#\s*HostKey'
     validate: /usr/sbin/sshd -T -f %s
   become: true
+  when: ssh_hostkey is defined
 
 #- name: Set ssh port
 #  ansible.builtin.lineinfile:

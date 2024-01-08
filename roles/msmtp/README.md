@@ -27,7 +27,8 @@ msmtp_tls_starttls: off
 msmtp_from: username@gmail.com
 
 # username and password
-# If you are using Gmail, use [app password](https://myaccount.google.com/apppasswords).
+# If you are using Gmail, set up an app password:
+# https://myaccount.google.com/apppasswords
 msmtp_user: username
 msmtp_password: plain-text-password
 

@@ -15,6 +15,7 @@
     path: /usr/share/zsh/plugins
     state: directory
   become: true
+  when: '"zsh" in shell_pkgs'
 
 - name: symlink zsh-syntax-highlighting and zsh-autosuggestions
   ansible.builtin.file:
@@ -25,6 +26,7 @@
   loop:
     - { src: /usr/share/zsh-syntax-highlighting, dest: /usr/share/zsh/plugins/zsh-syntax-highlighting }
     - { src: /usr/share/zsh-autosuggestions, dest: /usr/share/zsh/plugins/zsh-autosuggestions }
+  when: '"zsh" in shell_pkgs'
 
 - name: Install WM packages
   ansible.builtin.dnf: name={{ wm_pkgs }} state=present
@@ -34,7 +36,7 @@
   ansible.builtin.dnf: name={{ other_pkgs }} state=present
   become: true
 
-- include_tasks: dotfiles.yml  
+- include_tasks: dotfiles.yml
 
 - include_tasks: flatpak.yml
 
