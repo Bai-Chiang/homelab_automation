@@ -21,6 +21,7 @@
     group: root
     mode: '0644'
   become: true
+  when: ups_product_id is defined
 
 - name: /etc/nut/upsd.users
   ansible.builtin.blockinfile:
