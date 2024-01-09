@@ -28,4 +28,4 @@
 - name: systemctl enable systemd-resolved
   ansible.builtin.systemd: name=systemd-resolved enabled=true
   become: true
-    
+

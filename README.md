@@ -63,9 +63,9 @@ Some also tested with fedora or Debian.
   It will send btrfs scrub result and S.M.A.R.T. notification to an email address configured with [`msmtp`](roles/msmtp/).
   It could also set up NFS ans SMB server.
 - [`podman`](roles/podman/) rootless containers that I used in my homelab. These containers could run as different users.
-- [`nut`](roles/nut/)(Network UPS Tools) also will send UPS notification email with [`msmtp`](roles/msmtp/).
+- [`nut`](roles/nut/)(Network UPS Tools) will monitor UPS status and send email notification configured in [`msmtp`](roles/msmtp/).
 - [`openssh`](roles/openssh/) server limit allowed login user, only allow public key authentication, set up firewall rules.
-- [`systemd_networkd`](roles/systemd_networkd/) configuration.
+- [`systemd_networkd`](roles/systemd_networkd/) configuration, either single NIC with static IP or custom setup.
 - [`wpa_supplicant`](roles/wpa_supplicant/) setup when using [systemd-networkd](https://wiki.archlinux.org/title/Systemd-networkd) as network manager. __DOES NOT__ work with [NetworkManager](https://wiki.archlinux.org/title/NetworkManager).
 - [`libvirt`](roles/libvirt/) virtualization.
 
