@@ -1,5 +1,7 @@
 Set up [Network UPS Tools](https://wiki.archlinux.org/title/Network_UPS_Tools) (NUT) and configure it to send email notification on Arch Linux.
 
+This role depends on [`roles/msmtp`](/roles/msmtp/).
+
 ## Tasks
 - Install `nut`.
 - Edit `/etc/nut/ups.conf`, `/etc/nut/upsd.users`, `/etc/nut/upsmon.conf`
@@ -21,17 +23,5 @@ ups_password: 1234546
 # You can get these IDs [XXXX:YYYY] by `lsusb` command.
 #ups_vender_id: XXXX
 #ups_product_id: YYYY
-
-
-# These are the variables from roles/msmtp
-msmtp_account: gmail
-msmtp_host: smtp.gmail.com
-msmtp_port: 465
-msmtp_tls: on
-msmtp_tls_starttls: off
-msmtp_from: username@gmail.com
-msmtp_user: username
-msmtp_password: plain-text-password
-msmtp_to: username@gmail.com
 ```
 

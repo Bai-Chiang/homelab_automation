@@ -1,5 +1,7 @@
 Update the system and reboot if necessary.
 
+This role depends on [`roles/msmtp`](/roles/msmtp/).
+
 ## Variables
 
 ### Arch Linux
@@ -7,13 +9,6 @@ Update with script [`auto-update.sh`](templates/auto-update.sh.j2).
 ```yaml
 # Auto update time. With format of systemd-timer OnCalendar=
 auto_update_time: '01:00:00'
-
-
-# msmtp_from and msmtp_to are optional variables used in roles/msmtp.
-# Specifies the sender and receiver email address.
-# If specified, the auto-update script will send an `pacman -Syu` log to the email address.
-#msmtp_from: username@domain.com
-#msmtp_to: username@domain.com
 ```
 
 ### Debian
