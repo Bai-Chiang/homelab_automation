@@ -30,7 +30,7 @@ msmtp_from: username@gmail.com
 # If you are using Gmail, set up an app password:
 # https://myaccount.google.com/apppasswords
 msmtp_user: username
-msmtp_password: plain-text-password
+msmtp_password: !unsafe plain-text-password
 
 # To email address
 # Not in the /root/.msmtprc file

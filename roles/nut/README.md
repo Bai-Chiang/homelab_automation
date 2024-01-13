@@ -14,7 +14,7 @@ This role depends on [`roles/msmtp`](/roles/msmtp/).
 ```yaml
 # UPS password in the /etc/nut/upsd.conf
 # https://wiki.archlinux.org/title/Network_UPS_Tools#upsd_configuration
-ups_password: 1234546
+ups_password: !unsafe 1234546
 
 
 # Optional variable to fix _Can't claim USB device error_
