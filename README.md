@@ -60,10 +60,10 @@ Some also tested with fedora or Debian.
 - [`gui`](roles/gui/) related tasks, like installing GPU driver, PipeWire, desktop environment, Flatpak, restore dotfiles, and setup snapshot for your home directory.
 - [`msmtp`](roles/msmtp/) configures a simple SMTP client, used to send email notification.
 - [`nas`](roles/nas/) will edit fstab to mount extra disk and set up btrfs-scrub timer.
-  It will send btrfs scrub result and S.M.A.R.T. notification to an email address configured with [`msmtp`](roles/msmtp/).
-  It could also set up NFS ans SMB server.
+  It will send btrfs scrub result and S.M.A.R.T. notification to an email address configured with [`roles/msmtp`](roles/msmtp/).
+  It could also set up NFS ans Samba server.
 - [`podman`](roles/podman/) rootless containers that I used in my homelab. These containers could run as different users.
-- [`nut`](roles/nut/)(Network UPS Tools) will monitor UPS status and send email notification configured with [`msmtp`](roles/msmtp/).
+- [`nut`](roles/nut/)(Network UPS Tools) will monitor UPS status and send email notification configured with [`roles/msmtp`](roles/msmtp/).
 - [`openssh`](roles/openssh/) server limit allowed login user, only allow public key authentication, set up firewall rules.
 - [`systemd_networkd`](roles/systemd_networkd/) configuration, either single NIC with static IP or custom setup.
 - [`wpa_supplicant`](roles/wpa_supplicant/) setup when using [systemd-networkd](https://wiki.archlinux.org/title/Systemd-networkd) as network manager. __DOES NOT__ work with [NetworkManager](https://wiki.archlinux.org/title/NetworkManager).

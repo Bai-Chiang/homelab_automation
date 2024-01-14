@@ -1,5 +1,11 @@
 NAS and file server related tasks for Arch Linux.
 
+[`raid.yml`](tasks/raid.yml) and [`samba.yml`](tasks/samba.yml) should also work on fedora.
+Since fedora uses SELinux samba share can only access files with `samba_share_t` context.
+[`samba.yml`] will re-label those directories,
+but if the directory or its subdirectory is mounted to podman container its context will become `container_file_t` therefore samba won't have permission to access those directories.
+You need start the container with `--security-opt label=disable` or add `SecurityLabelDisable=true` to Quadlet file.
+
 This role depends on [`roles/msmtp`](/roles/msmtp/).
 
 ## Tasks
