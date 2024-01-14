@@ -17,7 +17,11 @@ UserNS=keep-id:uid=1000,gid=1000
 Volume={{ podman_user.autobrr_config_dir }}:/config:Z
 
 HostName=autobrr
+{% if "gluetun" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
 Network=container:gluetun
+{% else %}
+PublishPort=127.0.0.1:7474:7474/tcp
+{% endif %}
 
 Environment=TZ={{ TZ }}
 Environment=AUTOBRR__HOST=0.0.0.0

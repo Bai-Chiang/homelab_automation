@@ -18,7 +18,11 @@ Network=container:gluetun
 Environment=PUID=1000
 Environment=PGID=1000
 Environment=TZ={{ TZ }}
-Environment=WEBUI_PORT=8081
+{% if podman_user.qbittorrent_web_port is defined %}
+Environment=WEBUI_PORT={{ podman_user.qbittorrent_web_port }}
+{% else %}
+Environment=WEBUI_PORT=8090
+{% endif %}
 
 UIDMap=1000:0:1
 UIDMap=0:1:1000

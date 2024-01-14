@@ -23,13 +23,18 @@ AddDevice=/dev/net/tun:/dev/net/tun
 
 HostName=gluetun
 {% if "transmission" in podman_user.containers %}
+{% if podman_user.transmission_web_port is defined %}
+PublishPort=127.0.0.1:{{ podman_user.transmission_web_port }}:9091/tcp
+{% else %}
 PublishPort=127.0.0.1:9091:9091/tcp
 {% endif %}
-{% if "qbittorrent" in podman_user.containers %}
-PublishPort=127.0.0.1:8081:8081/tcp
 {% endif %}
-{% if "deluge" in podman_user.containers %}
-PublishPort=127.0.0.1:8112:8112/tcp
+{% if "qbittorrent" in podman_user.containers %}
+{% if podman_user.qbittorrent_web_port is defined %}
+PublishPort=127.0.0.1:{{ podman_user.qbittorrent_web_port }}:{{ podman_user.qbittorrent_web_port }}/tcp
+{% else %}
+PublishPort=127.0.0.1:8090:8090/tcp
+{% endif %}
 {% endif %}
 {% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
 PublishPort=127.0.0.1:7474:7474/tcp
@@ -46,7 +51,11 @@ Environment=FIREWALL_VPN_INPUT_PORTS='{{ podman_user.gluetun_firewall_vpn_input_
 {% if podman_user.gluetun_httpproxy is defined and podman_user.gluetun_httpproxy %}
 Environment=HTTPPROXY=on
 Environment=HTTPPROXY_STEALTH=on
+{% if podman_user.httpproxy_web_port is defined %}
+PublishPort=127.0.0.1:{{ podman_user.gluetun_httpproxy_port }}:8888/tcp
+{% else %}
 PublishPort=127.0.0.1:8888:8888/tcp
+{% endif %}
 {% endif %}
 
 
