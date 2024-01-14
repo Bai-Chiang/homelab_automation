@@ -149,7 +149,7 @@ Set up Samba when `{{ smb_share }}` is defined.
 smb_share:
   - name: data
     comment: data
-    path: /home/tux/data
+    path: /home/tux/data        # no trailing slash at the end
     valid_users: smb_username
     read_only: 'no'
 

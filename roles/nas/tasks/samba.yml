@@ -111,7 +111,7 @@
 
 - name: Set SELinux file context to shared directories
   community.general.sefcontext:
-    target: "/srv/smb/{{ item.name }}(/.*)?"
+    target: "{{ item.path }}(/.*)?"
     setype: samba_share_t
     state: present
   become: true
@@ -120,7 +120,7 @@
   register: samba_share_sefcontext
 
 - name: Apply SELinux file context to shared directories
-  ansible.builtin.command: "restorecon -R {{ item.dir }}"
+  ansible.builtin.command: "restorecon -R {{ item.path }}"
   become: true
   when:
     - ansible_selinux.status == "enabled"
