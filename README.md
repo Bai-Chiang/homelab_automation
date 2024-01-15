@@ -5,6 +5,9 @@ This repository is a collection of scripts and  Ansible playbooks that I used to
   It will also configure OpenSSH server, firewall, and user creation.
   Remaining [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) steps will be handle by Ansible [`roles/archlinux_common`](roles/archlinux_common) and [`roles/gui`](roles/gui/).
 
+- [`arch_install_bcachefs.sh`](arch_install_bcachefs.sh) script will install Arch Linux with bcachefs instead, based on my installation [notes](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(bcachefs,unified_kernel_image,secure_boot)).
+  Bcachefs is still considered as experimental, so make sure you have a __working__ backup.
+
 - [`fedora_post_install.sh`](fedora_post_install.sh) and [`debian_post_install.sh`](debian_post_install.sh) will configure OpenSSH server port and firewall.
 
 - [`roles/`](roles/) directory contains various Ansible roles.
