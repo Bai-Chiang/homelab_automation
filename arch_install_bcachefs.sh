@@ -18,7 +18,7 @@ BCACHEFS_FORMAT_OPTS="--compression=zstd"
 # RAID 0
 #BCACHEFS_FORMAT_OPTS="--data_replicas=1 --metadata_replicas=2"
 #
-# RAID 1 and tired storage
+# RAID 1 and tiered storage
 #BCACHEFS_FORMAT_OPTS="--replicas=2 --foreground_target=ssd --promote_target=ssd --metadata_target=ssd --background_target=hdd"
 
 UCODE_PKG="amd-ucode"
@@ -372,31 +372,6 @@ else
 fi
 
 
-echo "
-######################################################
-# zram
-# https://wiki.archlinux.org/title/Zram
-######################################################
-"
-read -p "Do you want to enable zram, and disable zswap? [Y/n] " zram
-zram="${zram:-y}"
-zram="${zram,,}"
-if [[ $zram == y ]] ; then
-    # disable zswap
-    kernel_cmd="$kernel_cmd zswap.enabled=0"
-    # install zram-generator
-    arch-chroot /mnt pacman --noconfirm -S zram-generator
-    # Create /etc/systemd/zram-generator.conf
-    if [[ -z $ZRAM_SIZE ]] ; then
-        ZRAM_SIZE='min(ram / 2, 4096)'
-    fi
-    echo "[zram0]"                       > /mnt/etc/systemd/zram-generator.conf
-    echo "zram-size = $ZRAM_SIZE"       >> /mnt/etc/systemd/zram-generator.conf
-    echo "compression-algorithm = zstd" >> /mnt/etc/systemd/zram-generator.conf
-    echo "fs-type = swap"               >> /mnt/etc/systemd/zram-generator.conf
-fi
-
-
 # Tried this but it still won't boot if it's encrypted
 #if [[ $BCACHEFS_FORMAT_OPTS == *"--encrypted"* ]] ; then
 #    # bcachefs is encrypted
@@ -438,6 +413,31 @@ kernel_cmd=""
 # modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
 # https://wiki.archlinux.org/title/PC_speaker#Globally
 kernel_cmd="root=UUID=$root_uuid modprobe.blacklist=pcspkr $KERNEL_PARAMETERS"
+
+
+echo "
+######################################################
+# zram
+# https://wiki.archlinux.org/title/Zram
+######################################################
+"
+read -p "Do you want to enable zram, and disable zswap? [Y/n] " zram
+zram="${zram:-y}"
+zram="${zram,,}"
+if [[ $zram == y ]] ; then
+    # disable zswap
+    kernel_cmd="$kernel_cmd zswap.enabled=0"
+    # install zram-generator
+    arch-chroot /mnt pacman --noconfirm -S zram-generator
+    # Create /etc/systemd/zram-generator.conf
+    if [[ -z $ZRAM_SIZE ]] ; then
+        ZRAM_SIZE='min(ram / 2, 4096)'
+    fi
+    echo "[zram0]"                       > /mnt/etc/systemd/zram-generator.conf
+    echo "zram-size = $ZRAM_SIZE"       >> /mnt/etc/systemd/zram-generator.conf
+    echo "compression-algorithm = zstd" >> /mnt/etc/systemd/zram-generator.conf
+    echo "fs-type = swap"               >> /mnt/etc/systemd/zram-generator.conf
+fi
 
 
 # Fallback kernel cmdline parameters (without SELinux, VFIO)
