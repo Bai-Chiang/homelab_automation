@@ -19,6 +19,7 @@ BCACHEFS_FORMAT_OPTS="--compression=zstd"
 #BCACHEFS_FORMAT_OPTS="--data_replicas=1 --metadata_replicas=2"
 #
 # RAID 1 and tiered storage
+# Drives and --label arguments will be asked later in the script.
 #BCACHEFS_FORMAT_OPTS="--replicas=2 --foreground_target=ssd --promote_target=ssd --metadata_target=ssd --background_target=hdd"
 
 UCODE_PKG="amd-ucode"
