@@ -2,11 +2,16 @@ This repository is a collection of scripts and  Ansible playbooks that I used to
 
 - [`arch_install.sh`](arch_install.sh) script will install Arch Linux, based on my installation [notes](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)).
   This script will cover the [_Pre-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Pre-installation), [_Installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Installation), and [_Configure the system_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Configure_the_system) sections.
-  It will also configure OpenSSH server, firewall, and user creation.
-  Remaining [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) steps will be handle by Ansible [`roles/archlinux_common`](roles/archlinux_common) and [`roles/gui`](roles/gui/).
+  It will also configure OpenSSH server, firewall, and user creation in the [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) section.
+  The remaining [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) steps are covered by Ansible [`roles/archlinux_common`](roles/archlinux_common) and [`roles/gui`](roles/gui/).
 
 - [`arch_install_bcachefs.sh`](arch_install_bcachefs.sh) script will install Arch Linux with bcachefs instead, based on my installation [notes](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(bcachefs,unified_kernel_image,secure_boot)).
   Bcachefs is still considered as experimental, so make sure you have a __working__ backup.
+  Similarly, it will cover the [_Pre-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(bcachefs,unified_kernel_image,secure_boot)#Pre-installation), [_Installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(bcachefs,unified_kernel_image,secure_boot)#Installation), and [_Configure the system_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(bcachefs,unified_kernel_image,secure_boot)#Configure_the_system) sections.
+  In addition, it will also configure OpenSSH server, firewall, and user creation in the [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(bcachefs,unified_kernel_image,secure_boot)#Post-installation) section.
+  The remaining [_Post-installation_](https://wiki.archlinux.org/title/User:Bai-Chiang/Installation_guide_(full_disk_encryption,secure_boot,unified_kernel_image,btrfs)#Post-installation) steps are covered by Ansible [`roles/archlinux_common`](roles/archlinux_common) and [`roles/gui`](roles/gui/).
+  The script is designed to work on bcachefs with single drive or multiple drives setup.
+  But current only single drive without encryption setup works.
 
 - [`fedora_post_install.sh`](fedora_post_install.sh) and [`debian_post_install.sh`](debian_post_install.sh) will configure OpenSSH server port and firewall.
 
