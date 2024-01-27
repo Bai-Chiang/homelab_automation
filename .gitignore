@@ -20,3 +20,6 @@
 !/fedora_post_install.sh
 !/homed.sh
 !/iommu.sh
+!/mkarchiso.sh
+!/virsh_undefine.sh
+!/virt-install_arch.sh
