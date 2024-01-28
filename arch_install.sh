@@ -724,13 +724,32 @@ arch-chroot /mnt pacman --noconfirm -S --needed firewalld
 arch-chroot /mnt systemctl enable firewalld.service
 echo "Set default firewall zone to drop."
 arch-chroot /mnt firewall-offline-cmd --set-default-zone=drop
-if [ "$enable_ssh" = y ] ; then
+read -p "Allow ICMP echo-request and echo-reply (respond ping)? [Y/n] "
+allow_ping="${allow_ping:-y}"
+allow_ping="${allow_ping,,}"
+if [[ $allow_ping == y ]] ; then
+    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block-inversion
+    echo -e "\nallow ping source ip address (example 192.168.1.0/24) empty to allow all"
+    read ping_source
+    if [[ -n $ping_source ]] ; then
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="family='ipv4' source address='${ping_source}' icmp-type name='echo-request' accept"
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="family='ipv4' source address='${ping_source}' icmp-type name='echo-reply' accept"
+    else
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-request
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-reply
+    fi
+fi
+if [[ $enable_ssh == y ]] ; then
     echo "modify default ssh service with new port."
     sed "/port=/s/port=\"22\"/port=\"${ssh_port}\"/" /mnt/usr/lib/firewalld/services/ssh.xml  > /mnt/etc/firewalld/services/ssh.xml
     #arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service=ssh
-    echo -e "\nssh allow source ip address (example 192.168.1.0/24)"
+    echo -e "\nssh allow source ip address (example 192.168.1.0/24) empty to allow all"
     read ssh_source
-    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ssh_source}' service name='ssh' accept"
+    if [[ -n $ssh_source ]] ; then
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ssh_source}' service name='ssh' accept"
+    else
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service ssh
+    fi
 fi
 
 
