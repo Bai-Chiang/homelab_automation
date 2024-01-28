@@ -38,13 +38,13 @@ ZRAM_SIZE='min(ram / 2, 4 * 1024)'
 KERNEL_PKGS="linux"
 BASE_PKGS="base sudo linux-firmware iptables-nft python"
 FS_PKGS="dosfstools btrfs-progs"
+#KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 ## server example
 #KERNEL_PKGS="linux-hardened"
 #BASE_PKGS="base sudo linux-firmware python efibootmgr iptables-nft"
 #FS_PKGS="dosfstools btrfs-progs"
 #OTHER_PKGS="vim"
-#KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 ## desktop example
 #KERNEL_PKGS="linux"
@@ -53,6 +53,11 @@ FS_PKGS="dosfstools btrfs-progs"
 #OTHER_PKGS="man-db vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
 
+
+if [[ $(tty) == '/dev/ttyS0'  ]] ; then
+    # Using serial port
+    KERNEL_PARAMETERS="$KERNEL_PARAMETERS console=ttyS0"
+fi
 
 ######################################################
 
@@ -409,7 +414,6 @@ partprobe &> /dev/null
 # wait for partition table update
 sleep 1
 root_uuid=$(lsblk -dno UUID $root_part)
-kernel_cmd=""
 
 # modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
 # https://wiki.archlinux.org/title/PC_speaker#Globally
