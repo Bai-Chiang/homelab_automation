@@ -5,12 +5,12 @@
 # Examples:
 #
 # Current only single drive and non-encryption works, like this
-BCACHEFS_FORMAT_OPTS="--compression=zstd"
+BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
 #
 # All following examples does not work yet.
 #
 # Single drive with compression and encryption
-#BCACHEFS_FORMAT_OPTS="--compression=zstd --encrypted"
+#BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted"
 #
 # multiple drives setup
 # You need to specify --replicas or --data_replicas and --metadata_replicas for the script to work, otherwise it will assume single drive setup.
