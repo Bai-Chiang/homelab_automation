@@ -34,27 +34,27 @@
   become: true
   when: ansible_distribution == "Fedora"
 
-- name: Get file system type of /
-  ansible.builtin.command: stat --file-system --format=%T /
-  become: true
-  register: root_fstype
-  changed_when: false
-  check_mode: false
-
-- name: Get file system type of ~/
-  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
-  become: true
-  register: home_fstype
-  changed_when: false
-  check_mode: false
-
-- name: Set container storage driver
-  ansible.builtin.lineinfile:
-    path: /etc/containers/storage.conf
-    regexp: '^driver\s*='
-    line: 'driver = "btrfs"'
-  become: true
-  when:
-    - root_fstype.stdout == 'btrfs'
-    - home_fstype.stdout == 'btrfs'
+#- name: Get file system type of /
+#  ansible.builtin.command: stat --file-system --format=%T /
+#  become: true
+#  register: root_fstype
+#  changed_when: false
+#  check_mode: false
+#
+#- name: Get file system type of ~/
+#  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
+#  become: true
+#  register: home_fstype
+#  changed_when: false
+#  check_mode: false
+#
+#- name: Set container storage driver
+#  ansible.builtin.lineinfile:
+#    path: /etc/containers/storage.conf
+#    regexp: '^driver\s*='
+#    line: 'driver = "btrfs"'
+#  become: true
+#  when:
+#    - root_fstype.stdout == 'btrfs'
+#    - home_fstype.stdout == 'btrfs'
 

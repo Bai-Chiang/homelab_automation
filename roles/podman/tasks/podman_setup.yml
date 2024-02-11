@@ -30,7 +30,7 @@
     - podman_user.name != "root"
     - not podman_user_lingering.stat.exists
 
-- name: /etc/subuid
+- name: Set /etc/subuid if using systemd-homed
   ansible.builtin.lineinfile:
     line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
     regexp: "^{{ podman_user.name }}:"
@@ -40,9 +40,11 @@
     group: root
     mode: '0644'
   become: true
-  when: ansible_distribution == "Archlinux"
+  when:
+    - ansible_distribution == "Archlinux"
+    - homed
 
-- name: Set /etc/subgid
+- name: Set /etc/subgid if using systemd-homed
   ansible.builtin.lineinfile:
     line: "{{ podman_user.name }}:{{ (podman_user.uid - 1000) * 65536 + 524288 }}:65536"
     regexp: "^{{ podman_user.name }}:"
@@ -52,7 +54,9 @@
     group: root
     mode: '0644'
   become: true
-  when: ansible_distribution == "Archlinux"
+  when:
+    - ansible_distribution == "Archlinux"
+    - homed
 
 #- name: setup container configs directory
 #  ansible.builtin.file:
