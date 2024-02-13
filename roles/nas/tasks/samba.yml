@@ -109,6 +109,11 @@
   ansible.builtin.systemd: name=smb enabled=true
   become: true
 
+- name: dnf install policycoreutils-python-utils
+  ansible.builtin.dnf: name=policycoreutils-python-utils state=present
+  become: true
+  when: ansible_distribution == "Fedora"
+
 - name: Set SELinux file context to shared directories
   community.general.sefcontext:
     target: "{{ item.path }}(/.*)?"
