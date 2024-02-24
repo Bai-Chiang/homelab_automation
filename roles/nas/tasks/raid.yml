@@ -48,6 +48,24 @@
     state: present
   loop: "{{ fstab_entries }}"
   become: true
+  register: fstab
+
+- name: remount
+  ansible.builtin.shell: |
+    systemctl daemon-reload
+    mount --all
+  become: true
+  when: fstab.changed
+
+- name: Set mount points permissions
+  ansible.builtin.file:
+    path: "{{ item.mount_point }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop: "{{ fstab_entries }}"
+  become: true
 
 - name: Set spindown timeout for disk
   ansible.builtin.copy:
