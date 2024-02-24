@@ -2,6 +2,11 @@
 Description=traefik container
 Wants=network-online.target
 After=network-online.target nss-lookup.target
+{% if podman_user.traefik_tailscale_enable %}
+Wants=traefik-tailscale.service
+After=traefik-tailscale.service
+Requires=traefik-tailscale.service
+{% endif %}
 
 [Container]
 ContainerName=traefik
@@ -12,9 +17,11 @@ Volume={{ podman_user.traefik_config_dir }}/static_conf.yml:/etc/traefik/traefik
 Volume={{ podman_user.traefik_config_dir }}/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:Z
 Volume={{ podman_user.traefik_config_dir }}/ssl:/etc/traefik/ssl:Z
 
-HostName=traefik
+{% if podman_user.traefik_tailscale_enable %}
+Network=container:traefik-tailscale
+{% else %}
 Network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true
-PublishPort=443:443/tcp
+{% endif %}
 
 
 [Service]
@@ -23,5 +30,10 @@ Restart=on-failure
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300
 
+{% if podman_user.traefik_tailscale_enable %}
+# Wait 30 sec for tailscale complete
+ExecStartPre=/usr/bin/sleep 30
+
+{% endif %}
 [Install]
 WantedBy=default.target

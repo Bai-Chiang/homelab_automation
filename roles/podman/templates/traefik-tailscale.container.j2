@@ -1,0 +1,41 @@
+[Unit]
+Description=tailscale container
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+Wants=traefik.service
+
+[Container]
+ContainerName=traefik-tailscale
+Image=ghcr.io/tailscale/tailscale:latest
+AutoUpdate=registry
+
+AddCapability=NET_ADMIN
+AddDevice=/dev/net/tun:/dev/net/tun
+
+Volume={{ podman_user.traefik_tailscale_config_dir }}/:/var/lib/tailscale:Z
+
+HostName=traefik-tailscale
+Network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true
+PublishPort=443:443/tcp
+
+Environment=TS_STATE_DIR=/var/lib/tailscale
+{% if podman_user.traefik_tailscale_hostname is defined %}
+Environment=TS_HOSTNAME={{ podman_user.traefik_tailscale_hostname }}
+{% else %}
+Environment=TS_HOSTNAME=traefik-tailscale-container
+{% endif %}
+{% if podman_user.traefik_tailscale_args is defined %}
+{% for arg in podman_user.traefik_tailscale_args %}
+Environment=TS_EXTRA_ARGS={{ arg }}
+{% endfor %}
+{% endif %}
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
