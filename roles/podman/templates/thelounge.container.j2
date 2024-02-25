@@ -1,0 +1,44 @@
+[Unit]
+Description=The Lounge container
+{% if "gluetun" in podman_user.containers and podman_user.thelounge_gluetun_proxy %}
+Wants=gluetun.service
+After=gluetun.service
+Requires=gluetun.service
+{% endif %}
+
+[Container]
+ContainerName=thelounge
+Image=lscr.io/linuxserver/thelounge:latest
+AutoUpdate=registry
+
+Volume={{ podman_user.thelounge_config_dir }}:/config:Z
+
+HostName=thelounge
+{% if "gluetun" in podman_user.containers and podman_user.thelounge_gluetun_proxy %}
+Network=container:gluetun
+{% else %}
+PublishPort=127.0.0.1:9000:9000/tcp
+{% endif %}
+
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ={{ TZ }}
+
+UIDMap=1000:0:1
+UIDMap=0:1:1000
+UIDMap=1001:1001:64536
+
+
+[Service]
+Restart=on-failure
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+{% if "gluetun" in podman_user.containers and podman_user.thelounge_gluetun_proxy %}
+# Wait 30 sec for gluetun complete
+ExecStartPre=/usr/bin/sleep 30
+
+{% endif %}
+[Install]
+WantedBy=default.target

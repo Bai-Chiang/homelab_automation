@@ -12,6 +12,9 @@ Wants=deluge.service
 {% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
 Wants=autobrr.service
 {% endif %}
+{% if "thelounge" in podman_user.containers and podman_user.thelounge_gluetun_proxy %}
+Wants=thelounge.service
+{% endif %}
 
 [Container]
 ContainerName=gluetun
@@ -38,6 +41,9 @@ PublishPort=127.0.0.1:8090:8090/tcp
 {% endif %}
 {% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
 PublishPort=127.0.0.1:7474:7474/tcp
+{% endif %}
+{% if "thelounge" in podman_user.containers and podman_user.thelounge_gluetun_proxy %}
+PublishPort=127.0.0.1:9000:9000/tcp
 {% endif %}
 
 Environment=TZ={{ TZ }}

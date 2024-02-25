@@ -8,10 +8,10 @@
     mode: '0700'
   become: true
 
-- name: thelounge.service
+- name: thelounge.container
   ansible.builtin.template:
-    src: thelounge.service.j2
-    dest: "/home/{{ podman_user.name }}/.config/systemd/user/thelounge.service"
+    src: thelounge.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/thelounge.container"
     owner: "{{ podman_user.name }}"
     group: "{{ podman_user.name }}"
     mode: '0600'
