@@ -1,5 +1,5 @@
 [Unit]
-Description=Update Flatpak
+Description=Update Flatpak and cleanup unused runtimes and applications.
 Wants=network-online.target
 After=network-online.target nss-lookup.target
 StartLimitIntervalSec=3h
@@ -10,5 +10,6 @@ OnFailure=failure-notification@%n
 Type=oneshot
 ExecStart=ping -c 1 flathub.org
 ExecStart=/usr/bin/flatpak update --user --noninteractive --assumeyes
+ExecStart=/usr/bin/flatpak uninstall --user --unused --noninteractive --assumeyes
 Restart=on-failure
 RestartSec=30min
