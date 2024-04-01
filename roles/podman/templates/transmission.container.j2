@@ -11,7 +11,9 @@ AutoUpdate=registry
 
 Volume={{ podman_user.transmission_config_dir }}:/config:Z
 Volume={{ podman_user.transmission_downloads_dir }}:/downloads:Z
+{% if podman_user.transmission_watch_dir is defined %}
 Volume={{ podman_user.transmission_watch_dir }}:/watch:Z
+{% endif %}
 
 HostName=transmission
 Network=container:gluetun
