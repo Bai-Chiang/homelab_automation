@@ -117,6 +117,7 @@
   ansible.builtin.systemd: name=traefik.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Set firewall rules for https
   ansible.posix.firewalld:
@@ -127,5 +128,5 @@
     state: enabled
   loop: "{{ podman_user.https_accept_source_ipv4 }}"
   become: true
-  when: 
+  when:
     - podman_user.https_accept_source_ipv4 is defined

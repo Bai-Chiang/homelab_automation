@@ -27,9 +27,10 @@
   ansible.builtin.systemd: name=unifi-controller enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 
-# 3478/udp    UniFi STUN port 
+# 3478/udp    UniFi STUN port
 # 10001/udp   UniFi AP discovery
 # 8080/tcp    UniFi device communication
 - name: add unifi firewalld service file unifi.xml

@@ -27,3 +27,4 @@
   ansible.builtin.systemd: name=autobrr.service enabled=true state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"

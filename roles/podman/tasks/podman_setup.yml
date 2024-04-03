@@ -9,7 +9,7 @@
     password_lock: true
     create_home: true
   become: true
-  when: 
+  when:
     - podman_user.name != ansible_user_id
     - podman_user.name != "root"
 
