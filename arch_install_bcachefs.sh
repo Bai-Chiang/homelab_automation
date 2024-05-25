@@ -497,15 +497,16 @@ echo "
 "
 arch-chroot /mnt mkdir -p /efi/EFI/Linux
 for KERNEL in $KERNEL_PKGS
-do 
-    # Add line ALL_microcode=(/boot/*-ucode.img)
-    sed -i '/^ALL_kver=.*/a ALL_microcode=(/boot/*-ucode.img)' /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    # Add Arch splash screen and add default_uki= and fallback_uki=
-    sed -i "s|^#default_options=.*|default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"\\ndefault_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i "s|^fallback_options=.*|fallback_options=\"-S autodetect --cmdline /etc/kernel/cmdline_fallback\"\\nfallback_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\"|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+do
+    # Edit default_uki= and fallback_uki=
+    sed -i -E "s@^(#|)default_uki=.*@default_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i -E "s@^(#|)fallback_uki=.*@fallback_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    # Edit default_options= and fallback_options=
+    sed -i -E "s@^(#|)default_options=.*@default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i -E "s@^(#|)fallback_options=.*@fallback_options=\"-S autodetect --cmdline /etc/kernel/cmdline_fallback\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
     # comment out default_image= and fallback_image=
-    sed -i "s|^default_image=.*|#&|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i "s|^fallback_image=.*|#&|" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i -E "s@^(#|)default_image=.*@#&@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i -E "s@^(#|)fallback_image=.*@#&@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
 done
 
 # remove leftover initramfs-*.img from /boot or /efi
