@@ -42,13 +42,10 @@ fi
 
 echo "
 
-This is an Arch Linux installation script.
-To activate it, press Enter, otherwise, press any other key.
-If you activate it, you will be given a chance to install the glorious Arch Linux automatically.
-However, there is no guarantee of success.
-There is also no guarantee of your existing data safety.
+This script is not thoroughly tested. It may wipe all hard drives connected. Make sure you have a working backup.
+
 "
-read -p "Ready? " start_install
+read -p "Press Enter to continue, otherwise press any other key. " start_install
 
 if [[ -n $start_install ]] ; then
     exit 1
@@ -470,7 +467,7 @@ else
 fi
 
 
-# btrfs as root 
+# btrfs as root
 # https://wiki.archlinux.org/title/Btrfs#Mounting_subvolume_as_root
 kernel_cmd="$kernel_cmd rootfstype=btrfs rootflags=subvol=/@ rw"
 # modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
@@ -620,7 +617,7 @@ if [[ $secure_boot == y ]] ; then
 
     echo "Signing unified kernel image ..."
     for KERNEL in $KERNEL_PKGS
-    do 
+    do
         arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/ArchLinux-$KERNEL.efi"
         arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/ArchLinux-$KERNEL-fallback.efi"
     done
@@ -711,7 +708,9 @@ if [[ $enable_ssh == y ]] ; then
     echo "ssh port? (22)"
     read ssh_port
     ssh_port="${ssh_port:-22}"
-    sed -i "s/^#Port.*/Port ${ssh_port}/" /mnt/etc/ssh/sshd_config
+    if [[ $ssh_port != 22 ]] ; then
+        sed -i "s/^#Port.*/Port ${ssh_port}/" /mnt/etc/ssh/sshd_config
+    fi
 fi
 
 
@@ -725,6 +724,20 @@ arch-chroot /mnt pacman --noconfirm -S --needed firewalld
 arch-chroot /mnt systemctl enable firewalld.service
 echo "Set default firewall zone to drop."
 arch-chroot /mnt firewall-offline-cmd --set-default-zone=drop
+if [[ $enable_ssh == y ]] ; then
+    if [[ $ssh_port != 22 ]] ; then
+        echo "modify default ssh service with new port."
+        sed "/port=/s/port=\"22\"/port=\"${ssh_port}\"/" /mnt/usr/lib/firewalld/services/ssh.xml  > /mnt/etc/firewalld/services/ssh.xml
+    fi
+    echo -e "\nssh allow source ip address (example 192.168.1.0/24) empty to allow all"
+    read ssh_source
+    if [[ -n $ssh_source ]] ; then
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ssh_source}' service name='ssh' accept"
+    else
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service ssh
+    fi
+fi
+echo -e "\n"
 read -p "Allow ICMP echo-request and echo-reply (respond ping)? [Y/n] "
 allow_ping="${allow_ping:-y}"
 allow_ping="${allow_ping,,}"
@@ -738,18 +751,6 @@ if [[ $allow_ping == y ]] ; then
     else
         arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-request
         arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-reply
-    fi
-fi
-if [[ $enable_ssh == y ]] ; then
-    echo "modify default ssh service with new port."
-    sed "/port=/s/port=\"22\"/port=\"${ssh_port}\"/" /mnt/usr/lib/firewalld/services/ssh.xml  > /mnt/etc/firewalld/services/ssh.xml
-    #arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service=ssh
-    echo -e "\nssh allow source ip address (example 192.168.1.0/24) empty to allow all"
-    read ssh_source
-    if [[ -n $ssh_source ]] ; then
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ssh_source}' service name='ssh' accept"
-    else
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service ssh
     fi
 fi
 
