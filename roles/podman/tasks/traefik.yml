@@ -52,16 +52,16 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-- name: traefik-tailscale.container
+- name: tailscale-traefik.container
   ansible.builtin.template:
-    src: traefik-tailscale.container.j2
-    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/traefik-tailscale.container"
+    src: tailscale-traefik.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/tailscale-traefik.container"
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0600'
   become: true
   become_user: "{{ podman_user.name }}"
-  when: podman_user.traefik_tailscale_enable
+  when: podman_user.tailscale_traefik_enable
 
 - name: systemctl --user daemon-reload
   ansible.builtin.systemd: daemon_reload=true scope=user
@@ -118,6 +118,12 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
+- name: systemctl --user enable --now tailscale-traefik.service
+  ansible.builtin.systemd: name=tailscale-traefik.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  when: podman_user.tailscale_traefik_enable
+
 - name: Set firewall rules for https
   ansible.posix.firewalld:
     rich_rule: rule family="ipv4" source address="{{ item }}" service name="https" accept
@@ -127,5 +133,5 @@
     state: enabled
   loop: "{{ podman_user.https_accept_source_ipv4 }}"
   become: true
-  when: 
+  when:
     - podman_user.https_accept_source_ipv4 is defined

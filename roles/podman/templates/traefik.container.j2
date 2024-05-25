@@ -26,14 +26,12 @@ Network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true
 
 [Service]
 Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300
 
-{% if podman_user.traefik_tailscale_enable %}
-# Wait 30 sec for tailscale complete
-ExecStartPre=/usr/bin/sleep 30
-
-{% endif %}
 [Install]
 WantedBy=default.target

@@ -34,6 +34,9 @@ UIDMap=1001:1001:64536
 
 [Service]
 Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300

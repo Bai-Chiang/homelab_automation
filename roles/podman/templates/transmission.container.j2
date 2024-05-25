@@ -31,12 +31,12 @@ UIDMap=1001:1001:64536
 
 [Service]
 Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300
-
-# Wait 30 sec for gluetun complete
-ExecStartPre=/usr/bin/sleep 30
 
 [Install]
 WantedBy=default.target

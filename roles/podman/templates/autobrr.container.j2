@@ -29,14 +29,12 @@ Environment=AUTOBRR__HOST=0.0.0.0
 
 [Service]
 Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300
 
-{% if "gluetun" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
-# Wait 30 sec for gluetun complete
-ExecStartPre=/usr/bin/sleep 30
-
-{% endif %}
 [Install]
 WantedBy=default.target

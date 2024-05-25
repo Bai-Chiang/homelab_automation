@@ -5,27 +5,27 @@ After=network-online.target nss-lookup.target
 Wants=traefik.service
 
 [Container]
-ContainerName=traefik-tailscale
+ContainerName=tailscale-traefik
 Image=ghcr.io/tailscale/tailscale:latest
 AutoUpdate=registry
 
 AddCapability=NET_ADMIN
 AddDevice=/dev/net/tun:/dev/net/tun
 
-Volume={{ podman_user.traefik_tailscale_config_dir }}/:/var/lib/tailscale:Z
+Volume={{ podman_user.tailscale_traefik_config_dir }}/:/var/lib/tailscale:Z
 
-HostName=traefik-tailscale
+HostName=tailscale-traefik
 Network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true
 PublishPort=443:443/tcp
 
 Environment=TS_STATE_DIR=/var/lib/tailscale
-{% if podman_user.traefik_tailscale_hostname is defined %}
-Environment=TS_HOSTNAME={{ podman_user.traefik_tailscale_hostname }}
+{% if podman_user.tailscale_traefik_hostname is defined %}
+Environment=TS_HOSTNAME={{ podman_user.tailscale_traefik_hostname }}
 {% else %}
-Environment=TS_HOSTNAME=traefik-tailscale-container
+Environment=TS_HOSTNAME=tailscale-traefik-container
 {% endif %}
-{% if podman_user.traefik_tailscale_args is defined %}
-{% for arg in podman_user.traefik_tailscale_args %}
+{% if podman_user.tailscale_traefik_args is defined %}
+{% for arg in podman_user.tailscale_traefik_args %}
 Environment=TS_EXTRA_ARGS={{ arg }}
 {% endfor %}
 {% endif %}
@@ -33,6 +33,12 @@ Environment=TS_EXTRA_ARGS={{ arg }}
 
 [Service]
 Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Remove tailscale-traefik container and all containers depend on tailscale-traefik
+ExecStartPre=-/usr/bin/podman rm --force --depend tailscale-traefik
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300

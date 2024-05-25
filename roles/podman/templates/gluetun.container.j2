@@ -1,13 +1,12 @@
 [Unit]
 Description=gluetun container
+Wants=network-online.target
+After=network-online.target nss-lookup.target
 {% if "transmission" in podman_user.containers %}
 Wants=transmission.service
 {% endif %}
 {% if "qbittorrent" in podman_user.containers %}
 Wants=qbittorrent.service
-{% endif %}
-{% if "deluge" in podman_user.containers %}
-Wants=deluge.service
 {% endif %}
 {% if "autobrr" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
 Wants=autobrr.service
@@ -18,7 +17,7 @@ Wants=thelounge.service
 
 [Container]
 ContainerName=gluetun
-Image=ghcr.io/qdm12/gluetun:latest
+Image=ghcr.io/qdm12/gluetun:v3
 AutoUpdate=registry
 
 AddCapability=NET_ADMIN
@@ -62,11 +61,17 @@ PublishPort=127.0.0.1:{{ podman_user.gluetun_httpproxy_port }}:8888/tcp
 {% else %}
 PublishPort=127.0.0.1:8888:8888/tcp
 {% endif %}
-{% endif %}
 
+{% endif %}
 
 [Service]
 Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Remove gluetun container and all containers depend on gluetun
+ExecStartPre=-/usr/bin/podman rm --force --depend gluetun
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300
