@@ -2,10 +2,10 @@
 Description=traefik container
 Wants=network-online.target
 After=network-online.target nss-lookup.target
-{% if podman_user.traefik_tailscale_enable %}
-Wants=traefik-tailscale.service
-After=traefik-tailscale.service
-Requires=traefik-tailscale.service
+{% if podman_user.traefik_tailscale_enable is defined and podman_user.traefik_tailscale_enable %}
+Wants=tailscale-traefik.service
+After=tailscale-traefik.service
+Requires=tailscale-traefik.service
 {% endif %}
 
 [Container]
@@ -17,10 +17,11 @@ Volume={{ podman_user.traefik_config_dir }}/static_conf.yml:/etc/traefik/traefik
 Volume={{ podman_user.traefik_config_dir }}/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:Z
 Volume={{ podman_user.traefik_config_dir }}/ssl:/etc/traefik/ssl:Z
 
-{% if podman_user.traefik_tailscale_enable %}
-Network=container:traefik-tailscale
+{% if podman_user.traefik_tailscale_enable is defined and podman_user.traefik_tailscale_enable %}
+Network=container:tailscale-traefik
 {% else %}
 Network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true
+PublishPort=443:443/tcp
 {% endif %}
 
 

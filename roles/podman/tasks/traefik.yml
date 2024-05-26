@@ -61,7 +61,9 @@
     mode: '0600'
   become: true
   become_user: "{{ podman_user.name }}"
-  when: podman_user.tailscale_traefik_enable
+  when:
+    - podman_user.traefik_tailscale_enable is defined
+    - podman_user.traefik_tailscale_enable
 
 - name: systemctl --user daemon-reload
   ansible.builtin.systemd: daemon_reload=true scope=user
@@ -123,7 +125,9 @@
   ansible.builtin.systemd: name=tailscale-traefik.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
-  when: podman_user.tailscale_traefik_enable
+  when:
+    - podman_user.traefik_tailscale_enable is defined
+    - podman_user.traefik_tailscale_enable
 
 - name: Set firewall rules for https
   ansible.posix.firewalld:
