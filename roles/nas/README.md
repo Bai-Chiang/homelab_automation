@@ -2,10 +2,9 @@ NAS and file server related tasks for Arch Linux.
 
 [`raid.yml`](tasks/raid.yml) and [`samba.yml`](tasks/samba.yml) should also work on fedora.
 Since fedora uses SELinux samba share can only access files with `samba_share_t` context.
-[`samba.yml`] will re-label those directories,
+[`samba.yml`](tasks/samba.yml) will re-label those directories,
 but if the directory or its subdirectory is mounted to podman container its context will become `container_file_t` therefore samba won't have permission to access those directories.
 
-This role depends on [`roles/msmtp`](/roles/msmtp/).
 
 ## Tasks
 - RAID
@@ -15,10 +14,12 @@ This role depends on [`roles/msmtp`](/roles/msmtp/).
   - Enable `btrfs-scrub@.timer` to automatically scrub btrfs volumes.
   - Create [`btrfs_scrub_report.sh`](templates/btrfs_scrub_report.sh.j2) to send scrub result with an email.
     The email is configured with [`roles/msmtp`](/roles/msmtp/).
+  - This task depends on [`roles/msmtp`](/roles/msmtp/).
 - [S.M.A.R.T.](https://wiki.archlinux.org/title/S.M.A.R.T.) status
   - Create self-test schedule.
   - Create [`smartd_notify.sh`](templates/smartd_notify.sh.j2) allow smartd send email warnings.
     The email is configured with [`roles/msmtp`](/roles/msmtp/).
+  - This task depends on [`roles/msmtp`](/roles/msmtp/).
 - [NFS](https://wiki.archlinux.org/title/NFS) file server
   - Edit `/etc/fstab` and create bind mounts.
   - Edit `/etc/exports`.
