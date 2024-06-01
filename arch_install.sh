@@ -21,13 +21,13 @@ FS_PKGS="dosfstools btrfs-progs"
 
 ## server example
 #KERNEL_PKGS="linux-hardened"
-#BASE_PKGS="base sudo linux-firmware python efibootmgr iptables-nft"
+#BASE_PKGS="base sudo linux-firmware python iptables-nft"
 #FS_PKGS="dosfstools btrfs-progs"
 #OTHER_PKGS="vim"
 
 ## desktop example
 #KERNEL_PKGS="linux"
-#BASE_PKGS="base linux-firmware sudo python efibootmgr iptables-nft"
+#BASE_PKGS="base linux-firmware sudo python iptables-nft"
 #FS_PKGS="dosfstools e2fsprogs btrfs-progs"
 #OTHER_PKGS="man-db vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
