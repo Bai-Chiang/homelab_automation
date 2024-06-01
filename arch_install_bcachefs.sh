@@ -140,13 +140,13 @@ echo "
 # https://man.archlinux.org/man/efibootmgr.8
 ######################################################
 "
-efibootmgr
+efibootmgr --unicode
 efi_boot_id=" "
 while [[ -n $efi_boot_id ]]; do
     echo -e "\nDo you want to delete any boot entries?: "
     read -p "Enter boot number (empty to skip): " efi_boot_id
     if [[ -n $efi_boot_id ]] ; then
-        efibootmgr -b $efi_boot_id -B
+        efibootmgr --bootnum $efi_boot_id --delete-bootnum --unicode
     fi
 done
 
@@ -584,9 +584,9 @@ echo "Creating UEFI boot entries for each unified kernel image ..."
 for KERNEL in $KERNEL_PKGS
 do
     # Add $KERNEL to boot loader
-    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet
+    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet --unicode
     # Get new added boot entry BootXXXX*
-    bootnum=$(efibootmgr | awk "/\sArchLinux-$KERNEL\s/ { print \$1}")
+    bootnum=$(efibootmgr --unicode | awk "/\sArchLinux-$KERNEL\s/ { print \$1}")
     # Get the hex number
     bootnum=${bootnum:4:4}
     # Add bootnum to bootorder
@@ -597,23 +597,23 @@ do
     fi
 
     # Add $KERNEL-fallback to boot loader
-    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet
+    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet --unicode
     # Get new added boot entry BootXXXX*
-    bootnum=$(efibootmgr | awk "/\sArchLinux-$KERNEL-fallback\s/ { print \$1}")
+    bootnum=$(efibootmgr --unicode | awk "/\sArchLinux-$KERNEL-fallback\s/ { print \$1}")
     # Get the hex number
     bootnum=${bootnum:4:4}
     # Add bootnum to bootorder
     bootorder="$bootorder,$bootnum"
 done
-arch-chroot /mnt efibootmgr --quiet --bootorder ${bootorder}
+arch-chroot /mnt efibootmgr --bootorder ${bootorder} --quiet --unicode
 
 echo -e "\n\n"
-arch-chroot /mnt efibootmgr
+arch-chroot /mnt efibootmgr --unicode
 echo -e "\n\nDo you want to change boot order?: "
 read -p "Enter boot order (empty to skip): " boot_order
 if [[ -n $boot_order ]] ; then
     echo -e "\n"
-    arch-chroot /mnt efibootmgr --bootorder ${boot_order}
+    arch-chroot /mnt efibootmgr --bootorder ${boot_order} --unicode
     echo -e "\n"
 fi
 
