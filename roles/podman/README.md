@@ -68,6 +68,9 @@ podman_users:
 
     # Path to store letsencrypt container config
     letsencrypt_config_dir: "/path/to/container/config/letsencrypt"
+    # Also create `/path/to/container/config/letsencrypt/cloudlfare.ini` that
+    # contains single line:
+    # dns_cloudflare_api_token = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
     # Email address for letsencrypt expiration notification
     letsencrypt_email: "email@domain.com"
