@@ -13,9 +13,9 @@ ContainerName=traefik
 Image=docker.io/library/traefik:v2.10
 AutoUpdate=registry
 
-Volume={{ podman_user.traefik_config_dir }}/static_conf.yml:/etc/traefik/traefik.yml:Z
-Volume={{ podman_user.traefik_config_dir }}/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:Z
-Volume={{ podman_user.traefik_config_dir }}/ssl:/etc/traefik/ssl:Z
+Volume={{ podman_user.traefik_config_dir }}/static_conf.yml:/etc/traefik/traefik.yml:Z,ro
+Volume={{ podman_user.traefik_config_dir }}/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:Z,ro
+Volume={{ podman_user.traefik_config_dir }}/ssl:/etc/traefik/ssl:Z,ro
 
 {% if podman_user.traefik_tailscale_enable is defined and podman_user.traefik_tailscale_enable %}
 Network=container:tailscale-traefik
