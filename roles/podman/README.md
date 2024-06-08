@@ -20,6 +20,11 @@ TZ: "US/Eastern"
 # If the user does not exist it will create a new user.
 # Here containers are spread under different users as an example, you could
 # group them under few users.
+# To manage systemd services under different users add `-M username@` to `systemctl` command,
+# for example:
+#     sudo systemctl --user -M user1@ status xxxx.service
+# To view journal under different user with UID 1001
+#     sudo journalctl _UID=1001 _SYSTEMD_USER_UNIT=xxxx.service
 podman_users:
 
   # podman containers under user `tux`

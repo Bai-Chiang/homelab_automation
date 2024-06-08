@@ -1,0 +1,48 @@
+[Unit]
+Description=UniFi container
+Wants=unifi-db.service
+After=unifi-db.service
+Requires=unifi-db.service
+
+[Container]
+ContainerName=unifi
+Image=lscr.io/linuxserver/unifi-network-application:latest
+AutoUpdate=registry
+
+Volume={{ podman_user.unifi_config_dir }}:/config:Z
+
+HostName=unifi-network-application
+Network=container:unifi-db
+
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ={{ TZ }}
+
+UIDMap=1000:0:1
+UIDMap=0:1:1000
+UIDMap=1001:1001:64536
+
+{% if not unifi_database_dir.stat.exists %}
+Environment=MONGO_USER=unifi
+Environment=MONGO_PASS={{ podman_user.unifi_db_pass }}
+Environment=MONGO_HOST=localhost
+Environment=MONGO_PORT=27017
+Environment=MONGO_DBNAME=unifi
+{% endif %}
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+{% if not unifi_database_dir.stat.exists %}
+# Wait MongoDB initialization
+ExecStartPre=/usr/bin/sleep 5
+
+{% endif %}
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
