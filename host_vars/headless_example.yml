@@ -2,11 +2,6 @@
 # This file contains credentials, should be encrypted using ansible-vault
 
 ###############################################################################
-# Default firewalld zone. The arch_install.sh set default zone to drop.
-#firewalld_default_zone: drop
-
-
-###############################################################################
 #role/archlinux_common
 # Use Reflector automatically update mirror list.
 # https://wiki.archlinux.org/title/Reflector
@@ -14,7 +9,7 @@
 # reflector_country: France,Germany
 # will only use mirrors from France and Germany
 # To get all country names and codes, run
-# reflector --list-countries 
+# reflector --list-countries
 reflector_country: us
 
 
@@ -216,8 +211,6 @@ podman_users:
     # List of all containers running under this user.
     containers:
       - syncthing
-      - letsencrypt
-      - nextcloud
 
     # lscr.io/linuxserver/syncthing:latest
     syncthing_data_dirs:
@@ -231,50 +224,4 @@ podman_users:
 
     # Path to syncthing configs
     syncthing_config_dir: "/podman_configs/syncthing"
-
-
-    # docker.io/certbot/dns-cloudflare
-    letsencrypt_config_dir: "/podman_configs/letsencrypt"
-
-    # Letsencrypt email address for notification
-    letsencrypt_email: letsencrypt18443@mydomain.com
-
-    # get wildcard certificates for mydomain.com using cloudflare dns
-    # put cloudflare dns credential under /container_configs/letsencrypt/cloudflare.ini
-    letsencrypt_domains:
-      - '*.mydomain.com'
-
-    # nextcloud configs, data, and postgres directory
-    nextcloud_config_dir: "/podman_configs/nextcloud"
-    nextcloud_data_dir: "/home/tux/nextcloud"
-    postgres_config_dir: "/podman_configs/nextcloud-postgres"
-
-    # postgres db name, user, and password
-    db_name: nextcloud
-    db_user: nextcloud
-    db_password: !unsafe nextclouddbpassword
-
-
-  # Add user `caddy` to run caddy reverse proxy service
-  - name: caddy
-    uid: 1001
-    enable_lingering: true
-    podman_system_prune_timer: daily
-    containers:
-      - caddy
-
-    # docker.io/library/caddy:alpine
-    caddy_config_dir: "/podman_configs/caddy-config"
-    caddy_data_dir: "/podman_configs/caddy-data"
-    # Put Caddyfile under files/ directory. It will be copy to /home/caddy/Caddyfile
-
-    # letsencrypt condig directory specified previously
-    # copy-ssl.service will copy ssl cert from letsencrypt directory to caddy_data_dir.
-    # This way reverse proxy would run as seperate user, and it won't be able to access cloudflare credential.
-    letsencrypt_config_dir: "/podman_configs/letsencrypt"
-
-    # Firewall rule. Only allow tcp/443 from these ip addresses.
-    https_accept_source_ipv4:
-      - 192.168.122.1
-      - 192.168.123.0/24
 

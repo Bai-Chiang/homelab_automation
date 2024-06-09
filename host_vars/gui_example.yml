@@ -7,7 +7,7 @@
 # reflector_country: France,Germany
 # will only use mirrors from France and Germany
 # To get all country names and codes, run
-# reflector --list-countries 
+# reflector --list-countries
 reflector_country: us
 
 ###############################################################################
@@ -112,12 +112,6 @@ other_pkgs:
   - kitty
   - htop
   - pass
-  - neofetch
-
-  # ranger file manager
-  # python-pillow needed for preview images in kitty terminal
-  - ranger
-  - python-pillow
 
   # bluetooth
   - bluez
