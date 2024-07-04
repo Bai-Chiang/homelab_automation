@@ -6,7 +6,7 @@ Common [post-installation configuration](https://wiki.archlinux.org/title/User:B
 - Enable [reflector](https://wiki.archlinux.org/title/Reflector) to auto update pacman mirror list.
 - Enable [paccache](https://wiki.archlinux.org/title/Pacman#Cleaning_the_package_cache) to auto clean up pacman package cache.
 - Enable [Periodic TRIM](https://wiki.archlinux.org/title/Solid_state_drive#Periodic_TRIM) for SSD.
-- Enable [native build](https://wiki.archlinux.org/title/Makepkg#Building_optimized_binaries) and [parallel compilation](https://wiki.archlinux.org/title/Makepkg#Parallel_compilation) when building AUR packages.
+- Enable [native build](https://wiki.archlinux.org/title/Makepkg#Building_optimized_binaries) and [parallel compilation](https://wiki.archlinux.org/title/Makepkg#Parallel_compilation) and `-O3` optimization when building AUR packages.
 - Set up [snapper](https://wiki.archlinux.org/title/Snapper) for root partition if using btrfs.
 
 
