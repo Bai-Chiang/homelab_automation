@@ -1,7 +1,7 @@
 [Unit]
 Description=MongoDB for UniFi container
-Wants=unifi-network-application.service
-Before=unifi-network-application.service
+Wants=unifi.service
+Before=unifi.service
 
 [Container]
 ContainerName=unifi-db
