@@ -746,8 +746,8 @@ if [[ $allow_ping == y ]] ; then
     echo -e "\nallow ping source ip address (example 192.168.1.0/24) empty to allow all"
     read ping_source
     if [[ -n $ping_source ]] ; then
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="family='ipv4' source address='${ping_source}' icmp-type name='echo-request' accept"
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="family='ipv4' source address='${ping_source}' icmp-type name='echo-reply' accept"
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-request' accept"
+        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-reply' accept"
     else
         arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-request
         arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-reply
