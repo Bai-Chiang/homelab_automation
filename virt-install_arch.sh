@@ -2,6 +2,12 @@
 # Install an Arch Linux virtual machine with given name/domain.
 # No graphics only serial output.
 
+if [[ -z $1 ]] ; then
+    echo "ERROR, please provide VM name/domain."
+    echo "virt-install_arch.sh VM_name"
+    exit 1
+fi
+
 virt-install \
     --name "$1" \
     --memory 2048 \
