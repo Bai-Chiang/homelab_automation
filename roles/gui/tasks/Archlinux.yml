@@ -66,29 +66,36 @@
 
 - include_tasks: flatpak.yml
 
+- name: systemctl enable --now bluetooth.service
+  ansible.builtin.systemd: name=bluetooth.service enabled=true state=started
+  become: true
+  when: '"bluez" in other_pkgs or "bluez-utils" in other_pkgs'
+
+- name: Create paru clone directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.cache/paru/clone"
+    state: directory
+
+#- include_tasks: paru.yml
+#  when: paru_chroot
+
 - name: Create screenshots directories
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/screenshots"
     state: directory
   when: '"grim" in wm_pkgs'
 
-- name: Create Ranger image previews cache directory
+- name: Create Downloads directory
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.cache/ranger"
+    path: "{{ ansible_user_dir }}/Downloads"
     state: directory
-  when: '"ranger" in other_pkgs'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0700'
 
-- name: systemctl enable --now bluetooth.service
-  ansible.builtin.systemd: name=bluetooth.service enabled=true state=started
-  become: true
-  when: '"bluez" in other_pkgs or "bluez-utils" in other_pkgs'
-
-#- include_tasks: paru.yml
-#  when: paru_chroot
-
-- name: Create paru clone directory
-  ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.cache/paru/clone"
-    state: directory
-  #when: not paru_chroot
+#- name: Create Ranger image previews cache directory
+#  ansible.builtin.file:
+#    path: "{{ ansible_user_dir }}/.cache/ranger"
+#    state: directory
+#  when: '"ranger" in other_pkgs'
 
