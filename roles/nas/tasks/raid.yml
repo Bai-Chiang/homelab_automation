@@ -44,7 +44,7 @@
   ansible.builtin.lineinfile:
     path: /etc/fstab
     regexp: "^{{ item.device }}\\s+{{ item.mount_point }}\\s+"
-    line: "{{ item.device }}    {{ item.mount_point }}    {{ item.fs }}    {{ item.mount_opts }}    0 0 "
+    line: "{{ item.device }}    {{ item.mount_point }}    {{ item.fs }}    {{ item.mount_opts }}    0 0"
     state: present
   loop: "{{ fstab_entries }}"
   become: true
