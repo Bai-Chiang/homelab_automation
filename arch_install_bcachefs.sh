@@ -443,6 +443,11 @@ if [[ $zram == y ]] ; then
     echo "zram-size = $ZRAM_SIZE"       >> /mnt/etc/systemd/zram-generator.conf
     echo "compression-algorithm = zstd" >> /mnt/etc/systemd/zram-generator.conf
     echo "fs-type = swap"               >> /mnt/etc/systemd/zram-generator.conf
+
+    echo "vm.swappiness = 180"              > /mnt/etc/sysctl.d/99-vm-zram-parameters.conf
+    echo "vm.watermark_boost_factor = 0"   >> /mnt/etc/sysctl.d/99-vm-zram-parameters.conf
+    echo "vm.watermark_scale_factor = 125" >> /mnt/etc/sysctl.d/99-vm-zram-parameters.conf
+    echo "vm.page-cluster = 0"             >> /mnt/etc/sysctl.d/99-vm-zram-parameters.conf
 fi
 
 
