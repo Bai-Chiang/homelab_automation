@@ -37,19 +37,19 @@ ZRAM_SIZE='min(ram / 2, 4 * 1024)'
 # minimal example
 KERNEL_PKGS="linux"
 BASE_PKGS="base sudo linux-firmware iptables-nft python"
-FS_PKGS="dosfstools btrfs-progs"
+FS_PKGS="dosfstools bcachefs-tools"
 #KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 ## server example
 #KERNEL_PKGS="linux-hardened"
 #BASE_PKGS="base sudo linux-firmware python iptables-nft"
-#FS_PKGS="dosfstools btrfs-progs"
+#FS_PKGS="dosfstools bcachefs-tools"
 #OTHER_PKGS="vim"
 
 ## desktop example
 #KERNEL_PKGS="linux"
 #BASE_PKGS="base linux-firmware sudo python iptables-nft"
-#FS_PKGS="dosfstools e2fsprogs btrfs-progs"
+#FS_PKGS="dosfstools e2fsprogs bcachefs-tools"
 #OTHER_PKGS="man-db vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
 
