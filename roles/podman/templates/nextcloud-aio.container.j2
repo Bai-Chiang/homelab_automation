@@ -1,0 +1,48 @@
+[Unit]
+Description=Nextcloud AIO Master Container
+Documentation=https://github.com/nextcloud/all-in-one/blob/main/docker-rootless.md
+After=local-fs.target
+Requires=podman.socket
+
+[Container]
+ContainerName=nextcloud-aio-mastercontainer
+Image=docker.io/nextcloud/all-in-one:latest
+AutoUpdate=registry
+SecurityLabelDisable=true
+
+HostName=nextcloud-aio
+Network=bridge
+{% if podman_user.nextcloud_aio_port is defined %}
+PublishPort=127.0.0.1:{{ podman_user.nextcloud_aio_port }}:8080/tcp
+{% else %}
+PublishPort=127.0.0.1:11001:8080/tcp
+{% endif %}
+
+Volume=nextcloud_aio_mastercontainer:/mnt/docker-aio-config
+Volume=/run/user/{{ podman_user.uid }}/podman/podman.sock:/var/run/docker.sock:ro,Z
+
+
+Environment=APACHE_PORT=11000
+Environment=APACHE_IP_BINDING=0.0.0.0
+Environment=WATCHTOWER_DOCKER_SOCKET_PATH=/run/user/{{ podman_user.uid }}/podman/podman.sock
+{% if podman_user.nextcloud_skip_domain_validation is defined and podman_user.nextcloud_skip_domain_validation %}
+Environment=SKIP_DOMAIN_VALIDATION=true
+{% endif %}
+{% if podman_user.nextcloud_backup_retention is defined %}
+Environment=BORG_RETENTION_POLICY="{{ podman_user.nextcloud_backup_retention }}"
+{% endif %}
+{% if podman_user.nextcloud_memory_limit is defined %}
+Environment=NEXTCLOUD_MEMORY_LIMIT={{ podman_user.nextcloud_memory_limit }}
+{% endif %}
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

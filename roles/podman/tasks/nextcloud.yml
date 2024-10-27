@@ -1,0 +1,32 @@
+---
+- name: nextcloud-aio.container
+  ansible.builtin.template:
+    src: nextcloud-aio.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/nextcloud-aio.container"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+
+- name: nextcloud-aio-mastercontainer.volume
+  ansible.builtin.copy:
+    content: |
+      [Volume]
+      VolumeName=nextcloud_aio_mastercontainer
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/nextcloud-aio-mastercontainer.volume"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+#- name: systemctl --user enable --now nextcloud-aio.service
+#  ansible.builtin.systemd: name=nextcloud-aio.service state=started enabled=true scope=user
+#  become: true
+#  become_user: "{{ podman_user.name }}"
+#  ignore_errors: "{{ ansible_check_mode }}"
+

@@ -11,6 +11,8 @@ This role should works on Arch Linux and Fedora.
 
 
 ## Variables and examples
+
+### Syncthing
 ```yaml
 # Time zone, used in LinuxServer.io images
 TZ: "US/Eastern"
@@ -27,7 +29,7 @@ TZ: "US/Eastern"
 #     sudo journalctl _UID=1001 _SYSTEMD_USER_UNIT=xxxx.service
 podman_users:
 
-  # podman containers under user `tux`
+  # Run Syncthing under user `tux`
   - name: tux
 
     # UID of the user
@@ -51,96 +53,19 @@ podman_users:
     syncthing_data_dirs:
       - { src: /path/on/host/machine, dest: /path/in/container }
       - { src: /another/path/on/host, dest: /another/path/in/container }
+```
 
+### Linux ISOs
+```yaml
+# Time zone, used in LinuxServer.io images
+TZ: "US/Eastern"
 
-  # podman containers under user `tux1` for generate letsencrypt certificates
-  # with cloudflare DNS challenge
+podman_users:
   - name: tux1
-
-    # UID of the user
     uid: 10001
-
-    # Enable lingering or not
     enable_lingering: true
-
-    # How often to clean up old podman images/containers.
-    # This is the OnCalendar= option in podman-system-prune.timer
     podman_system_prune_timer: daily
 
-    # List of containers that will run under user `tux1`
-    containers:
-      - letsencrypt
-
-    # Path to store letsencrypt container config
-    letsencrypt_config_dir: "/path/to/container/config/letsencrypt"
-    # Also create `/path/to/container/config/letsencrypt/cloudlfare.ini` that
-    # contains single line:
-    # dns_cloudflare_api_token = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-    # Email address for letsencrypt expiration notification
-    letsencrypt_email: "email@domain.com"
-
-    # Domains contained in letsencrypt certification
-    letsencrypt_domains:
-      - '*.mydomain.example'
-
-
-  # podman containers under user `tux2` for reverse proxy
-  - name: tux2
-
-    # UID of the user
-    uid: 10002
-
-    # Enable lingering or not
-    enable_lingering: true
-
-    # How often to clean up old podman images/containers.
-    # This is the OnCalendar= option in podman-system-prune.timer
-    podman_system_prune_timer: daily
-
-    # List of containers that will run under user `tux2`
-    containers:
-      - traefik
-
-    # Path to store traefik container config
-    traefik_config_dir: "/path/to/container/config/traefik"
-
-    # traefik static config file
-    # see example at the end
-    traefik_static_config: "files/traefik_static_config.yml"
-
-    # traefik dynamic config file
-    # see example at the end
-    traefik_dynamic_config: "files/traefik_dynamic_config.yml"
-
-    # Path to store letsencrypt container config
-    # If letsencrypt and traefik running as different users, traefik won't be
-    # able to access letsencrypt certificates, with advantage being traefik
-    # also won't have access to your DNS token.
-    # To accommodate this we create a copy-ssl.service running as root and
-    # only copy generated certificates to `{{ traefik_config_dir }}`.
-    letsencrypt_config_dir: "/path/to/container/config/letsencrypt"
-
-    # firewall rules only allow connection from these ipv4 address
-    https_accept_source_ipv4:
-      - 192.168.1.0/24
-      - 192.168.2.1
-
-
-  # podman containers under user `tux2` for seeding Linux ISOs.
-  - name: tux3
-
-    # UID of the user
-    uid: 10003
-
-    # Enable lingering or not
-    enable_lingering: true
-
-    # How often to clean up old podman images/containers.
-    # This is the OnCalendar= option in podman-system-prune.timer
-    podman_system_prune_timer: daily
-
-    # List of containers that will run under user `tux3`
     containers:
       - gluetun
       - transmission
@@ -190,6 +115,95 @@ podman_users:
 ```
 
 
+### Nextcloud AIO, traefik2 reverse proxy and Letsencrypt running as different users
+
+```yaml
+podman_users:
+
+  # Generate letsencrypt certificates under user `tux2` with cloudflare DNS challenge.
+  # This way other user can't access your DNS token.
+  - name: tux2
+    uid: 10002
+    enable_lingering: true
+    podman_system_prune_timer: daily
+
+    containers:
+      - letsencrypt
+
+    # Path to store letsencrypt container config
+    letsencrypt_config_dir: "/path/to/container/config/letsencrypt"
+    # Also create `/path/to/container/config/letsencrypt/cloudlfare.ini` that
+    # contains single line:
+    # dns_cloudflare_api_token = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    # Email address for letsencrypt expiration notification
+    letsencrypt_email: "email@domain.com"
+
+    # Domains contained in letsencrypt certification
+    letsencrypt_domains:
+      - '*.mydomain.example'
+
+
+  # Reverse proxy runs under user `tux3`
+  - name: tux3
+    uid: 10003
+    enable_lingering: true
+    podman_system_prune_timer: daily
+
+    containers:
+      - traefik
+
+    # Path to store traefik container config
+    traefik_config_dir: "/path/to/container/config/traefik"
+
+    # traefik static config file
+    # see example at the end
+    traefik_static_config: "files/traefik_static_config.yml"
+
+    # traefik dynamic config file
+    # see example at the end
+    traefik_dynamic_config: "files/traefik_dynamic_config.yml"
+
+    # Path to store letsencrypt container config
+    # If letsencrypt and traefik running as different users, traefik won't be
+    # able to access letsencrypt certificates, with advantage being traefik
+    # also won't have access to your DNS token.
+    # To accommodate this we create a copy-ssl.service running as root and
+    # only copy generated certificates to `{{ traefik_config_dir }}`.
+    letsencrypt_config_dir: "/path/to/container/config/letsencrypt"
+
+    # firewall rules only allow connection from these ipv4 address
+    https_accept_source_ipv4:
+      - 192.168.1.0/24
+      - 192.168.2.1
+
+
+  # Nextcloud AIO runs under user `tux4`
+  - name: tux4
+    uid: 10004
+    enable_lingering: true
+    podman_system_prune_timer: daily
+
+    containers:
+      - nextcloud
+
+    # The Nextcloud AIO web admin port
+    nextcloud_aio_port: 11001
+
+    # Some optional environment variables pass to nextcloud-aio-mastercontainer
+    # https://github.com/nextcloud/all-in-one/blob/main/compose.yaml
+
+    # SKIP_DOMAIN_VALIDATION
+    nextcloud_skip_domain_validation: true
+
+    # BORG_RETENTION_POLICY
+    nextcloud_backup_retention: "--keep-within=7d --keep-weekly=4 --keep-monthly=0"
+
+    # NEXTCLOUD_MEMORY_LIMIT
+    nextcloud_memory_limit: 1024M
+```
+
+
 Traefik static configuration file example
 ```yaml
 providers:
@@ -222,13 +236,14 @@ Traefik dynamic configuration file example
 http:
 
   routers:
-    syncthing:
+    nextcloud:
       entryPoints:
         - https
-      rule: "Host(`syncthing.mydomain.example`)"
-      service: syncthing
+      rule: "Host(`nextcloud.mydomain.example`)"
+      service: nextcloud
       middlewares:
         - secureHeader
+        - nextcloud-redirectregex
       tls:
         options: default
         domains:
@@ -237,11 +252,11 @@ http:
               - "*.mydomain.example"
 
   services:
-    syncthing:
+    nextcloud:
       loadBalancer:
         passHostHeader: true
         servers:
-          - url: "http://10.0.2.2:8384"
+          - url: "http://10.0.2.2:11000"
 
   middlewares:
     secureHeader:
@@ -249,12 +264,18 @@ http:
         stsSeconds: 15552000
         stsIncludeSubdomains: true
         forceSTSHeader: true
-        frameDeny: true
+        customFrameOptionsValue: "SAMEORIGIN"
         contentTypeNosniff: true
         browserXssFilter: true
-        referrerPolicy: "no-referrer"
+        referrerPolicy: "strict-origin"
         customResponseHeaders:
           X-Robots-Tag: "noindex,nofollow,nosnippet,noarchive,notranslate,noimageindex"
+
+    nextcloud-redirectregex:
+      redirectRegex:
+        permanent: true
+        regex: "https://(.*)/.well-known/(?:card|cal)dav"
+        replacement: "https://${1}/remote.php/dav"
 
 
 tls:
