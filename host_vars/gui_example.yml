@@ -63,6 +63,7 @@ wm_pkgs:
   - wl-clipboard
   - swaylock
   - swayidle
+  - swaybg
   - fuzzel
   # grim and slurp for screenshoot
   - grim
@@ -70,9 +71,8 @@ wm_pkgs:
 
   # KDE
   - plasma-meta
-  - plasma-wayland-session
   - sddm
-  - phonon-qt5-vlc
+  - phonon-qt6-vlc
 
   # gnome
   - gnome-shell
