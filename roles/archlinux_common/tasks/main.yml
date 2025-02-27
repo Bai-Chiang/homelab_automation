@@ -35,16 +35,19 @@
     insertafter: '^#\s*--country'
   become: true
   when: ansible_architecture == 'x86_64'
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl enable reflector.service
   ansible.builtin.systemd: name=reflector enabled=true
   become: true
   when: ansible_architecture == 'x86_64'
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl enable --now reflector.timer
   ansible.builtin.systemd: name=reflector.timer enabled=true state=started
   become: true
   when: ansible_architecture == 'x86_64'
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: pacman -S pacman-contrib for paccache
   community.general.pacman: name=pacman-contrib state=present
@@ -53,6 +56,7 @@
 - name: systemctl enable --now paccache.timer
   ansible.builtin.systemd: name=paccache.timer enabled=true state=started
   become: true
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl enable --now fstrim.timer
   ansible.builtin.systemd: name=fstrim.timer enabled=true state=started
