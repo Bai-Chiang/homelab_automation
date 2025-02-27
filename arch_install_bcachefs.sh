@@ -6,21 +6,23 @@
 #
 # Current only single drive and non-encryption works, like this
 BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
-#
-# All following examples does not work yet.
-#
+
 # Single drive with compression and encryption
 #BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted"
-#
+
 # multiple drives setup
 # You need to specify --replicas or --data_replicas and --metadata_replicas for the script to work, otherwise it will assume single drive setup.
-#
+
 # RAID 0
 #BCACHEFS_FORMAT_OPTS="--data_replicas=1 --metadata_replicas=2"
-#
+
 # RAID 1 and tiered storage
 # Drives and --label arguments will be asked later in the script.
 #BCACHEFS_FORMAT_OPTS="--replicas=2 --foreground_target=ssd --promote_target=ssd --metadata_target=ssd --background_target=hdd"
+
+# Complicated options with pre-partitioned disks
+# Need to specify --label= options
+#BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted --data_replicas=2 --metadata_replicas=2 --metadata_target=ssd --foreground_target=ssd --promote_target=ssd --background_target=hdd --label=hdd.hdd1 /dev/sdc --label=hdd.hdd2 /dev/sdd --durability=2 --discard --label=ssd.ssd1 /dev/sda2"
 
 UCODE_PKG="amd-ucode"
 
@@ -29,7 +31,7 @@ UCODE_PKG="amd-ucode"
 LANG='en_US.UTF-8'
 KEYMAP='us'
 # https://wiki.archlinux.org/title/Time_zone
-TIMEZONE="US/Eastern"
+TIMEZONE="UTC"
 
 # zram-size option in zram-generator.conf if enabled zram.
 ZRAM_SIZE='min(ram / 2, 4 * 1024)'
@@ -161,7 +163,12 @@ umount -R /mnt &> /dev/null
 swapoff --all
 devices=$(lsblk --nodeps --paths --list --noheadings --sort=size --output=name,size,model | grep --invert-match "loop" | cat --number)
 
-device_id=" "
+if [[ $BCACHEFS_FORMAT_OPTS == *"--label="* ]] ; then
+    # If --label= is specified skip disk partition.
+    device_id=""
+else
+    device_id=" "
+fi
 while [[ -n $device_id ]]; do
     echo -e "Choose device to format:"
     echo "$devices"
@@ -182,41 +189,43 @@ efi_part=$(echo "$partitions" | awk "\$1 == $efi_id { print \$2}")
 
 
 # root partition
-if [[ $BCACHEFS_FORMAT_OPTS != *"replicas="* ]] ; then
-    # Single drive
-    echo -e "\n\nTell me the root partition number:"
-    echo "$partitions"
-    read -p "Enter a number: " root_id
-    root_part=$(echo "$partitions" | awk "\$1 == $root_id { print \$2}")
-    bcachefs_format_opts="$BCACHEFS_FORMAT_OPTS $root_part"
-    root_devices="$root_part"
-else
-    # Multiple drives
+if [[ $BCACHEFS_FORMAT_OPTS == *"--label="* ]] ; then
+    # --label= and disks included in $BCACHEFS_FORMAT_OPTS, only ask root devices
     bcachefs_format_opts="$BCACHEFS_FORMAT_OPTS"
-    root_devices=''
-    echo -e "\n\nSet up bcachefs with multiple drives. Please add root partitions one a time."
-    root_id=" "
-    while [[ -n $root_id ]]; do
-        echo -e "\nTell me one root partition number:"
+    echo -e "\nTell me one root partition number (to get UUID later):"
+    echo "$partitions"
+    read -p "Enter a number (empty to skip): " root_id
+    root_part=$(echo "$partitions" | awk "\$1 == $root_id { print \$2}")
+else
+    if [[ $BCACHEFS_FORMAT_OPTS != *"replicas="* ]] ; then
+        # Single drive
+        echo -e "\n\nTell me the root partition number:"
         echo "$partitions"
-        read -p "Enter a number (empty to skip): " root_id
-        if [[ -n $root_id ]] ; then
-            root_part=$(echo "$partitions" | awk "\$1 == $root_id { print \$2}")
-            if [[ -z $root_devices ]] ; then
-                root_devices="$root_part"
-            else
-                root_devices="$root_devices:$root_part"
+        read -p "Enter a number: " root_id
+        root_part=$(echo "$partitions" | awk "\$1 == $root_id { print \$2}")
+        bcachefs_format_opts="$BCACHEFS_FORMAT_OPTS $root_part"
+    else
+        # Multiple drives
+        bcachefs_format_opts="$BCACHEFS_FORMAT_OPTS"
+        echo -e "\n\nSet up bcachefs with multiple drives. Please add root partitions one a time."
+        root_id=" "
+        while [[ -n $root_id ]]; do
+            echo -e "\nTell me one root partition number:"
+            echo "$partitions"
+            read -p "Enter a number (empty to skip): " root_id
+            if [[ -n $root_id ]] ; then
+                root_part=$(echo "$partitions" | awk "\$1 == $root_id { print \$2}")
+                if [[ $BCACHEFS_FORMAT_OPTS == *"--promote_target="* || $BCACHEFS_FORMAT_OPTS == *"--foreground_target="* || $BCACHEFS_FORMAT_OPTS == *"--background_target="* || $BCACHEFS_FORMAT_OPTS == *"--metadata_target="* ]] ; then
+                    # Tired storage
+                    echo -e "\nTell me its disk label for example ssd.ssd1"
+                    read -p "Enter a its label (empty to skip): " disk_label
+                    bcachefs_format_opts="$bcachefs_format_opts --label=$disk_label $root_part"
+                else
+                    bcachefs_format_opts="$bcachefs_format_opts $root_part"
+                fi
             fi
-            if [[ $BCACHEFS_FORMAT_OPTS == *"--promote_target="* || $BCACHEFS_FORMAT_OPTS == *"--foreground_target="* || $BCACHEFS_FORMAT_OPTS == *"--background_target="* || $BCACHEFS_FORMAT_OPTS == *"--metadata_target="* ]] ; then
-                # Tired storage
-                echo -e "\nTell me its disk label for example ssd.ssd1"
-                read -p "Enter a its label: " disk_label
-                bcachefs_format_opts="$bcachefs_format_opts --label=$disk_label $root_part"
-            else
-                bcachefs_format_opts="$bcachefs_format_opts $root_part"
-            fi
-        fi
-    done
+        done
+    fi
 fi
 
 
@@ -250,6 +259,12 @@ mkfs.fat -n boot -F 32 "$efi_part"
 echo -e "\nFormatting root partition ..."
 echo "Running command: bcachefs format --fs_label=ArchLinux $bcachefs_format_opts"
 bcachefs format --fs_label=ArchLinux $bcachefs_format_opts
+# reload partition table
+partprobe &> /dev/null
+# wait for partition table update
+sleep 1
+root_uuid=$(lsblk -dno UUID $root_part)
+
 
 # swap partition
 if [[ -n $swap_id ]] ; then
@@ -262,7 +277,7 @@ fi
 
 # mount all partitions
 echo -e "\nMounting all partitions ..."
-mount -t bcachefs "$root_devices" /mnt
+mount.bcachefs UUID=$root_uuid /mnt
 mkdir /mnt/efi
 mount "$efi_part" /mnt/efi
 if [[ -n $swap_id ]] ; then
@@ -410,15 +425,9 @@ if [[ -n $swap_id ]] ; then
     sed -i "/swap/ s:^UUID=[a-zA-Z0-9-]*\s:/dev/mapper/cryptswap  :" /mnt/etc/fstab
 fi
 
-# reload partition table
-partprobe &> /dev/null
-# wait for partition table update
-sleep 1
-root_uuid=$(lsblk -dno UUID $root_part)
-
 # modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
 # https://wiki.archlinux.org/title/PC_speaker#Globally
-kernel_cmd="root=UUID=$root_uuid modprobe.blacklist=pcspkr $KERNEL_PARAMETERS"
+kernel_cmd="root=UUID=$root_uuid rw modprobe.blacklist=pcspkr $KERNEL_PARAMETERS"
 
 
 echo "
