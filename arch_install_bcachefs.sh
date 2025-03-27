@@ -22,7 +22,7 @@ BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
 
 # Complicated options with pre-partitioned disks
 # Need to specify --label= options
-#BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted --data_replicas=2 --metadata_replicas=2 --metadata_target=ssd --foreground_target=ssd --promote_target=ssd --background_target=hdd --label=hdd.hdd1 /dev/sdc --label=hdd.hdd2 /dev/sdd --durability=2 --discard --label=ssd.ssd1 /dev/sda2"
+#BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted --data_replicas=2 --metadata_replicas=2 --metadata_target=ssd --foreground_target=ssd --promote_target=ssd --background_target=hdd --label=hdd.hdd0 /dev/sdb --label=hdd.hdd1 /dev/sdc --durability=2 --discard --label=ssd.ssd0 /dev/sda2"
 
 UCODE_PKG="amd-ucode"
 
@@ -83,7 +83,7 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Verify_the_boot_mode
 ######################################################
 "
-if [[ -e /sys/firmware/efi/efivars ]] ; then
+if [[ -e /sys/firmware/efi/fw_platform_size ]] ; then
     echo "UEFI mode OK."
 else
     echo "System not booted in UEFI mode!"
@@ -98,7 +98,7 @@ secure_boot="${secure_boot,,}"
 if [[ $secure_boot == y ]] ; then
     # bootctl status output should have
     # Secure Boot: disabled (setup)
-    setup_mode=$(bootctl status | grep -E "Secure Boot.*setup" | wc -l)
+    setup_mode=$(bootctl status 2>&1 | grep -E "Secure Boot.*setup" | wc -l)
     if [[ $setup_mode -ne 1 ]] ; then
         echo "The firmware is not in the setup mode. Please check BIOS."
         read -p "Continue without secure boot? [y/N] " keep_going
