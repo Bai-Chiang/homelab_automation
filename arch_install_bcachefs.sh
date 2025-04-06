@@ -698,7 +698,7 @@ if [[ $enable_ssh == y ]] ; then
     fi
 fi
 echo -e "\n"
-read -p "Allow ICMP echo-request and echo-reply (respond ping)? [Y/n] "
+read -p "Allow ICMP echo-request and echo-reply (respond ping)? [Y/n] " allow_ping
 allow_ping="${allow_ping:-y}"
 allow_ping="${allow_ping,,}"
 if [[ $allow_ping == y ]] ; then
