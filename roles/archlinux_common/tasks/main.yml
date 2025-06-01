@@ -76,8 +76,16 @@
     insertafter: "{{ item.insertafter }}"
   loop:
     - { regexp: '^(CFLAGS=.*-march=).*( -pipe.*)', line: '\1native -O3\2', backrefs: true, insertafter: '' }
-    - { regexp: '^RUSTFLAGS=', line: 'RUSTFLAGS="-C opt-level=3 -C target-cpu=native"', backrefs: false, insertafter: '^#RUSTFLAGS=' }
     - { regexp: '^MAKEFLAGS=', line: 'MAKEFLAGS="-j$(nproc)"', backrefs: false, insertafter: '^#MAKEFLAGS=' }
+  become: true
+
+- name: Optimize AUR building RUSTFLAGS
+  ansible.builtin.lineinfile:
+    path: /etc/makepkg.conf.d/rust.conf
+    regexp: '^(RUSTFLAGS=").*(-Cforce-frame-pointers=yes.*)'
+    line: '\1-C opt-level=3 -C target-cpu=native \2'
+    backrefs: true
+    insertafter: '^#RUSTFLAGS='
   become: true
 
 - name: Get file system type of /
