@@ -117,6 +117,9 @@ Set up NFS when `{{ nfs_mount_point }}` is defined.
 # The root directory for NFSv4
 nfs_root: /srv/nfs
 
+# NFS root export options
+nfs_root_ip_opt: '192.168.122.1(rw,sync,nocrossmnt,fsid=0)'
+
 # NFS mount points
 nfs_mount_point:
 
