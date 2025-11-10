@@ -15,3 +15,8 @@
   ansible.builtin.command: mv /etc/network/interfaces /etc/network/interfaces.save
   become: true
   when: ansible_distribution == "Debian" and network_interfaces.stat.exists
+
+- name: systemctl disable NetworkManager
+  ansible.builtin.systemd: name=NetworkManager enabled=false
+  become: true
+
