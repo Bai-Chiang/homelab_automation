@@ -25,7 +25,7 @@
 - name: pacman -S reflector
   community.general.pacman: name=reflector state=present
   become: true
-  when: ansible_architecture == 'x86_64'
+  when: ansible_facts["architecture"] == 'x86_64'
 
 - name: Configure reflector
   ansible.builtin.lineinfile:
@@ -34,19 +34,19 @@
     line: "--country {{ reflector_country }}"
     insertafter: '^#\s*--country'
   become: true
-  when: ansible_architecture == 'x86_64'
+  when: ansible_facts["architecture"] == 'x86_64'
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl enable reflector.service
   ansible.builtin.systemd: name=reflector enabled=true
   become: true
-  when: ansible_architecture == 'x86_64'
+  when: ansible_facts["architecture"] == 'x86_64'
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl enable --now reflector.timer
   ansible.builtin.systemd: name=reflector.timer enabled=true state=started
   become: true
-  when: ansible_architecture == 'x86_64'
+  when: ansible_facts["architecture"] == 'x86_64'
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: pacman -S pacman-contrib for paccache
@@ -65,7 +65,7 @@
 - name: systemctl enable --now restorecond.service (SELinux)
   ansible.builtin.systemd: name=restorecond.service enabled=true state=started
   become: true
-  when: ansible_selinux.status == "enabled"
+  when: ansible_facts["selinux"]["status"] == "enabled"
 
 - name: Optimize AUR building CFLAGS
   ansible.builtin.lineinfile:

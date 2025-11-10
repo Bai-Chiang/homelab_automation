@@ -42,7 +42,7 @@
 
 - name: Add user to libvirt group (non systemd-homed)
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     groups: libvirt
     append: true
   become: true
@@ -50,9 +50,9 @@
 
 - name: Add user to libvirt group (systemd-homed)
   community.general.homectl:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     password: "{{ ansible_become_password }}"
-    memberof: "{{ ansible_user_id }},wheel,libvirt"
+    memberof: "{{ ansible_facts.user_id }},wheel,libvirt"
   become: true
   when: homed
 

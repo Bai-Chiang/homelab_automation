@@ -2,12 +2,12 @@
 - name: pacman -S samba
   community.general.pacman: name=samba state=present
   become: true
-  when: ansible_distribution == "Archlinux"
+  when: ansible_facts["distribution"] == "Archlinux"
 
 - name: dnf install samba
   ansible.builtin.dnf: name=samba state=present
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 - name: Create /etc/samba/smb.conf
   ansible.builtin.template:
@@ -62,7 +62,7 @@
     shell: "/usr/bin/nologin"
   become: true
   when:
-    - item.name != ansible_user_id
+    - item.name != ansible_facts["user_id"]
     - item.name != "root"
   loop: "{{ smb_users }}"
 
@@ -112,7 +112,7 @@
 - name: dnf install policycoreutils-python-utils
   ansible.builtin.dnf: name=policycoreutils-python-utils state=present
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 - name: Set SELinux file context to shared directories
   community.general.sefcontext:
@@ -120,7 +120,7 @@
     setype: samba_share_t
     state: present
   become: true
-  when: ansible_selinux.status == "enabled"
+  when: ansible_facts["selinux"]["status"] == "enabled"
   loop: "{{ smb_share }}"
   register: samba_share_sefcontext
 
@@ -128,7 +128,7 @@
   ansible.builtin.command: "restorecon -R {{ item.path }}"
   become: true
   when:
-    - ansible_selinux.status == "enabled"
+    - ansible_facts["selinux"]["status"] == "enabled"
     - samba_share_sefcontext.changed
   loop: "{{ smb_share }}"
 

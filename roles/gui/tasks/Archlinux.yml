@@ -1,6 +1,6 @@
 ---
 - name: Get file system type of ~/
-  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
+  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_facts.user_dir }}"
   register: home_fstype
   changed_when: false
   check_mode: false
@@ -19,14 +19,14 @@
 
 - name: change shell (non systemd-homed)
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     shell: "{{ default_shell }}"
   become: true
   when: not homed
 
 - name: change shell (systemd-homed)
   community.general.homectl:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     password: "{{ ansible_become_password }}"
     shell: "{{ default_shell }}"
   become: true
@@ -79,7 +79,7 @@
 
 - name: Create paru clone directory
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.cache/paru/clone"
+    path: "{{ ansible_facts.user_dir }}/.cache/paru/clone"
     state: directory
 
 #- include_tasks: paru.yml
@@ -87,15 +87,15 @@
 
 - name: Create screenshots directories
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/screenshots"
+    path: "{{ ansible_facts.user_dir }}/screenshots"
     state: directory
   when: '"grim" in wm_pkgs'
 
 - name: Create Downloads directory
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/Downloads"
+    path: "{{ ansible_facts.user_dir }}/Downloads"
     state: directory
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_facts.user_id }}"
+    group: "{{ ansible_facts.user_id }}"
     #mode: '0700'
 

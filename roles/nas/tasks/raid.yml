@@ -3,7 +3,7 @@
   ansible.builtin.dnf: name=cryptsetup state=present
   become: true
   when:
-    - ansible_distribution == "Fedora"
+    - ansible_facts["distribution"] == "Fedora"
     - crypttab_entries is defined
 
 - name: Create /etc/crypttab file
@@ -17,7 +17,7 @@
     access_time: preserve
   become: true
   when:
-    - ansible_distribution == "Fedora"
+    - ansible_facts["distribution"] == "Fedora"
     - crypttab_entries is defined
 
 - name: Edit /etc/crypttab

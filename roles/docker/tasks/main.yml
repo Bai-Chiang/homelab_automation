@@ -1,5 +1,5 @@
 ---
-- include_tasks: "{{ ansible_distribution }}_install.yml"
+- include_tasks: "{{ ansible_facts.distribution }}_install.yml"
 
 - import_tasks: docker_compose.yml
 

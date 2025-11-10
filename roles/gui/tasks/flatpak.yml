@@ -2,12 +2,12 @@
 - name: pacman -S flatpak
   community.general.pacman: name=flatpak state=present
   become: true
-  when: ansible_distribution == "Archlinux"
+  when: ansible_facts["distribution"] == "Archlinux"
 
 - name: dnf install flatpak
   ansible.builtin.dnf: name=flatpak state=present
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 - name: Add flathub repo
   community.general.flatpak_remote:
@@ -27,18 +27,18 @@
 
 - name: setup systemd user directory
   ansible.builtin.file:
-    path: "/home/{{ ansible_user_id }}/.config/systemd/user"
+    path: "/home/{{ ansible_facts.user_id }}/.config/systemd/user"
     state: directory
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    owner: "{{ ansible_facts.user_id }}"
+    group: "{{ ansible_facts.user_id }}"
     mode: '0700'
 
 - name: flatpak-update.service
   ansible.builtin.copy:
     src: "{{ item }}"
-    dest: "/home/{{ ansible_user_id }}/.config/systemd/user/{{ item }}"
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+    dest: "/home/{{ ansible_facts.user_id }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ansible_facts.user_id }}"
+    group: "{{ ansible_facts.user_id }}"
     mode: '0600'
   loop:
     - flatpak-update.service

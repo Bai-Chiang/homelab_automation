@@ -19,18 +19,18 @@
 
 - name: Check ~/.ssh/authorized_keys exists or not
   ansible.builtin.stat:
-    path: "{{ ansible_user_dir }}/.ssh/authorized_keys"
+    path: "{{ ansible_facts.user_dir }}/.ssh/authorized_keys"
   register: ssh_authorized_keys_file
 
 - name: Get all public keys in ~/.ssh/authorized_keys
-  ansible.builtin.shell: "cat {{ ansible_user_dir }}/.ssh/authorized_keys"
+  ansible.builtin.shell: "cat {{ ansible_facts.user_dir }}/.ssh/authorized_keys"
   changed_when: false
   register: ssh_authorized_keys
   when: ssh_authorized_keys_file.stat.exists
 
 - name: Enroll authorized public keys if file exist with homectl
   community.general.homectl:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     password: "{{ ansible_become_password }}"
     sshkeys: "{{ ssh_authorized_keys.stdout }}"
   become: true

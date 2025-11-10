@@ -2,12 +2,12 @@
 - name: pacman -S git
   community.general.pacman: name=git state=present
   become: true
-  when: ansible_distribution == "Archlinux"
+  when: ansible_facts["distribution"] == "Archlinux"
 
 - name: dnf install git
   ansible.builtin.dnf: name=git state=present
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 - name: Restore dotfiles
   ansible.builtin.shell: |
@@ -21,13 +21,13 @@
     dotfiles checkout
     dotfiles config --local status.showUntrackedFiles no
   args:
-    chdir: "{{ ansible_user_dir }}"
+    chdir: "{{ ansible_facts.user_dir }}"
     executable: /usr/bin/bash
-    creates: "{{ ansible_user_dir }}/.dotfiles/config"
+    creates: "{{ ansible_facts.user_dir }}/.dotfiles/config"
 
 - name: Set ssh connection in .dotfiles/config
   ansible.builtin.lineinfile:
-    path: "{{ ansible_user_dir }}/.dotfiles/config"
+    path: "{{ ansible_facts.user_dir }}/.dotfiles/config"
     regexp: '^\surl ='
     insertafter: '^\[remote'
     line: "\turl = {{ dotfiles_repo.ssh }}"
@@ -35,4 +35,4 @@
 - name: pacman -S openssh
   community.general.pacman: name=openssh state=present
   become: true
-  when: ansible_distribution == "Archlinux"
+  when: ansible_facts["distribution"] == "Archlinux"

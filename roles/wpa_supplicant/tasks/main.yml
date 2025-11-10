@@ -1,5 +1,5 @@
 ---
-- include_tasks: "{{ ansible_distribution }}_prepare.yml"
+- include_tasks: "{{ ansible_facts.distribution }}_prepare.yml"
 
 - name: Copy wpa_supplicant configs
   ansible.builtin.copy:

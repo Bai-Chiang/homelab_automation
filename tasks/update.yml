@@ -4,19 +4,19 @@
     update_cache: true
     upgrade: true
   become: true
-  when: ansible_distribution == "Archlinux"
+  when: ansible_facts["distribution"] == "Archlinux"
 
 - name: dnf update
   ansible.builtin.dnf:
     name: "*"
     state: latest
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 - name: apt update && apt dist-upgrade
   ansible.builtin.apt:
     update_cache: true
     upgrade: dist
   become: true
-  when: ansible_distribution == "Debian"
+  when: ansible_facts["distribution"] == "Debian"
 

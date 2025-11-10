@@ -5,7 +5,7 @@
 
 - name: change shell
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     shell: "{{ default_shell }}"
   become: true
 
@@ -42,12 +42,12 @@
 
 - name: Create screenshots directories
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/screenshots"
+    path: "{{ ansible_facts.user_dir }}/screenshots"
     state: directory
   when: '"grim" in wm_pkgs'
 
 - name: Create Ranger image previews cache directory
   ansible.builtin.file:
-    path: "{{ ansible_user_dir }}/.cache/ranger"
+    path: "{{ ansible_facts.user_dir }}/.cache/ranger"
     state: directory
   when: '"ranger" in other_pkgs'

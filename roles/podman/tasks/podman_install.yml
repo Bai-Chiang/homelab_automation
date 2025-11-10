@@ -6,33 +6,33 @@
       - aardvark-dns
     state: present
   become: true
-  when: ansible_distribution == "Archlinux"
+  when: ansible_facts["distribution"] == "Archlinux"
 
 - name: apt install podman
   ansible.builtin.apt: name=podman state=present
   become: true
-  when: ansible_distribution == "Debian"
+  when: ansible_facts["distribution"] == "Debian"
 
 - name: dnf install podman
   ansible.builtin.dnf: name=podman state=present
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 # install acl package for ansible to become other unprivileged user
 - name: apt install acl
   ansible.builtin.apt: name=acl state=present
   become: true
-  when: ansible_distribution == "Debian"
+  when: ansible_facts["distribution"] == "Debian"
 
 - name: dnf install acl
   ansible.builtin.dnf: name=acl state=present
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 - name: dnf install policycoreutils-python-utils
   ansible.builtin.dnf: name=policycoreutils-python-utils state=present
   become: true
-  when: ansible_distribution == "Fedora"
+  when: ansible_facts["distribution"] == "Fedora"
 
 #- name: Get file system type of /
 #  ansible.builtin.command: stat --file-system --format=%T /
@@ -42,7 +42,7 @@
 #  check_mode: false
 #
 #- name: Get file system type of ~/
-#  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_user_dir }}"
+#  ansible.builtin.command: "stat --file-system --format=%T {{ ansible_facts.user_dir }}"
 #  become: true
 #  register: home_fstype
 #  changed_when: false

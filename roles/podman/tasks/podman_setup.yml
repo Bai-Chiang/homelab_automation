@@ -10,7 +10,7 @@
     create_home: true
   become: true
   when:
-    - podman_user.name != ansible_user_id
+    - podman_user.name != ansible_facts["user_id"]
     - podman_user.name != "root"
 
 - name: Check lingering
@@ -41,7 +41,7 @@
     mode: '0644'
   become: true
   when:
-    - ansible_distribution == "Archlinux"
+    - ansible_facts["distribution"] == "Archlinux"
     - homed
 
 - name: Set /etc/subgid if using systemd-homed
@@ -55,7 +55,7 @@
     mode: '0644'
   become: true
   when:
-    - ansible_distribution == "Archlinux"
+    - ansible_facts["distribution"] == "Archlinux"
     - homed
 
 #- name: setup container configs directory

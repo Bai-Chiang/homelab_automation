@@ -4,7 +4,7 @@
     name: container_use_devices
     state: true
     persistent: true
-  when: ansible_selinux.status == "enabled"
+  when: ansible_facts["selinux"]["status"] == "enabled"
   become: true
 
 - name: setsebool -P domain_kernel_load_modules=true
@@ -12,7 +12,7 @@
     name: domain_kernel_load_modules
     state: true
     persistent: true
-  when: ansible_selinux.status == "enabled"
+  when: ansible_facts["selinux"]["status"] == "enabled"
   become: true
 
 - name: gluetun.container
