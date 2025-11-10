@@ -36,6 +36,7 @@ wm_pkgs:
   - swaylock
   - swayidle
   - waybar
+  - polkit
   - xdg-utils
   - xdg-desktop-portal
   - xorg-xwayland
