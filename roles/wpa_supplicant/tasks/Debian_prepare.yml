@@ -1,0 +1,10 @@
+---
+- name: apt install wpasupplicant
+  ansible.builtin.apt: name=wpasupplicant state=present
+  become: true
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
