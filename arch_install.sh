@@ -8,7 +8,7 @@ BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
 LANG='en_US.UTF-8'
 KEYMAP='us'
 # https://wiki.archlinux.org/title/Time_zone
-TIMEZONE="US/Eastern"
+TIMEZONE="UTC"
 
 # zram-size option in zram-generator.conf if enabled zram.
 ZRAM_SIZE='min(ram / 2, 4 * 1024)'

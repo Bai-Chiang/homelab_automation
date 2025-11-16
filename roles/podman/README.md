@@ -15,7 +15,7 @@ This role should works on Arch Linux and Fedora.
 ### Syncthing
 ```yaml
 # Time zone, used in LinuxServer.io images
-TZ: "US/Eastern"
+TZ: "Etc/UTC"
 
 
 # Run podman under these users.
@@ -58,7 +58,7 @@ podman_users:
 ### Linux ISOs
 ```yaml
 # Time zone, used in LinuxServer.io images
-TZ: "US/Eastern"
+TZ: "Etc/UTC"
 
 podman_users:
   - name: tux1
