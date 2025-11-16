@@ -1,8 +1,12 @@
 [Match]
-Name={{ static_nic }}
+Name={{ networkd_static.nic }}
 
 [Network]
 DHCP=no
-Address={{ static_ip }}
-Gateway={{ static_gateway }}
-DNS={{ static_dns }}
+Address={{ networkd_static.ip }}
+{% if networkd_static.gateway is defined %}
+Gateway={{ networkd_static.gateway }}
+{% endif %}
+{% if networkd_static.dns is defined %}
+DNS={{ networkd_static.dns }}
+{% endif %}

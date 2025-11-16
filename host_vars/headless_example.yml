@@ -2,7 +2,7 @@
 # This file contains credentials, should be encrypted using ansible-vault
 
 ###############################################################################
-#role/archlinux_common
+#roles/archlinux_common
 # Use Reflector automatically update mirror list.
 # https://wiki.archlinux.org/title/Reflector
 #
@@ -14,7 +14,7 @@ reflector_country: us
 
 
 ###############################################################################
-#role/openssh
+#roles/openssh
 
 # Only allow these users connect through ssh
 ssh_allowusers: 'tux user1 user2'
@@ -31,24 +31,25 @@ ssh_accept_source_ipv4:
 
 
 ###############################################################################
-#role/networkd_static
+#roles/systemd_networkd
 # Static ip address with systemd-networkd
 
-# interface name
-static_nic: enp1s0
+networkd_static_ip:
+    # interface name
+  - nic: enp1s0
 
-# Static ip address with CIDR notation
-static_ip: 192.168.122.2/24
+    # Static ip address with CIDR notation
+    ip: 192.168.122.2/24
 
-# Gateway
-static_gateway: 192.168.122.1
+    # Gateway
+    gateway: 192.168.122.1
 
-# DNS server
-static_dns: 192.168.122.1
+    # DNS server
+    dns: 192.168.122.1
 
 
 ###############################################################################
-#role/msmtp
+#roles/msmtp
 # https://wiki.archlinux.org/title/Msmtp
 # Simple smtp client to send email notification.
 # Using Gmail as an example.
@@ -82,7 +83,7 @@ msmtp_password: GmailAppPasswd
 
 
 ###############################################################################
-#role/auto-update
+#roles/auto-update
 # Automatically update system and send an email notification with update result specified in roles/msmtp
 
 # The auto update time in systemd timer format.
@@ -90,7 +91,7 @@ auto_update_time: '*-*-* 01:00:00'
 
 
 ###############################################################################
-#role/nas
+#roles/nas
 # Storage related tasks, like edit /etc/fstab file to mount disks, schedule btrfs
 # scrub jobs, S.M.A.R.T notifications, NFS and samba server, etc.
 
@@ -175,7 +176,7 @@ nfs_accept_source_ipv4:
 
 
 ###############################################################################
-#role/ups
+#roles/ups
 # uninterruptible power supply setup
 # The email notifications will be send via roles/msmtp
 
@@ -190,7 +191,7 @@ ups_password: upspassword
 
 
 ###############################################################################
-# role/podman
+# roles/podman
 
 # TZ enviroment variable for LSIO images.
 TZ: "US/Eastern"

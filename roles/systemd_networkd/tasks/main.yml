@@ -4,12 +4,15 @@
 - name: "Create static network"
   ansible.builtin.template:
     src: en0.network.j2
-    dest: /etc/systemd/network/{{ static_nic }}.network
+    dest: /etc/systemd/network/{{ networkd_static.nic }}.network
     owner: root
     group: systemd-network
     mode: '0640'
   become: true
-  when: networkd_configs_dir is not defined
+  when: networkd_static_ip is defined
+  loop: "{{ networkd_static_ip }}"
+  loop_control:
+    loop_var: networkd_static
 
 - name: Copy systemd-networkd configs
   ansible.builtin.copy:

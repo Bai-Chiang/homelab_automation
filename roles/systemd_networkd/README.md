@@ -26,17 +26,18 @@ This is for preventing the leaking of private keys when setting up WireGuard usi
 ## Variables
 ### Single NIC static IP
 ```yaml
-# NIC name
-static_nic: enp1s0
+networkd_static_ip:
+    # NIC name
+  - nic: enp1s0
 
-# IP address with its prefix length
-static_ip: 192.168.122.2/24
+    # IP address with its prefix length
+    ip: 192.168.122.2/24
 
-# Gateway address
-static_gateway: 192.168.122.1
+    # Gateway address
+    gateway: 192.168.122.1
 
-# DNS server address
-static_dns: 9.9.9.9
+    # DNS server address
+    dns: 9.9.9.9
 ```
 
 ### Advanced setup
