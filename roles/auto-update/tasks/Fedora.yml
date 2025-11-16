@@ -3,6 +3,19 @@
   ansible.builtin.dnf: name=dnf-automatic state=present
   become: true
 
+- name: Check file /etc/dnf/automatic.conf
+  ansible.builtin.stat:
+    path: /etc/dnf/automatic.conf
+  register: etc_dnf_automatic_conf
+
+- name: Copy /usr/share/dnf5/dnf5-plugins/automatic.conf to /etc/dnf/automatic.conf
+  ansible.builtin.copy:
+    src: /usr/share/dnf5/dnf5-plugins/automatic.conf
+    dest: /etc/dnf/automatic.conf
+    remote_src: true
+  become: true
+  when: not etc_dnf_automatic_conf.stat.exists
+
 - name: Edit /etc/dnf/automatic.conf
   ansible.builtin.lineinfile:
     path: /etc/dnf/automatic.conf
@@ -13,27 +26,27 @@
     - { regexp: '^apply_updates =', line: "apply_updates = yes" }
     - { regexp: '^reboot =', line: "reboot = when-needed" }
 
-- name: Create /etc/systemd/system/dnf-automatic.timer.d/ directory
+- name: Create /etc/systemd/system/dnf5-automatic.timer.d/ directory
   ansible.builtin.file:
-    path: /etc/systemd/system/dnf-automatic.timer.d
+    path: /etc/systemd/system/dnf5-automatic.timer.d
     state: directory
     owner: root
     group: root
     mode: '0755'
   become: true
 
-- name: Override default dnf-automatic.timer
+- name: Override default dnf5-automatic.timer
   ansible.builtin.template:
-    src: dnf-automatic-timer-override.conf.j2
-    dest: /etc/systemd/system/dnf-automatic.timer.d/override.conf
+    src: dnf5-automatic-timer-override.conf.j2
+    dest: /etc/systemd/system/dnf5-automatic.timer.d/override.conf
     owner: root
     group: root
     mode: '0644'
   become: true
   when: auto_update_time is defined
 
-- name: systemctl enable dnf-automatic.timer
-  ansible.builtin.systemd: name=dnf-automatic.timer enabled=true state=started
+- name: systemctl enable dnf5-automatic.timer
+  ansible.builtin.systemd: name=dnf5-automatic.timer enabled=true state=started
   become: true
 
 - name: systemctl daemon-reload

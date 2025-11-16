@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-dnf install -y policycoreutils-python-utils
+dnf install -y policycoreutils-python-utils python3-libdnf5
 
 # set ssh port
 echo "ssh port? (22)"
