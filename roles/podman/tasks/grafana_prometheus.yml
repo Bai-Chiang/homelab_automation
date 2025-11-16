@@ -46,6 +46,15 @@
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"
 
+- name: systemctl --user enable --now prometheus-node-exporter.service
+  ansible.builtin.systemd: name=prometheus-node-exporter.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when:
+    - podman_user.prometheus_host_mode is defined
+    - podman_user.prometheus_host_mode
+
 - name: add Grafana firewalld service file grafana.xml
   ansible.builtin.copy:
     content: |

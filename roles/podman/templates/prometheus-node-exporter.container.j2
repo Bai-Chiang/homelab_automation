@@ -5,11 +5,26 @@ After=network-online.target nss-lookup.target
 
 [Container]
 ContainerName=prometheus-node-exporter
+{% if podman_user.prometheus_host_mode is defined and podman_user.prometheus_host_mode %}
+Network=host
+PodmanArgs=--pid=host
+{% else %}
 Pod=grafana-prometheus.pod
+{% endif %}
 Image=quay.io/prometheus/node-exporter:latest
 AutoUpdate=registry
 
 User={{ podman_user.uid }}:{{ podman_user.uid }}
+
+{% if podman_user.prometheus_host_mode is defined and podman_user.prometheus_host_mode %}
+Volume=/:/host:ro,rslave
+Exec=--path.rootfs=/host
+Exec=--path.procfs=/host/proc
+Exec=--path.sysfs=/host/sys
+Exec=--collector.filesystem.mount-points-exclude=^/(dev|proc|sys)($$|/)
+Exec=--collector.processes
+Exec=--collector.systemd
+{% endif %}
 
 
 [Service]

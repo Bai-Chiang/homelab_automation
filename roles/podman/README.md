@@ -14,7 +14,7 @@ This role should works on Arch Linux and Fedora.
 - [Syncthing](#Syncthing)
 - [Linux ISOs](#Linux-ISOs)
 - [Nextcloud AIO, traefik2 reverse proxy and Letsencrypt running as different users](#Nextcloud-AIO-traefik2-reverse-proxy-and-Letsencrypt-running-as-different-users)
-- [Grafana and Prometheus monitor CPU and Mem usage](#Grafana-and-Prometheus-monitor-CPU-and-Mem-usage)
+- [Grafana and Prometheus monitoring](#Grafana-and-Prometheus-monitoring)
 
 ### Syncthing
 ```yaml
@@ -300,12 +300,9 @@ tls:
 ```
 
 
-### Grafana and Prometheus monitor CPU and Mem usage
+### Grafana and Prometheus monitoring
 
 ```yaml
-# Time zone, used in LinuxServer.io images
-TZ: "Etc/UTC"
-
 podman_users:
   - name: tux5
     uid: 10005
@@ -322,6 +319,12 @@ podman_users:
     # see example at the end
     prometheus_yml: "files/prometheus.yml"
 
+    # If only monitoring CPU and Mem usage set prometheus_host_mode to false
+    # If need to query more host info like network traffic, system processes etc,
+    # set prometheus_host_mode to true. This will run prometheus-node-exporter container
+    # with more privileges.
+    prometheus_host_mode: false
+
     # optional Grafana firewall rules only allow connection from these ipv4 address
     # If undefined no connection is allowed
     grafana_accept_source_ipv4:
@@ -333,9 +336,13 @@ podman_users:
 global:
   scrape_interval: 30s
 scrape_configs:
- - job_name: 'node_exporter'
-   scrape_interval: 3s
+ - job_name: 'node'
+   scrape_interval: 30s
    static_configs:
     - targets:
+      # If prometheus_host_mode set to false
       - localhost:9100
+
+      # If prometheus_host_mode set to true
+      - host.containers.internal:9100
 ```
