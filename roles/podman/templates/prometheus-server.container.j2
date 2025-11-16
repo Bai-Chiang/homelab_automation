@@ -1,0 +1,28 @@
+[Unit]
+Description=Prometheus server container
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+
+[Container]
+ContainerName=prometheus-server
+Pod=grafana-prometheus.pod
+Image=quay.io/prometheus/prometheus:latest
+AutoUpdate=registry
+
+User={{ podman_user.uid }}:{{ podman_user.uid }}
+
+Volume={{ podman_user.grafana_prometheus_config_dir }}/prometheus:/prometheus:Z
+Volume={{ podman_user.grafana_prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml:Z
+
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

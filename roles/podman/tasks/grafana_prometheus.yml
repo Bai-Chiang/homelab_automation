@@ -1,0 +1,79 @@
+---
+- name: grafana and prometheus config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.grafana_prometheus_config_dir }}"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  loop:
+    - "{{ podman_user.grafana_prometheus_config_dir }}/grafana"
+    - "{{ podman_user.grafana_prometheus_config_dir }}/prometheus"
+
+- name: Copy prometheus.yml file
+  ansible.builtin.copy:
+    src: "{{ podman_user.prometheus_yml }}"
+    dest: "{{ podman_user.grafana_prometheus_config_dir }}/prometheus.yml"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+
+- name: grafana prometheus containers
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/{{ item }}"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+  loop:
+    - grafana-prometheus.pod
+    - prometheus-server.container
+    - prometheus-node-exporter.container
+    - grafana.container
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now grafana-prometheus-pod.service
+  ansible.builtin.systemd: name=grafana-prometheus-pod.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: add Grafana firewalld service file grafana.xml
+  ansible.builtin.copy:
+    content: |
+      <?xml version="1.0" encoding="utf-8"?>
+      <service>
+        <short>Syncthing</short>
+        <description>Syncthing</description>
+        <port protocol="tcp" port="3000"/>
+      </service>
+    dest: /etc/firewalld/services/grafana.xml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: grafana_firewalld_file
+
+- name: Reload firewalld when grafana.xml changed
+  ansible.builtin.command: firewall-cmd --reload
+  become: true
+  when: grafana_firewalld_file.changed
+
+- name: Set firewall rules for Grafana Listening port (TCP)
+  ansible.posix.firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" service name="grafana" accept
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ podman_user.grafana_accept_source_ipv4 }}"
+  become: true
+  when: podman_user.grafana_accept_source_ipv4 is defined
+

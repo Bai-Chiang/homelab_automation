@@ -1,0 +1,25 @@
+[Unit]
+Description=Prometheus Node Exporter container
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+
+[Container]
+ContainerName=prometheus-node-exporter
+Pod=grafana-prometheus.pod
+Image=quay.io/prometheus/node-exporter:latest
+AutoUpdate=registry
+
+User={{ podman_user.uid }}:{{ podman_user.uid }}
+
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

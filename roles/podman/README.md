@@ -11,6 +11,10 @@ This role should works on Arch Linux and Fedora.
 
 
 ## Variables and examples
+- [Syncthing](#Syncthing)
+- [Linux ISOs](#Linux-ISOs)
+- [Nextcloud AIO, traefik2 reverse proxy and Letsencrypt running as different users](#Nextcloud-AIO-traefik2-reverse-proxy-and-Letsencrypt-running-as-different-users)
+- [Grafana and Prometheus monitor CPU and Mem usage](#Grafana-and-Prometheus-monitor-CPU-and-Mem-usage)
 
 ### Syncthing
 ```yaml
@@ -293,4 +297,45 @@ tls:
     default:
       minVersion: VersionTLS13
       sniStrict: true
+```
+
+
+### Grafana and Prometheus monitor CPU and Mem usage
+
+```yaml
+# Time zone, used in LinuxServer.io images
+TZ: "Etc/UTC"
+
+podman_users:
+  - name: tux5
+    uid: 10005
+    enable_lingering: true
+    podman_system_prune_timer: daily
+
+    containers:
+      - grafana_prometheus
+
+    # Path to store Grafana and Prometheus container config
+    grafana_prometheus_config_dir: "/path/to/container/config/grafana_prometheus"
+
+    # Prometheus.yml file
+    # see example at the end
+    prometheus_yml: "files/prometheus.yml"
+
+    # optional Grafana firewall rules only allow connection from these ipv4 address
+    # If undefined no connection is allowed
+    grafana_accept_source_ipv4:
+      - 192.168.1.0/24
+```
+
+`prometheus.yml` file example
+```yaml
+global:
+  scrape_interval: 30s
+scrape_configs:
+ - job_name: 'node_exporter'
+   scrape_interval: 3s
+   static_configs:
+    - targets:
+      - localhost:9100
 ```

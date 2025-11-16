@@ -104,11 +104,13 @@
   ansible.builtin.systemd: name=podman-system-prune.timer enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl --user enable podman-auto-update.timer
   ansible.builtin.systemd: name=podman-auto-update.timer enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - include_tasks: "{{ container }}.yml"
   loop: "{{ podman_user.containers }}"

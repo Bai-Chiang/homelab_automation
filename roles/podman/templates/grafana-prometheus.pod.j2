@@ -1,0 +1,29 @@
+[Unit]
+Description=Grafana and Prometheus Pod
+Wants=network-online.target
+After=network-online.target nss-lookup.target
+
+[Pod]
+PodName=grafana-prometheus
+
+UserNS=keep-id
+
+HostName=grafana-prometheus
+{% if podman_user.grafana_accept_source_ipv4 is defined %}
+PublishPort=3000:3000/tcp
+{% else %}
+PublishPort=127.0.0.1:3000:3000/tcp
+{% endif %}
+
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
