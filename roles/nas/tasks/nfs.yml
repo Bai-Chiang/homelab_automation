@@ -2,6 +2,12 @@
 - name: pacman -S nfs-utils
   community.general.pacman: name=nfs-utils state=present
   become: true
+  when: ansible_facts["distribution"] == "Archlinux"
+
+- name: dnf install nfs-utils
+  ansible.builtin.dnf: name=nfs-utils state=present
+  become: true
+  when: ansible_facts["distribution"] == "Fedora"
 
 - name: Create NFS directories
   ansible.builtin.file:
@@ -9,6 +15,7 @@
     state: directory
   loop: "{{ nfs_mount_point }}"
   become: true
+  when: item.bind is defined
 
 - name: Add bind mount to /etc/fstab
   ansible.builtin.lineinfile:
@@ -18,6 +25,7 @@
     state: present
   loop: "{{ nfs_mount_point }}"
   become: true
+  when: item.bind is defined
 
 - name: add root mount to /etc/exports
   ansible.builtin.lineinfile:
@@ -27,7 +35,7 @@
     state: present
   become: true
 
-- name: add other mount points to /etc/exports
+- name: add other mount points to /etc/exports (bind mount)
   ansible.builtin.lineinfile:
     path: /etc/exports
     regexp: "^{{ item.bind }}\\s+"
@@ -35,6 +43,17 @@
     state: present
   loop: "{{ nfs_mount_point }}"
   become: true
+  when: item.bind is defined
+
+- name: add other mount points to /etc/exports (no bind mount)
+  ansible.builtin.lineinfile:
+    path: /etc/exports
+    regexp: "^{{ item.target }}\\s+"
+    line: "{{ item.target }}  {{ item.ip_opt }}"
+    state: present
+  loop: "{{ nfs_mount_point }}"
+  become: true
+  when: item.bind is not defined
 
 #- name: Add custom NFS rule to UFW
 #  ansible.builtin.blockinfile:
@@ -67,14 +86,22 @@
   when: nfs_accept_source_ipv4 is defined
   become: true
 
-- name: systemctl enable nfsv4-server.service
+- name: (ArchLinux) systemctl enable nfsv4-server.service
   ansible.builtin.systemd: name=nfsv4-server.service enabled=true
   become: true
+  when: ansible_facts["distribution"] == "Archlinux"
 
-- name: systemctl mask rpcbind.service rpcbind.socket nfs-server.service
+- name: (ArchLinux) systemctl mask rpcbind.service rpcbind.socket nfs-server.service
   ansible.builtin.systemd: name={{ item }} enabled=false masked=true
   become: true
   loop:
     - rpcbind.service
     - rpcbind.socket
     - nfs-server.service
+  when: ansible_facts["distribution"] == "Archlinux"
+
+- name: (Fedora) systemctl enable nfs-server.service
+  ansible.builtin.systemd: name=nfs-server.service enabled=true
+  become: true
+  when: ansible_facts["distribution"] == "Fedora"
+
