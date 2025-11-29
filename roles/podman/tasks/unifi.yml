@@ -1,32 +1,28 @@
 ---
 - name: Check unifi database direcoty
   ansible.builtin.stat:
-    path: "{{ podman_user.unifi_db_dir }}"
+    path: "{{ podman_user.unifi_config_dir }}/unifi-db"
   register: unifi_database_dir
-
-- name: unifi database direcoty
-  ansible.builtin.file:
-    path: "{{ podman_user.unifi_db_dir }}"
-    state: directory
-    owner: "{{ podman_user.name}}"
-    group: "{{ podman_user.name }}"
-    mode: '0700'
   become: true
+  become_user: "{{ podman_user.name }}"
 
 - name: unifi-controller container config direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.unifi_config_dir }}"
+    path: "{{ podman_user.unifi_config_dir }}/{{ item }}"
     state: directory
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
+  loop:
+    - unifi
+    - unifi-db
 
 - name: First time setup
   include_tasks: unifi-init.yml
   when: not unifi_database_dir.stat.exists
 
-- name: unifi-db.container and unifi.container
+- name: unifi.pod, unifi-db.container and unifi.container
   ansible.builtin.template:
     src: "{{ item }}.j2"
     dest: "/home/{{ podman_user.name }}/.config/containers/systemd/{{ item }}"
@@ -36,13 +32,20 @@
   become: true
   become_user: "{{ podman_user.name }}"
   loop:
-    - unifi-db.container
+    - unifi.pod
     - unifi.container
+    - unifi-db.container
 
 - name: systemctl --user daemon-reload
   ansible.builtin.systemd: daemon_reload=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now unifi-pod.service
+  ansible.builtin.systemd: name=unifi-pod enabled=true state=started scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl --user enable --now unifi-db.service
   ansible.builtin.systemd: name=unifi-db enabled=true state=started scope=user

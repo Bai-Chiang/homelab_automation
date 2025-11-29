@@ -1,25 +1,19 @@
 [Unit]
 Description=MongoDB for UniFi container
-Wants=unifi.service
-Before=unifi.service
 
 [Container]
 ContainerName=unifi-db
+Pod=unifi.pod
 Image=docker.io/mongo:7.0
 AutoUpdate=registry
 
-UserNS=keep-id
+User=1000
+Group=1000
 
-Volume={{ podman_user.unifi_db_dir }}:/data/db:Z
+Volume={{ podman_user.unifi_config_dir }}/unifi-db:/data/db:Z
 {% if not unifi_database_dir.stat.exists %}
 Volume={{ unifi_db_tmp_dir.path }}/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:Z,ro
 {% endif %}
-
-HostName=unifi-db
-PublishPort=127.0.0.1:8443:8443/tcp
-PublishPort=3478:3478/udp
-PublishPort=10001:10001/udp
-PublishPort=8080:8080/tcp
 
 
 [Service]
