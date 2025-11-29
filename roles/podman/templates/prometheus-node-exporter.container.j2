@@ -14,7 +14,8 @@ Pod=grafana-prometheus.pod
 Image=quay.io/prometheus/node-exporter:latest
 AutoUpdate=registry
 
-User={{ podman_user.uid }}:{{ podman_user.uid }}
+User={{ podman_user.uid }}
+Group={{ podman_user.uid }}
 
 {% if podman_user.prometheus_host_mode is defined and podman_user.prometheus_host_mode %}
 Volume=/:/host:ro,rslave

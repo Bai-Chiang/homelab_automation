@@ -9,7 +9,8 @@ Pod=grafana-prometheus.pod
 Image=quay.io/prometheus/prometheus:latest
 AutoUpdate=registry
 
-User={{ podman_user.uid }}:{{ podman_user.uid }}
+User={{ podman_user.uid }}
+Group={{ podman_user.uid }}
 
 Volume={{ podman_user.grafana_prometheus_config_dir }}/prometheus:/prometheus:Z
 Volume={{ podman_user.grafana_prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml:Z
