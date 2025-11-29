@@ -357,9 +357,7 @@ scrape_configs:
    scrape_interval: 30s
    static_configs:
     - targets:
-      # If prometheus_host_mode set to false
       - localhost:9100
-
-      # If prometheus_host_mode set to true
-      - host.containers.internal:9100
 ```
+
+In Grafana connect to Prometheus data source with URL `http://localhost:9090`
