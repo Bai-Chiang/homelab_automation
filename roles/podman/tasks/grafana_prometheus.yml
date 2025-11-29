@@ -1,15 +1,15 @@
 ---
 - name: grafana and prometheus config direcoty
   ansible.builtin.file:
-    path: "{{ podman_user.grafana_prometheus_config_dir }}"
+    path: "{{ podman_user.grafana_prometheus_config_dir }}/{{ item }}"
     state: directory
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
     mode: '0700'
   become: true
   loop:
-    - "{{ podman_user.grafana_prometheus_config_dir }}/grafana"
-    - "{{ podman_user.grafana_prometheus_config_dir }}/prometheus"
+    - grafana
+    - prometheus
 
 - name: Copy prometheus.yml file
   ansible.builtin.copy:
