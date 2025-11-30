@@ -50,6 +50,9 @@ podman_users:
     containers:
       - syncthing
 
+    # Syncthing Web UI port
+    syncthing_webui_port: 8384
+
     # Path to store syncthing container config
     syncthing_config_dir: "/path/to/container/config/syncthing"
 
@@ -92,30 +95,30 @@ podman_users:
     # https://github.com/qdm12/gluetun-wiki/blob/main/setup/options/http-proxy.md
     #gluetun_httpproxy: true
 
+    # transmission Web UI port
+    transmission_webui_port: 9091
+
     # Path to store transmission config
     transmission_config_dir: "/path/to/container/config/transmission"
 
     # Path to transmission download directory
     transmission_downloads_dir: "/path/to/transmission/download/dir"
 
-    # Optionally, specify web UI port (default 9091)
-    #transmission_web_port: 9091
-
     # Optionally, transmisison watch directory
     #transmission_watch_dir: "/path/to/transmission/watch/dir"
 
-    # Optionally, add auth to transmission web UI
-    #transmission_user: tux
-    #transmission_pass: !unsafe mypassword
+    # Optionally, add auth to transmission Web UI
+    transmission_user: tux
+    transmission_pass: !unsafe mypassword
+
+    # qbittirrent Web UI port
+    qbittorrent_webui_port: 8081
 
     # Path to store qbittorrent config
     qbittorrent_config_dir: "/path/to/container/config/qbittorrent"
 
     # Path to qbittorrent download directory
     qbittorrent_downloads_dir: "/path/to/qbittorrent/download/dir"
-
-    # Optionally, specify web UI port (default 8090)
-    #qbittorrent_web_port: 8090
 ```
 
 
@@ -328,6 +331,9 @@ podman_users:
 
     containers:
       - grafana_prometheus
+
+    # The Grafana Web UI port
+    grafana_webui_port: 3000
 
     # Path to store Grafana and Prometheus container config
     grafana_prometheus_config_dir: "/path/to/container/config/grafana_prometheus"

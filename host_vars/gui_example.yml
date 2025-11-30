@@ -172,4 +172,7 @@ podman_users:
     # Path to syncthing configs
     syncthing_config_dir: "/home/tux/data/container_configs/syncthing"
 
+    # Syncthing Web UI port
+    syncthing_webui_port: 8384
+
 

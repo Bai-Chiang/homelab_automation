@@ -9,11 +9,7 @@ PodName=grafana-prometheus
 UserNS=keep-id
 
 HostName=grafana-prometheus
-{% if podman_user.grafana_accept_source_ipv4 is defined %}
-PublishPort=3000:3000/tcp
-{% else %}
-PublishPort=127.0.0.1:3000:3000/tcp
-{% endif %}
+PublishPort=127.0.0.1:{{ podman_user.grafana_webui_port }}:{{ podman_user.grafana_webui_port }}/tcp
 
 
 [Service]

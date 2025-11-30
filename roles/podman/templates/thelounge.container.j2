@@ -17,7 +17,7 @@ HostName=thelounge
 {% if "gluetun" in podman_user.containers and podman_user.thelounge_gluetun_proxy %}
 Network=container:gluetun
 {% else %}
-PublishPort=127.0.0.1:9000:9000/tcp
+PublishPort=127.0.0.1:{{ podman_user.thelounge_webui_port }}:{{ podman_user.thelounge_webui_port }}/tcp
 {% endif %}
 
 Environment=PUID=1000

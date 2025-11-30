@@ -12,11 +12,7 @@ Volume={{ item.src }}:{{ item.dest }}:Z
 {% endfor %}
 
 HostName=syncthing
-{% if podman_user.syncthing_web_port is defined %}
-PublishPort=127.0.0.1:{{ podman_user.syncthing_web_port }}:8384/tcp
-{% else %}
-PublishPort=127.0.0.1:8384:8384/tcp
-{% endif %}
+PublishPort=127.0.0.1:{{ podman_user.syncthing_webui_port }}:8384/tcp
 {% if podman_user.syncthing_sync_port is defined %}
 PublishPort={{ podman_user.syncthing_sync_port }}:22000/tcp
 {% else %}

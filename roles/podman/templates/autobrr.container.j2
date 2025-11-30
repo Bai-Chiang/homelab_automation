@@ -21,7 +21,7 @@ HostName=autobrr
 {% if "gluetun" in podman_user.containers and podman_user.autobrr_gluetun_proxy %}
 Network=container:gluetun
 {% else %}
-PublishPort=127.0.0.1:7474:7474/tcp
+PublishPort=127.0.0.1:{{ podman_user.autobrr_webui_port }}:{{ podman_user.autobrr_webui_port }}/tcp
 {% endif %}
 
 Environment=TZ={{ TZ }}

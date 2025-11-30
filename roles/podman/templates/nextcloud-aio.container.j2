@@ -12,17 +12,13 @@ SecurityLabelDisable=true
 
 HostName=nextcloud-aio
 Network=bridge
-{% if podman_user.nextcloud_aio_port is defined %}
-PublishPort=127.0.0.1:{{ podman_user.nextcloud_aio_port }}:8080/tcp
-{% else %}
-PublishPort=127.0.0.1:11001:8080/tcp
-{% endif %}
+PublishPort=127.0.0.1:{{ podman_user.nextcloud_web_admin_port }}:8080/tcp
 
 Volume=nextcloud_aio_mastercontainer:/mnt/docker-aio-config
 Volume=/run/user/{{ podman_user.uid }}/podman/podman.sock:/var/run/docker.sock:ro,Z
 
 
-Environment=APACHE_PORT=11000
+Environment=APACHE_PORT={{ podman_user.nextcloud_webui_port }}
 Environment=APACHE_IP_BINDING=0.0.0.0
 Environment=WATCHTOWER_DOCKER_SOCKET_PATH=/run/user/{{ podman_user.uid }}/podman/podman.sock
 {% if podman_user.nextcloud_skip_domain_validation is defined and podman_user.nextcloud_skip_domain_validation %}

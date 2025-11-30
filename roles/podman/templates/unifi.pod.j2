@@ -5,7 +5,7 @@ Description=UniFi and MongoDB Pod
 PodName=unifi
 
 HostName=unifi
-PublishPort=127.0.0.1:8443:8443/tcp
+PublishPort=127.0.0.1:{{ podman_user.unifi_webui_port }}:{{ podman_user.unifi_webui_port }}/tcp
 PublishPort=3478:3478/udp
 PublishPort=10001:10001/udp
 PublishPort=8080:8080/tcp
