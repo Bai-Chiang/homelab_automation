@@ -1,0 +1,36 @@
+[Unit]
+Description=Paperless-ngx container
+Wants=paperless-ngx-redis.service
+After=paperless-ngx-redis.service
+
+[Container]
+ContainerName=paperless-ngx
+Pod=paperless-ngx.pod
+Image=ghcr.io/paperless-ngx/paperless-ngx:latest
+AutoUpdate=registry
+Timezone={{ TZ }}
+
+Volume={{ podman_user.paperless_config_dir }}/paperless:/usr/src/paperless/data:Z
+
+Environment=USERMAP_UID=1000
+Environment=USERMAP_GID=1000
+Environment=PAPERLESS_REDIS=redis://localhost:6379
+{% if podman_user.paperless_url is defined %}
+Environment=PAPERLESS_URL={{ podman_user.paperless_url }}
+Environment=PAPERLESS_USE_X_FORWARD_HOST=true
+Environment=PAPERLESS_USE_X_FORWARD_PORT=true
+Environment=PAPERLESS_PROXY_SSL_HEADER='["HTTP_X_FORWARDED_PROTO", "https"]'
+{% endif %}
+
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

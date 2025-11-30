@@ -1,0 +1,27 @@
+[Unit]
+Description=Paperless-ngx Redis container
+
+[Container]
+ContainerName=paperless-ngx-redis
+Pod=paperless-ngx.pod
+Image=docker.io/library/redis:latest
+AutoUpdate=registry
+Timezone={{ TZ }}
+
+User=1000
+Group=1000
+
+Volume={{ podman_user.paperless_config_dir }}/redis:/data:Z
+
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

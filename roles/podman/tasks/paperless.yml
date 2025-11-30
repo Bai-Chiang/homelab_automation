@@ -1,0 +1,92 @@
+---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status paperless-ngx.service
+# #     sudo systemctl --user -M tux@ status paperless-ngx-redis.service
+# #     sudo systemctl --user -M tux@ status paperless-ngx-pod.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=paperless-ngx.service
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=paperless-ngx-redis.service
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=paperless-ngx-pod.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - paperless
+#
+#     # paperless Web UI port
+#     paperless_webui_port: 8000
+#
+#     # Path to store paperless container config
+#     paperless_config_dir: "/path/to/container/config/paperless"
+#
+#     # Set PAPERLESS_URL when using with reverse proxy
+#     paperless_url: https://paperless.domain.com
+
+- name: paperless config direcoty
+  ansible.builtin.file:
+    path: "{{ podman_user.paperless_config_dir }}/{{ item }}"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  loop:
+    - paperless
+    - redis
+
+- name: paperless and redis containers
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/{{ item }}"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+  loop:
+    - paperless-ngx.pod
+    - paperless-ngx.container
+    - paperless-ngx-redis.container
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now paperless-ngx-pod.service
+  ansible.builtin.systemd: name=paperless-ngx-pod.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: systemctl --user enable --now paperless-ngx-redis.service
+  ansible.builtin.systemd: name=paperless-ngx-redis.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: systemctl --user enable --now paperless-ngx.service
+  ansible.builtin.systemd: name=paperless-ngx.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+

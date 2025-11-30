@@ -1,0 +1,25 @@
+[Unit]
+Description=Paperless-ngx and Redis Pod
+
+[Pod]
+PodName=paperless-ngx
+
+UIDMap=1000:0:1
+UIDMap=0:1:1000
+UIDMap=1001:1001:64536
+
+HostName=paperless-ngx
+PublishPort=127.0.0.1:{{ podman_user.paperless_webui_port }}:{{ podman_user.paperless_webui_port }}/tcp
+
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
