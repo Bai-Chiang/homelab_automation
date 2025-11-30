@@ -347,11 +347,6 @@ podman_users:
     # set prometheus_host_mode to true. This will run prometheus-node-exporter container
     # with more privileges.
     prometheus_host_mode: false
-
-    # optional Grafana firewall rules only allow connection from these ipv4 address
-    # If undefined no connection is allowed
-    grafana_accept_source_ipv4:
-      - 192.168.1.0/24
 ```
 
 `prometheus.yml` file example
