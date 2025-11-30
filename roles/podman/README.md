@@ -168,6 +168,20 @@ podman_users:
     # see example at the end
     traefik_dynamic_config: "files/traefik_dynamic_config.yml"
 
+    # Allow traefik connect to these local ports on localhost
+    # These ports are added to traefik container with options Network=pasta:--tcp-ns
+    traefik_forward_ports:
+      - 11000
+      - 8088
+
+    # Optionally, add tailscale container.
+    # After service started, looking for authentication link in the journal
+    # sudo journalctl _UID=10003 _SYSTEMD_USER_UNIT=tailscale-traefik.service
+    traefik_tailscale_enable: true
+
+    # Path to store tailscale container config (If tailscale enabled)
+    traefik_config_dir: "/path/to/container/config/tailscale"
+
     # Path to store letsencrypt container config
     # If letsencrypt and traefik running as different users, traefik won't be
     # able to access letsencrypt certificates, with advantage being traefik
@@ -191,8 +205,11 @@ podman_users:
     containers:
       - nextcloud
 
-    # The Nextcloud AIO web admin port
-    nextcloud_aio_port: 11001
+    # The Nextcloud Web UI port
+    nextcloud_webui_port: 11000
+
+    # The Nextcloud AIO Web admin port
+    nextcloud_web_admin_port: 8088
 
     # Some optional environment variables pass to nextcloud-aio-mastercontainer
     # https://github.com/nextcloud/all-in-one/blob/main/compose.yaml
@@ -260,7 +277,7 @@ http:
       loadBalancer:
         passHostHeader: true
         servers:
-          - url: "http://10.0.2.2:11000"
+          - url: "http://localhost:11000"
 
   middlewares:
     secureHeader:

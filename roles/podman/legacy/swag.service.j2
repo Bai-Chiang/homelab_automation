@@ -27,7 +27,6 @@ ExecStart=/usr/bin/podman run \
     --env PUID=1000 \
     --env PGID=1000 \
     --env TZ={{ TZ }} \
-    --network=slirp4netns:port_handler=slirp4netns \
     --publish 443:443/tcp \
     --volume {{ podman_user.swag_config_dir }}:/config:Z \
     --env URL={{ podman_user.swag_domain }} \

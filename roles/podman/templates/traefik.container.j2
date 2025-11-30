@@ -19,10 +19,17 @@ Volume={{ podman_user.traefik_config_dir }}/ssl:/etc/traefik/ssl:Z,ro
 
 {% if podman_user.traefik_tailscale_enable is defined and podman_user.traefik_tailscale_enable %}
 Network=container:tailscale-traefik
-{% else %}
-Network=slirp4netns:port_handler=slirp4netns,allow_host_loopback=true
+{%- else %}
+HostName=traefik
 PublishPort=443:443/tcp
+{% if podman_user.traefik_forward_ports is defined %}
+Network=pasta:
+{%- for port in podman_user.traefik_forward_ports -%}
+--tcp-ns,{{ port }}{{ "," if not loop.last else "" }}
+{%- endfor %}
 {% endif %}
+{% endif %}
+
 
 
 [Service]
