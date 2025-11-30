@@ -8,6 +8,7 @@ ContainerName=grafana
 Pod=grafana-prometheus.pod
 Image=docker.io/grafana/grafana:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 User={{ podman_user.uid }}
 Group={{ podman_user.uid }}

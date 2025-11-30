@@ -10,6 +10,7 @@ Requires=gluetun.service
 ContainerName=thelounge
 Image=lscr.io/linuxserver/thelounge:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 Volume={{ podman_user.thelounge_config_dir }}:/config:Z
 

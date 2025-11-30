@@ -8,6 +8,7 @@ ContainerName=prometheus-server
 Pod=grafana-prometheus.pod
 Image=quay.io/prometheus/prometheus:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 User={{ podman_user.uid }}
 Group={{ podman_user.uid }}

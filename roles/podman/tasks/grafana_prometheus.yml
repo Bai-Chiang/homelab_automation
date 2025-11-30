@@ -1,4 +1,55 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status grafana.service
+# #     sudo systemctl --user -M tux@ status prometheus-server.service
+# #     sudo systemctl --user -M tux@ status prometheus-node-exporter.service
+# #     sudo systemctl --user -M tux@ status grafana-prometheus-pod.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=grafana.service
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=prometheus-server.service
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=prometheus-node-exporter.service
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=grafana-prometheus-pod.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - grafana_prometheus
+#
+#     # Grafana Web UI port
+#     grafana_webui_port: 3000
+#
+#     # Path to store Grafana and Prometheus container config
+#     grafana_prometheus_config_dir: "/path/to/container/config/grafana_prometheus"
+#
+#     # Prometheus.yml file
+#     # see example in roles/podman/README.md
+#     prometheus_yml: "files/prometheus.yml"
+#
+#     # If only monitoring CPU and Mem usage set prometheus_host_mode to false
+#     # If need to query more host info like network traffic, system processes etc,
+#     # set prometheus_host_mode to true. This will run prometheus-node-exporter container
+#     # with more privileges.
+#     prometheus_host_mode: false
+
 - name: grafana and prometheus config direcoty
   ansible.builtin.file:
     path: "{{ podman_user.grafana_prometheus_config_dir }}/{{ item }}"

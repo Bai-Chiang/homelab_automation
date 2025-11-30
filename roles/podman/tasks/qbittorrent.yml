@@ -1,4 +1,42 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status qbittorrent.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=qbittorrent.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - qbittorrent
+#
+#     # qbittorrent Web UI port
+#     qbittorrent_webui_port: 8081
+#
+#     # Path to store qbittorrent container config
+#     qbittorrent_config_dir: "/path/to/container/config/qbittorrent"
+#
+#     # Path to qbittorrent download directory
+#     qbittorrent_downloads_dir: "/path/to/qbittorrent/download/dir"
+
 - name: qbittorrent container config direcoty
   ansible.builtin.file:
     path: "{{ podman_user.qbittorrent_config_dir }}"

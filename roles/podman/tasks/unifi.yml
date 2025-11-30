@@ -1,4 +1,53 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status unifi.service
+# #     sudo systemctl --user -M tux@ status unifi-db.service
+# #     sudo systemctl --user -M tux@ status unifi-pod.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=unifi.service
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=unifi-db.service
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=unifi-pod.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - unifi
+#
+#     # unifi Web UI port
+#     unifi_webui_port: 4443
+#
+#     # Path to store unifi container config
+#     unifi_config_dir: "/path/to/container/config/unifi"
+#
+#     # UniFi MongoDB password
+#     unifi_db_pass: !unsafe xj9jKbfptRprydNwq9dmKjTPsDvxau
+#
+#     # Allow devices communication on these ports
+#     # 3478/udp
+#     # 10001/udp
+#     # 8080/tcp
+#     unifi_accept_source_ipv4:
+#      - 192.168.1.0/24
+
 - name: Check unifi database direcoty
   ansible.builtin.stat:
     path: "{{ podman_user.unifi_config_dir }}/unifi-db"

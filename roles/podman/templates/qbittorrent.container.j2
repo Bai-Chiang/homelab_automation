@@ -8,6 +8,7 @@ Requires=gluetun.service
 ContainerName=qbittorrent
 Image=lscr.io/linuxserver/qbittorrent:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 Volume={{ podman_user.qbittorrent_config_dir }}:/config:Z
 Volume={{ podman_user.qbittorrent_downloads_dir }}:/downloads:Z

@@ -9,6 +9,7 @@ ContainerName=unifi
 Pod=unifi.pod
 Image=lscr.io/linuxserver/unifi-network-application:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 Volume={{ podman_user.unifi_config_dir }}/unifi:/config:Z
 

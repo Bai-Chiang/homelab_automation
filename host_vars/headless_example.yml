@@ -194,7 +194,7 @@ ups_password: upspassword
 # roles/podman
 
 # TZ enviroment variable for LSIO images.
-TZ: "US/Eastern"
+TZ: "UTC"
 
 # Running podman as rootless user
 # name and uid specify the username and UID value.

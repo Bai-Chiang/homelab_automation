@@ -1,4 +1,71 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status traefik.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=traefik.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - traefik
+#
+#     # Path to store traefik container config
+#     traefik_config_dir: "/path/to/container/config/traefik"
+#
+#     # traefik static config file
+#     # see example at roles/podman/README.md
+#     traefik_static_config: "files/traefik_static_config.yml"
+#
+#     # traefik dynamic config file
+#     # see example at roles/podman/README.md
+#     traefik_dynamic_config: "files/traefik_dynamic_config.yml"
+#
+#     # Allow traefik connect to these local ports on localhost
+#     # These ports are added to traefik container with options Network=pasta:--tcp-ns
+#     traefik_forward_ports:
+#       - 11000
+#       - 8088
+#
+#     # Optionally, add tailscale container.
+#     # After service started, looking for authentication link in the journal
+#     # sudo journalctl _UID=10003 _SYSTEMD_USER_UNIT=tailscale-traefik.service
+#     traefik_tailscale_enable: true
+#
+#     # Path to store tailscale container config (If tailscale enabled)
+#     traefik_config_dir: "/path/to/container/config/tailscale"
+#
+#     # Path to store letsencrypt container config
+#     # If letsencrypt and traefik running as different users, traefik won't be
+#     # able to access letsencrypt certificates, with advantage being traefik
+#     # also won't have access to your DNS token.
+#     # To accommodate this we create a copy-ssl.service running as root and
+#     # only copy generated certificates to `{{ traefik_config_dir }}`.
+#     letsencrypt_config_dir: "/path/to/container/config/letsencrypt"
+#
+#     # firewall rules only allow connection from these ipv4 address
+#     https_accept_source_ipv4:
+#       - 192.168.1.0/24
+#       - 192.168.2.1
+
 - name: Allow rootless podman access 443 port
   ansible.builtin.copy:
     content: |

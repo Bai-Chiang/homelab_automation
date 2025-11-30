@@ -1,4 +1,51 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status nextcloud-aio.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=nextcloud-aio.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - nextcloud
+#
+#     # The Nextcloud Web UI port
+#     nextcloud_webui_port: 11000
+#
+#     # The Nextcloud AIO Web admin port
+#     nextcloud_web_admin_port: 8088
+#
+#     # Some optional environment variables pass to nextcloud-aio-mastercontainer
+#     # https://github.com/nextcloud/all-in-one/blob/main/compose.yaml
+#
+#     # SKIP_DOMAIN_VALIDATION
+#     nextcloud_skip_domain_validation: true
+#
+#     # BORG_RETENTION_POLICY
+#     nextcloud_backup_retention: "--keep-within=7d --keep-weekly=4 --keep-monthly=0"
+#
+#     # NEXTCLOUD_MEMORY_LIMIT
+#     nextcloud_memory_limit: 1024M
+
 - name: nextcloud-aio.container
   ansible.builtin.template:
     src: nextcloud-aio.container.j2
@@ -24,9 +71,9 @@
   become: true
   become_user: "{{ podman_user.name }}"
 
-#- name: systemctl --user enable --now nextcloud-aio.service
-#  ansible.builtin.systemd: name=nextcloud-aio.service state=started enabled=true scope=user
-#  become: true
-#  become_user: "{{ podman_user.name }}"
-#  ignore_errors: "{{ ansible_check_mode }}"
+- name: systemctl --user enable --now nextcloud-aio.service
+  ansible.builtin.systemd: name=nextcloud-aio.service state=started enabled=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 

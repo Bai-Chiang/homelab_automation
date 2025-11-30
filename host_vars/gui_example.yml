@@ -145,7 +145,7 @@ flatpak_pkgs:
 # roles/podman
 
 # TZ enviroment variable for LSIO images.
-TZ: "Etc/UTC"
+TZ: "UTC"
 
 # Running podman as rootless user
 # name and uid specify the username and UID value.

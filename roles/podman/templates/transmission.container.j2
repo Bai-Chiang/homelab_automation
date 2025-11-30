@@ -8,6 +8,7 @@ Requires=gluetun.service
 ContainerName=transmission
 Image=lscr.io/linuxserver/transmission:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 Volume={{ podman_user.transmission_config_dir }}:/config:Z
 Volume={{ podman_user.transmission_downloads_dir }}:/downloads:Z

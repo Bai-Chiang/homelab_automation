@@ -13,6 +13,7 @@ Pod=grafana-prometheus.pod
 {% endif %}
 Image=quay.io/prometheus/node-exporter:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 User={{ podman_user.uid }}
 Group={{ podman_user.uid }}

@@ -1,4 +1,39 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status autobrr.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=autobrr.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - autobrr
+#
+#     # autobrr Web UI port
+#     autobrr_webui_port: 7474
+#
+#     # Path to store autobrr container config
+#     autobrr_config_dir: "/path/to/container/config/autobrr"
+
 - name: autobrr container config direcoty
   ansible.builtin.file:
     path: "{{ podman_user.autobrr_config_dir }}"

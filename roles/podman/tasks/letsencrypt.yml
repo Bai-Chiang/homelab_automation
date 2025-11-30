@@ -1,4 +1,46 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status letsencrypt.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=letsencrypt.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - letsencrypt
+#
+#     # Path to store letsencrypt container config
+#     letsencrypt_config_dir: "/path/to/container/config/letsencrypt"
+#     # Also create `/path/to/container/config/letsencrypt/cloudlfare.ini` that
+#     # contains single line:
+#     # dns_cloudflare_api_token = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#
+#     # Email address for letsencrypt expiration notification
+#     letsencrypt_email: "email@domain.com"
+#
+#     # Domains contained in letsencrypt certification
+#     letsencrypt_domains:
+#       - '*.mydomain.example'
+
 - name: letsencrypt container config direcoty
   ansible.builtin.file:
     path: "{{ podman_user.letsencrypt_config_dir }}"

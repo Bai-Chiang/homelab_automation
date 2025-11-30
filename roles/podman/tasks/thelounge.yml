@@ -1,4 +1,39 @@
 ---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status thelounge.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=thelounge.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - thelounge
+#
+#     # thelounge Web UI port
+#     thelounge_webui_port: 9000
+#
+#     # Path to store thelounge container config
+#     thelounge_config_dir: "/path/to/container/config/thelounge"
+
 - name: thelounge container config direcoty
   ansible.builtin.file:
     path: "{{ podman_user.thelounge_config_dir }}"

@@ -5,6 +5,7 @@ Description=Syncthing container
 ContainerName=syncthing
 Image=lscr.io/linuxserver/syncthing:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 Volume={{ podman_user.syncthing_config_dir }}:/config:Z
 {% for item in podman_user.syncthing_data_dirs %}

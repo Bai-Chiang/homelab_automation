@@ -19,6 +19,7 @@ Wants=thelounge.service
 ContainerName=gluetun
 Image=ghcr.io/qdm12/gluetun:v3
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 AddCapability=NET_ADMIN
 AddDevice=/dev/net/tun:/dev/net/tun

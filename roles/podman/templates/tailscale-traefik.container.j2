@@ -8,6 +8,7 @@ Wants=traefik.service
 ContainerName=tailscale-traefik
 Image=ghcr.io/tailscale/tailscale:latest
 AutoUpdate=registry
+Timezone={{ TZ }}
 
 AddCapability=NET_ADMIN
 AddDevice=/dev/net/tun:/dev/net/tun
