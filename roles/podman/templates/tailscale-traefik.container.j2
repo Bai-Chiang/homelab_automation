@@ -3,6 +3,8 @@ Description=tailscale container
 Wants=network-online.target
 After=network-online.target nss-lookup.target
 Wants=traefik.service
+After=traefik.service
+Requires=traefik.service
 
 [Container]
 ContainerName=tailscale-traefik
@@ -15,14 +17,7 @@ AddDevice=/dev/net/tun:/dev/net/tun
 
 Volume={{ podman_user.tailscale_config_dir }}/:/var/lib/tailscale:Z
 
-HostName=tailscale-traefik
-PublishPort=443:443/tcp
-{% if podman_user.traefik_forward_ports is defined %}
-Network=pasta:
-{%- for port in podman_user.traefik_forward_ports -%}
---tcp-ns,{{ port }}{{ "," if not loop.last else "" }}
-{%- endfor %}
-{% endif %}
+Network=container:traefik
 
 Environment=TS_STATE_DIR=/var/lib/tailscale
 {% if podman_user.tailscale_hostname is defined %}
@@ -42,9 +37,6 @@ Restart=on-failure
 RestartSec=5
 RestartMaxDelaySec=1h
 RestartSteps=10
-
-# Remove tailscale-traefik container and all containers depend on tailscale-traefik
-ExecStartPre=-/usr/bin/podman rm --force --depend tailscale-traefik
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300

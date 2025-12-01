@@ -4,8 +4,7 @@ Wants=network-online.target
 After=network-online.target nss-lookup.target
 {% if podman_user.traefik_tailscale_enable is defined and podman_user.traefik_tailscale_enable %}
 Wants=tailscale-traefik.service
-After=tailscale-traefik.service
-Requires=tailscale-traefik.service
+Before=tailscale-traefik.service
 {% endif %}
 
 [Container]
@@ -18,9 +17,6 @@ Volume={{ podman_user.traefik_config_dir }}/static_conf.yml:/etc/traefik/traefik
 Volume={{ podman_user.traefik_config_dir }}/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml:Z,ro
 Volume={{ podman_user.traefik_config_dir }}/ssl:/etc/traefik/ssl:Z,ro
 
-{% if podman_user.traefik_tailscale_enable is defined and podman_user.traefik_tailscale_enable %}
-Network=container:tailscale-traefik
-{%- else %}
 HostName=traefik
 PublishPort=443:443/tcp
 {% if podman_user.traefik_forward_ports is defined %}
@@ -28,7 +24,6 @@ Network=pasta:
 {%- for port in podman_user.traefik_forward_ports -%}
 --tcp-ns,{{ port }}{{ "," if not loop.last else "" }}
 {%- endfor %}
-{% endif %}
 {% endif %}
 
 
@@ -38,6 +33,9 @@ Restart=on-failure
 RestartSec=5
 RestartMaxDelaySec=1h
 RestartSteps=10
+
+# Remove traefik container and all containers depend on traefik
+ExecStartPre=-/usr/bin/podman rm --force --depend traefik
 
 # Extend Timeout to allow time to pull the image
 TimeoutStartSec=300
