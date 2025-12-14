@@ -8,7 +8,7 @@ OnFailure=failure-notification@%n
 
 [Service]
 Type=oneshot
-ExecStart=ping -c 1 flathub.org
+#ExecStart=ping -c 1 flathub.org
 ExecStart=/usr/bin/flatpak update --user --noninteractive --assumeyes
 ExecStart=/usr/bin/flatpak uninstall --user --unused --noninteractive --assumeyes
 Restart=on-failure
