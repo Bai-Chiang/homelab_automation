@@ -339,7 +339,7 @@ echo "
 echo -e "Generating fstab ..."
 genfstab -U /mnt >> /mnt/etc/fstab
 echo "Removing subvolid entry in fstab ..."
-sed -i 's/subvolid=[0-9]*,//g' /mnt/etc/fstab
+sed -i '/btrfs/s/subvolid=[0-9]*,//g' /mnt/etc/fstab
 
 
 echo "
