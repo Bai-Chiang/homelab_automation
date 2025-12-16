@@ -16,6 +16,14 @@ cp arch_install.sh           "$tempdir/archlive/airootfs/root/"
 cp arch_install_bcachefs.sh  "$tempdir/archlive/airootfs/root/"
 cp homed.sh                  "$tempdir/archlive/airootfs/root/"
 
+# Add bcachefs packages
+if [[ $(grep '^bcachefs-tools$' $tempdir/archlive/packages.x86_64 | wc -l) == 0 ]] ; then
+    echo "bcachefs-tools" >> $tempdir/archlive/packages.x86_64
+fi
+if [[ $(grep '^bcachefs-dkms$' $tempdir/archlive/packages.x86_64 | wc -l) == 0 ]] ; then
+    echo "bcachefs-dkms" >> $tempdir/archlive/packages.x86_64
+fi
+
 if [[ -n "$KERNEL_CMD" ]] ; then
     # add kernel command to systemd-boot
     echo "options $KERNEL_CMD" >> "$tempdir/archlive/efiboot/loader/entries/01-archiso-x86_64-linux.conf"
