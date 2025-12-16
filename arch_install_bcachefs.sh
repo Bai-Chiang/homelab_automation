@@ -279,7 +279,7 @@ fi
 echo -e "\nMounting all partitions ..."
 mount.bcachefs UUID=$root_uuid /mnt
 mkdir /mnt/efi
-mount "$efi_part" /mnt/efi
+mount -o fmask=0177,dmask=0077,noexec,nosuid,nodev "$efi_part" /mnt/efi
 if [[ -n $swap_id ]] ; then
     swapon "$swap_part"
 fi

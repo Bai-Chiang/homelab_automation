@@ -291,7 +291,7 @@ mount -o "$home_mount_opts,subvol=@home" "$root_part" /mnt/home
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@snapshots" "$root_part" /mnt/.snapshots
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@var_log" "$root_part" /mnt/var/log
 mount -o "$BTRFS_MOUNT_OPTS,nodev,nosuid,noexec,subvol=@pacman_pkgs" "$root_part" /mnt/var/cache/pacman/pkg
-mount "$efi_part" /mnt/efi
+mount -o fmask=0177,dmask=0077,noexec,nosuid,nodev "$efi_part" /mnt/efi
 if [[ -n $swap_id ]] ; then
     swapon "$swap_part"
 fi
