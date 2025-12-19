@@ -23,6 +23,9 @@ fi
 if [[ $(grep '^bcachefs-dkms$' $tempdir/archlive/packages.x86_64 | wc -l) == 0 ]] ; then
     echo "bcachefs-dkms" >> $tempdir/archlive/packages.x86_64
 fi
+if [[ $(grep '^linux-headers$' $tempdir/archlive/packages.x86_64 | wc -l) == 0 ]] ; then
+    echo "linux-headers" >> $tempdir/archlive/packages.x86_64
+fi
 
 if [[ -n "$KERNEL_CMD" ]] ; then
     # add kernel command to systemd-boot

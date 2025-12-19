@@ -11,6 +11,7 @@ BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
 #BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted"
 
 # multiple drives setup
+# !!! multi-drives root setup NOT TESTED !!!
 # You need to specify --replicas or --data_replicas and --metadata_replicas for the script to work, otherwise it will assume single drive setup.
 
 # RAID 0
@@ -39,19 +40,19 @@ ZRAM_SIZE='min(ram / 2, 4 * 1024)'
 # minimal example
 KERNEL_PKGS="linux"
 BASE_PKGS="base sudo linux-firmware iptables-nft python"
-FS_PKGS="dosfstools bcachefs-dkms bcachefs-tools"
+FS_PKGS="dosfstools bcachefs-tools bcachefs-dkms linux-headers"
 #KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 ## server example
-#KERNEL_PKGS="linux-hardened"
+#KERNEL_PKGS="linux linux-hardened"
 #BASE_PKGS="base sudo linux-firmware python iptables-nft"
-#FS_PKGS="dosfstools bcachefs-tools"
+#FS_PKGS="dosfstools bcachefs-tools bcachefs-dkms linux-headers linux-hardened linux-hardened-headers"
 #OTHER_PKGS="vim"
 
 ## desktop example
 #KERNEL_PKGS="linux"
 #BASE_PKGS="base linux-firmware sudo python iptables-nft"
-#FS_PKGS="dosfstools e2fsprogs bcachefs-tools"
+#FS_PKGS="dosfstools e2fsprogs bcachefs-tools bcachefs-dkms linux-headers"
 #OTHER_PKGS="man-db vim"
 #OTHER_PKGS="$OTHER_PKGS git base-devel ansible"
 
@@ -394,11 +395,15 @@ else
 fi
 
 
-# Tried this but it still won't boot if it's encrypted
-#if [[ $BCACHEFS_FORMAT_OPTS == *"--encrypted"* ]] ; then
-#    # bcachefs is encrypted
-#    sed -i '/^MODULES=/ s/()/(bcachefs)/' /mnt/etc/mkinitcpio.conf
-#fi
+echo "
+######################################################
+# Add bcachefs to initramfs
+# https://wiki.archlinux.org/title/User:Bai-Chiang/Arch_Linux_installation_with_Bcachefs,_unified_kernel_image_(UKI),_secure_boot,_and_common_setups#Add_bcachefs_to_initramfs
+######################################################
+"
+# mkinitcpio
+echo "Editing mkinitcpio ..."
+sed -i '/^HOOKS=/ s/filesystems/bcachefs filesystems/' /mnt/etc/mkinitcpio.conf
 
 
 if [[ -n $swap_id ]] ; then
@@ -424,6 +429,7 @@ if [[ -n $swap_id ]] ; then
     # change /etc/fstab swap entry
     sed -i "/swap/ s:^UUID=[a-zA-Z0-9-]*\s:/dev/mapper/cryptswap  :" /mnt/etc/fstab
 fi
+
 
 # modprobe.blacklist=pcspkr will disable PC speaker (beep) globally
 # https://wiki.archlinux.org/title/PC_speaker#Globally
