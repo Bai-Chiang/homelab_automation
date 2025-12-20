@@ -23,6 +23,22 @@ firewall_drop="${firewall_drop:-n}"
 firewall_drop="${firewall_drop,,}"
 if [[ $firewall_drop == y ]] ; then
     firewall-cmd --set-default-zone=drop
+
+    read -p "Allow ICMP echo-request and echo-reply (respond ping)? [Y/n] " allow_ping
+    allow_ping="${allow_ping:-y}"
+    allow_ping="${allow_ping,,}"
+    if [[ $allow_ping == y ]] ; then
+        firewall-cmd --permanent --zone=drop --add-icmp-block-inversion
+        echo -e "\nallow ping source ip address (example 192.168.1.0/24) empty to allow all"
+        read ping_source
+        if [[ -n $ping_source ]] ; then
+            firewall-cmd --permanent --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-request' accept"
+            firewall-cmd --permanent --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-reply' accept"
+        else
+            firewall-cmd --permanent --zone=drop --add-icmp-block=echo-request
+            firewall-cmd --permanent --zone=drop --add-icmp-block=echo-reply
+        fi
+    fi
 fi
 
 echo -e "\nssh allow source ip address (example 192.168.1.0/24), empty to skip"
