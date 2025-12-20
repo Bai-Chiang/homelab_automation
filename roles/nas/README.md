@@ -145,7 +145,7 @@ Set up Samba when `{{ smb_share }}` is defined.
 #    [data]
 #       comment = data
 #       path = /srv/smb/data
-#       valid users = smb_username
+#       valid users = smb_username, smb_username2
 #       public = no
 #       browseable = no
 #       printable = no
@@ -159,13 +159,16 @@ smb_share:
   - name: data
     comment: data
     path: /home/tux/data        # no trailing slash at the end
-    valid_users: smb_username
+    valid_users: smb_username, smb_username2
     read_only: 'no'
 
 # Samba user with UID and password
 smb_users:
   - name: smb_username
     passwd: !unsafe pa$sw0r6
+    uid: 10001
+  - name: smb_username2
+    passwd: !unsafe p@$sw0r6
     uid: 10001
 
 # (Optional) Firewall rule, only allow Samba connection from these IP address.
