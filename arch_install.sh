@@ -460,7 +460,10 @@ if [[ $encrypt_root == y ]] ; then
     sed -i '/^HOOKS=/ s/base/base systemd keyboard/' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/block/sd-vconsole block sd-encrypt/' /mnt/etc/mkinitcpio.conf
     if [[ $cryptkey == y ]] ; then
-        sed -i '/^MODULES=/ s/()/(vfat)/' /mnt/etc/mkinitcpio.conf
+        #sed -i '/^MODULES=/ s/()/(vfat keyboard usbhid xhci_hcd)/' /mnt/etc/mkinitcpio.conf
+        sed -i '/^MODULES=/ s/()/(vfat keyboard)/' /mnt/etc/mkinitcpio.conf
+    else
+        sed -i '/^MODULES=/ s/()/(keyboard)/' /mnt/etc/mkinitcpio.conf
     fi
 else
     kernel_cmd="root=UUID=$root_uuid"
