@@ -520,8 +520,8 @@ arch-chroot /mnt mkdir -p /efi/EFI/Linux
 for KERNEL in $KERNEL_PKGS
 do
     # Edit default_uki= and fallback_uki=
-    sed -i -E "s@^(#|)default_uki=.*@default_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i -E "s@^(#|)fallback_uki=.*@fallback_uki=\"/efi/EFI/Linux/ArchLinux-$KERNEL-fallback.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i -E "s@^(#|)default_uki=.*@default_uki=\"/efi/EFI/Linux/arch-$KERNEL.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    sed -i -E "s@^(#|)fallback_uki=.*@fallback_uki=\"/efi/EFI/Linux/arch-$KERNEL-fallback.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
     # Edit default_options= and fallback_options=
     sed -i -E "s@^(#|)default_options=.*@default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
     sed -i -E "s@^(#|)fallback_options=.*@fallback_options=\"-S autodetect --cmdline /etc/kernel/cmdline_fallback\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
@@ -584,8 +584,8 @@ if [[ $secure_boot == y ]] ; then
     echo "Signing unified kernel image ..."
     for KERNEL in $KERNEL_PKGS
     do
-        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/ArchLinux-$KERNEL.efi"
-        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/ArchLinux-$KERNEL-fallback.efi"
+        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/arch-$KERNEL.efi"
+        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/arch-$KERNEL-fallback.efi"
     done
 fi
 
@@ -604,7 +604,7 @@ echo "Creating UEFI boot entries for each unified kernel image ..."
 for KERNEL in $KERNEL_PKGS
 do
     # Add $KERNEL to boot loader
-    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\ArchLinux-$KERNEL.efi" --quiet --unicode
+    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\arch-$KERNEL.efi" --quiet --unicode
     # Get new added boot entry BootXXXX*
     bootnum=$(efibootmgr --unicode | awk "/\sArchLinux-$KERNEL\s/ { print \$1}")
     # Get the hex number
@@ -617,7 +617,7 @@ do
     fi
 
     # Add $KERNEL-fallback to boot loader
-    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\ArchLinux-$KERNEL-fallback.efi" --quiet --unicode
+    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\arch-$KERNEL-fallback.efi" --quiet --unicode
     # Get new added boot entry BootXXXX*
     bootnum=$(efibootmgr --unicode | awk "/\sArchLinux-$KERNEL-fallback\s/ { print \$1}")
     # Get the hex number
