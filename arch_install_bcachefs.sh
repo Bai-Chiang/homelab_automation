@@ -8,6 +8,7 @@
 BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
 
 # Single drive with compression and encryption
+# !!!encryption does NOT work!!!
 #BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted"
 
 # multiple drives setup
@@ -23,7 +24,7 @@ BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
 
 # Complicated options with pre-partitioned disks
 # Need to specify --label= options
-#BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted --data_replicas=2 --metadata_replicas=2 --metadata_target=ssd --foreground_target=ssd --promote_target=ssd --background_target=hdd --label=hdd.hdd0 /dev/sdb --label=hdd.hdd1 /dev/sdc --durability=2 --discard --label=ssd.ssd0 /dev/sda2"
+#BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --data_replicas=2 --metadata_replicas=2 --metadata_target=ssd --foreground_target=ssd --promote_target=ssd --background_target=hdd --label=hdd.hdd0 /dev/sdb --label=hdd.hdd1 /dev/sdc --durability=2 --discard --label=ssd.ssd0 /dev/sda2"
 
 UCODE_PKG="amd-ucode"
 
@@ -244,6 +245,25 @@ if [[ -n $swap_id ]] ; then
 fi
 
 
+## encrypted root partition
+#if [[ $BCACHEFS_FORMAT_OPTS == *"--encrypted"* ]] ; then
+#    echo -e "\nDo you want to create a key file on the efi partition to automatically unlock the root partition on boot?\nThis could be used with the setup that the boot partition on an external flash drive, such that the system could autounlock on boot. But without the flash drive the system cannot boot and root partition is encrypted. It's not recommended if both efi and root partition on the same device, it would make the encryption meanless. Since the key file is on the unencrypted efi partition, anyone could easily the key file and decrypt the root partition.\nIf choose n then it will ask you for a encryption password."
+#    read -p "[y/N] " cryptkey
+#    cryptkey="${cryptkey:-n}"
+#    cryptkey="${cryptkey,,}"
+#    if [[ $cryptkey == y ]] ; then
+#        # create keyfile
+#        # https://wiki.archlinux.org/title/Dm-crypt/Device_encryption#Creating_a_keyfile_with_random_characters
+#        echo -e "\nCreating keyfile ..."
+#        mkdir -p /efi
+#        mount "$efi_part" /efi
+#        dd bs=512 count=4 if=/dev/random iflag=fullblock | base64 --wrap=0 > /efi/rootkeyfile
+#        chmod 600 /efi/rootkeyfile
+#        bcachefs_format_opts=$(echo $bcachefs_format_opts | sed 's|--encrypted |--encrypted --passphrase_file=/efi/rootkeyfile |')
+#    fi
+#fi
+
+
 echo "
 ######################################################
 # Format the partitions
@@ -277,8 +297,15 @@ fi
 
 
 # mount all partitions
-echo -e "\nMounting all partitions ..."
-mount.bcachefs UUID=$root_uuid /mnt
+echo -e "\nMounting root partition with command:"
+if [[ $cryptkey == y ]] ; then
+    echo -e "   bcachefs mount --passphrase-file /efi/rootkeyfile UUID=$root_uuid /mnt"
+    bcachefs mount --passphrase-file /efi/rootkeyfile UUID=$root_uuid /mnt
+    umount -R /efi
+else
+    echo -e "   mount.bcachefs UUID=$root_uuid /mnt"
+    mount.bcachefs UUID=$root_uuid /mnt
+fi
 mkdir /mnt/efi
 mount -o fmask=0177,dmask=0077,noexec,nosuid,nodev "$efi_part" /mnt/efi
 if [[ -n $swap_id ]] ; then
@@ -403,6 +430,22 @@ echo "
 "
 # mkinitcpio
 echo "Editing mkinitcpio ..."
+#if [[ $BCACHEFS_FORMAT_OPTS == *"--encrypted"* ]] ; then
+#    sed -i '/^HOOKS=/ s/ keyboard//' /mnt/etc/mkinitcpio.conf
+#    sed -i '/^HOOKS=/ s/ udev//' /mnt/etc/mkinitcpio.conf
+#    sed -i '/^HOOKS=/ s/ keymap//' /mnt/etc/mkinitcpio.conf
+#    sed -i '/^HOOKS=/ s/ consolefont//' /mnt/etc/mkinitcpio.conf
+#    sed -i '/^HOOKS=/ s/base/base systemd keyboard/' /mnt/etc/mkinitcpio.conf
+#    sed -i '/^HOOKS=/ s/block/sd-vconsole block sd-encrypt/' /mnt/etc/mkinitcpio.conf
+#    if [[ $cryptkey == y ]] ; then
+#        #sed -i '/^MODULES=/ s/()/(vfat bcachefs keyboard usbhid xhci_hcd)/' /mnt/etc/mkinitcpio.conf
+#        sed -i '/^MODULES=/ s/()/(vfat bcachefs keyboard)/' /mnt/etc/mkinitcpio.conf
+#    else
+#        #sed -i '/^MODULES=/ s/()/(bcachefs keyboard usbhid xhci_hcd)/' /mnt/etc/mkinitcpio.conf
+#        sed -i '/^MODULES=/ s/()/(bcachefs keyboard)/' /mnt/etc/mkinitcpio.conf
+#    fi
+#fi
+sed -i '/^MODULES=/ s/()/(bcachefs)/' /mnt/etc/mkinitcpio.conf
 sed -i '/^HOOKS=/ s/filesystems/bcachefs filesystems/' /mnt/etc/mkinitcpio.conf
 
 
