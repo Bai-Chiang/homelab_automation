@@ -39,19 +39,19 @@ TIMEZONE="UTC"
 ZRAM_SIZE='min(ram / 2, 4 * 1024)'
 
 # minimal example
-KERNEL_PKGS="linux"
+KERNELS=("linux")
 BASE_PKGS="base sudo linux-firmware iptables-nft python"
 FS_PKGS="dosfstools bcachefs-tools bcachefs-dkms linux-headers"
 #KERNEL_PARAMETERS="console=ttyS0"    # this kernel parameter force output to serial port, useful for libvirt virtual machine w/o any graphis.
 
 ## server example
-#KERNEL_PKGS="linux linux-hardened"
+#KERNELS=("linux" "linux-hardened")
 #BASE_PKGS="base sudo linux-firmware python iptables-nft"
 #FS_PKGS="dosfstools bcachefs-tools bcachefs-dkms linux-headers linux-hardened linux-hardened-headers"
 #OTHER_PKGS="vim"
 
 ## desktop example
-#KERNEL_PKGS="linux"
+#KERNELS=("linux")
 #BASE_PKGS="base linux-firmware sudo python iptables-nft"
 #FS_PKGS="dosfstools e2fsprogs bcachefs-tools bcachefs-dkms linux-headers"
 #OTHER_PKGS="man-db vim"
@@ -343,7 +343,7 @@ echo "
 # https://wiki.archlinux.org/title/Installation_guide#Install_essential_packages
 ######################################################
 "
-pacstrap -K /mnt $BASE_PKGS $KERNEL_PKGS $FS_PKGS $UCODE_PKG $OTHER_PKGS
+pacstrap -K /mnt $BASE_PKGS ${KERNELS[@]} $FS_PKGS $UCODE_PKG $OTHER_PKGS
 
 
 echo "
@@ -559,18 +559,30 @@ echo "
 # https://wiki.archlinux.org/title/Unified_kernel_image
 ######################################################
 "
-arch-chroot /mnt mkdir -p /efi/EFI/Linux
-for KERNEL in $KERNEL_PKGS
-do
-    # Edit default_uki= and fallback_uki=
-    sed -i -E "s@^(#|)default_uki=.*@default_uki=\"/efi/EFI/Linux/arch-$KERNEL.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i -E "s@^(#|)fallback_uki=.*@fallback_uki=\"/efi/EFI/Linux/arch-$KERNEL-fallback.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    # Edit default_options= and fallback_options=
+if [[ ${#KERNELS[@]} == 1 ]] ; then
+    echo "Do you want to intall UKI to /efi/EFI/BOOT/BOOTX64.EFI? This is a workaround for machines that have faulty firmware that can't add boot entries."
+    read -p "[y/N] " bootx64
+    bootx64="${bootx64:-n}"
+    bootx64="${bootx64,,}"
+else
+    bootx64="n"
+fi
+if [[ $bootx64 == y ]] ; then
+    arch-chroot /mnt mkdir -p /efi/EFI/BOOT
+else
+    arch-chroot /mnt mkdir -p /efi/EFI/Linux
+fi
+for KERNEL in $KERNELS ; do
+    # Edit default_uki=
+    if [[ $bootx64 == y ]] ; then
+        sed -i -E "s@^(#|)default_uki=.*@default_uki=\"/efi/EFI/BOOT/BOOTX64.EFI\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    else
+        sed -i -E "s@^(#|)default_uki=.*@default_uki=\"/efi/EFI/Linux/arch-$KERNEL.efi\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
+    fi
+    # Edit default_options=
     sed -i -E "s@^(#|)default_options=.*@default_options=\"--splash /usr/share/systemd/bootctl/splash-arch.bmp\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i -E "s@^(#|)fallback_options=.*@fallback_options=\"-S autodetect --cmdline /etc/kernel/cmdline_fallback\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    # comment out default_image= and fallback_image=
+    # comment out default_image=
     sed -i -E "s@^(#|)default_image=.*@#&@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
-    sed -i -E "s@^(#|)fallback_image=.*@#&@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
 done
 
 # remove leftover initramfs-*.img from /boot or /efi
@@ -625,10 +637,12 @@ if [[ $secure_boot == y ]] ; then
     fi
 
     echo "Signing unified kernel image ..."
-    for KERNEL in $KERNEL_PKGS
-    do
-        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/arch-$KERNEL.efi"
-        arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/arch-$KERNEL-fallback.efi"
+    for KERNEL in $KERNELS ; do
+        if [[ $bootx64 == y ]] ; then
+            arch-chroot /mnt sbctl sign --save "/efi/EFI/BOOT/BOOTX64.EFI"
+        else
+            arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/arch-$KERNEL.efi"
+        fi
     done
 fi
 
@@ -644,10 +658,13 @@ arch-chroot /mnt pacman --noconfirm -S --needed efibootmgr
 
 bootorder=""
 echo "Creating UEFI boot entries for each unified kernel image ..."
-for KERNEL in $KERNEL_PKGS
-do
+for KERNEL in $KERNELS ; do
     # Add $KERNEL to boot loader
-    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\arch-$KERNEL.efi" --quiet --unicode
+    if [[ $bootx64 == y ]] ; then
+        arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader 'EFI\BOOT\BOOTX64.EFI' --quiet --unicode
+    else
+        arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\arch-$KERNEL.efi" --quiet --unicode
+    fi
     # Get new added boot entry BootXXXX*
     bootnum=$(efibootmgr --unicode | awk "/\sArchLinux-$KERNEL\s/ { print \$1}")
     # Get the hex number
@@ -658,15 +675,6 @@ do
     else
         bootorder="$bootorder,$bootnum"
     fi
-
-    # Add $KERNEL-fallback to boot loader
-    arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL-fallback" --loader "EFI\\Linux\\arch-$KERNEL-fallback.efi" --quiet --unicode
-    # Get new added boot entry BootXXXX*
-    bootnum=$(efibootmgr --unicode | awk "/\sArchLinux-$KERNEL-fallback\s/ { print \$1}")
-    # Get the hex number
-    bootnum=${bootnum:4:4}
-    # Add bootnum to bootorder
-    bootorder="$bootorder,$bootnum"
 done
 arch-chroot /mnt efibootmgr --bootorder ${bootorder} --quiet --unicode
 
@@ -687,7 +695,7 @@ echo "
 # https://wiki.archlinux.org/title/Podman#Rootless_Podman
 ######################################################
 "
-if [[ $KERNEL_PKGS == *"linux-hardened"* ]]; then
+if [[ ${KERNELS[@]} =~ "linux-hardened" ]]; then
     read -p "Do you want to enable the unprivileged user namespace (for rootless containers) ? [Y/n] " enable_user_ns_unprivileged
     enable_user_ns_unprivileged="${enable_user_ns_unprivileged:-y}"
     enable_user_ns_unprivileged="${enable_user_ns_unprivileged,,}"
