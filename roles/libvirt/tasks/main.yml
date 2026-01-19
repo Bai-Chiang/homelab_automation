@@ -26,15 +26,12 @@
   community.general.pacman:
     name:
       # libvirt
-      - qemu-desktop
+      - qemu-base
       - libvirt
-      - virt-manager
       # default NAT/DHCP networking support
       - iptables-nft
       - dnsmasq
       - dmidecode
-      # bridged networking support
-      - bridge-utils
       # UEFI support
       - edk2-ovmf
     state: present
