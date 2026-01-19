@@ -145,7 +145,7 @@
     - podman_user.traefik_tailscale_enable
 
 - name: systemctl --user daemon-reload
-  ansible.builtin.systemd: daemon_reload=true scope=user
+  ansible.builtin.systemd_service: daemon_reload=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
@@ -177,31 +177,31 @@
   become: true
 
 - name: systemctl daemon-reload
-  ansible.builtin.systemd: daemon_reload=true
+  ansible.builtin.systemd_service: daemon_reload=true
   become: true
 
 - name: systemctl enable copy-ssl.timer
-  ansible.builtin.systemd: name=copy-ssl.timer enabled=true
+  ansible.builtin.systemd_service: name=copy-ssl.timer enabled=true
   become: true
 
 - name: systemctl start copy-ssl.service
-  ansible.builtin.systemd: name=copy-ssl.service state=started
+  ansible.builtin.systemd_service: name=copy-ssl.service state=started
   become: true
   when: copy_ssl_service.changed
 
 - name: systemctl --user daemon-reload
-  ansible.builtin.systemd: daemon_reload=true scope=user
+  ansible.builtin.systemd_service: daemon_reload=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
 - name: systemctl --user enable --now traefik.service
-  ansible.builtin.systemd: name=traefik.service state=started enabled=true scope=user
+  ansible.builtin.systemd_service: name=traefik.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl --user enable --now tailscale-traefik.service
-  ansible.builtin.systemd: name=tailscale-traefik.service state=started enabled=true scope=user
+  ansible.builtin.systemd_service: name=tailscale-traefik.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"

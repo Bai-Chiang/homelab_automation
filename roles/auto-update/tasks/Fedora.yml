@@ -46,10 +46,10 @@
   when: auto_update_time is defined
 
 - name: systemctl daemon-reload
-  ansible.builtin.systemd: daemon_reload=true
+  ansible.builtin.systemd_service: daemon_reload=true
   become: true
 
-- name: systemctl enable dnf5-automatic.timer
-  ansible.builtin.systemd: name=dnf5-automatic.timer enabled=true state=started
+- name: systemctl enable --now dnf5-automatic.timer
+  ansible.builtin.systemd_service: name=dnf5-automatic.timer enabled=true state=started
   become: true
 

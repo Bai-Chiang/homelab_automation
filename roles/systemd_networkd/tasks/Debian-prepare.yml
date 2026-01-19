@@ -17,6 +17,6 @@
   when: ansible_facts["distribution"] == "Debian" and network_interfaces.stat.exists
 
 - name: systemctl disable NetworkManager
-  ansible.builtin.systemd: name=NetworkManager enabled=false
+  ansible.builtin.systemd_service: name=NetworkManager enabled=false
   become: true
 

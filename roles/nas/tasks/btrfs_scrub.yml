@@ -49,6 +49,6 @@
   become: true
 
 - name: systemctl enable btrfs-scrub@.timer
-  ansible.builtin.systemd: name=btrfs-scrub@{{ item.escape }}.timer enabled=true
+  ansible.builtin.systemd_service: name=btrfs-scrub@{{ item.escape }}.timer enabled=true
   loop: "{{ btrfs_scrub_path }}"
   become: true

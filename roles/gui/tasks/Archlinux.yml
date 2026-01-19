@@ -47,12 +47,12 @@
   become: true
 
 - name: systemctl enable sddm.service
-  ansible.builtin.systemd: name=sddm.service enabled=true
+  ansible.builtin.systemd_service: name=sddm.service enabled=true
   become: true
   when: '"sddm" in wm_pkgs'
 
 - name: systemctl enable gdm.service
-  ansible.builtin.systemd: name=gdm.service enabled=true
+  ansible.builtin.systemd_service: name=gdm.service enabled=true
   become: true
   when: '"gdm" in wm_pkgs'
 
@@ -62,7 +62,7 @@
   when: other_pkgs is defined
 
 - name: systemctl enable cups.socket
-  ansible.builtin.systemd: name=cups.socket enabled=true
+  ansible.builtin.systemd_service: name=cups.socket enabled=true
   become: true
   when: '"cups" in other_pkgs'
 
@@ -72,8 +72,8 @@
 - include_tasks: flatpak.yml
   when: flatpak_pkgs is defined
 
-- name: systemctl enable --now bluetooth.service
-  ansible.builtin.systemd: name=bluetooth.service enabled=true state=started
+- name: systemctl enable bluetooth.service
+  ansible.builtin.systemd_service: name=bluetooth.service enabled=true
   become: true
   when: '"bluez" in other_pkgs or "bluez-utils" in other_pkgs'
 

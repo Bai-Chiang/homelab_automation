@@ -87,12 +87,12 @@
   become: true
 
 - name: (ArchLinux) systemctl enable nfsv4-server.service
-  ansible.builtin.systemd: name=nfsv4-server.service enabled=true
+  ansible.builtin.systemd_service: name=nfsv4-server.service enabled=true
   become: true
   when: ansible_facts["distribution"] == "Archlinux"
 
 - name: (ArchLinux) systemctl mask rpcbind.service rpcbind.socket nfs-server.service
-  ansible.builtin.systemd: name={{ item }} enabled=false masked=true
+  ansible.builtin.systemd_service: name={{ item }} enabled=false masked=true
   become: true
   loop:
     - rpcbind.service
@@ -101,7 +101,7 @@
   when: ansible_facts["distribution"] == "Archlinux"
 
 - name: (Fedora) systemctl enable nfs-server.service
-  ansible.builtin.systemd: name=nfs-server.service enabled=true
+  ansible.builtin.systemd_service: name=nfs-server.service enabled=true
   become: true
   when: ansible_facts["distribution"] == "Fedora"
 

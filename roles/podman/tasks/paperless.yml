@@ -68,24 +68,24 @@
     - paperless-ngx-redis.container
 
 - name: systemctl --user daemon-reload
-  ansible.builtin.systemd: daemon_reload=true scope=user
+  ansible.builtin.systemd_service: daemon_reload=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
 - name: systemctl --user enable --now paperless-ngx-pod.service
-  ansible.builtin.systemd: name=paperless-ngx-pod.service state=started enabled=true scope=user
+  ansible.builtin.systemd_service: name=paperless-ngx-pod.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl --user enable --now paperless-ngx-redis.service
-  ansible.builtin.systemd: name=paperless-ngx-redis.service state=started enabled=true scope=user
+  ansible.builtin.systemd_service: name=paperless-ngx-redis.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl --user enable --now paperless-ngx.service
-  ansible.builtin.systemd: name=paperless-ngx.service state=started enabled=true scope=user
+  ansible.builtin.systemd_service: name=paperless-ngx.service state=started enabled=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"

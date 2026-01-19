@@ -30,24 +30,24 @@
     - unifi-db.container
 
 - name: systemctl --user daemon-reload
-  ansible.builtin.systemd: daemon_reload=true scope=user
+  ansible.builtin.systemd_service: daemon_reload=true scope=user
   become: true
   become_user: "{{ podman_user.name }}"
 
 - name: systemctl --user start unifi-pod.service
-  ansible.builtin.systemd: name=unifi-pod state=started scope=user
+  ansible.builtin.systemd_service: name=unifi-pod state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl --user start unifi-db.service
-  ansible.builtin.systemd: name=unifi-db state=started scope=user
+  ansible.builtin.systemd_service: name=unifi-db state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: systemctl --user start unifi.service
-  ansible.builtin.systemd: name=unifi state=started scope=user
+  ansible.builtin.systemd_service: name=unifi state=started scope=user
   become: true
   become_user: "{{ podman_user.name }}"
   ignore_errors: "{{ ansible_check_mode }}"

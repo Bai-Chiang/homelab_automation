@@ -46,9 +46,9 @@
     - failure-notification@.service
 
 - name: systemctl --user daemon-reload
-  ansible.builtin.systemd: daemon_reload=true scope=user
+  ansible.builtin.systemd_service: daemon_reload=true scope=user
 
-- name: systemctl enable --user flatpak-update.timer
-  ansible.builtin.systemd: name=flatpak-update.timer enabled=true scope=user
+- name: systemctl --user enable flatpak-update.timer
+  ansible.builtin.systemd_service: name=flatpak-update.timer enabled=true scope=user
   ignore_errors: "{{ ansible_check_mode }}"
 

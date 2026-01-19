@@ -25,10 +25,10 @@
   when: networkd_configs_dir is defined
 
 - name: systemctl enable systemd-networkd
-  ansible.builtin.systemd: name=systemd-networkd enabled=true
+  ansible.builtin.systemd_service: name=systemd-networkd enabled=true
   become: true
 
 - name: systemctl enable systemd-resolved
-  ansible.builtin.systemd: name=systemd-resolved enabled=true
+  ansible.builtin.systemd_service: name=systemd-resolved enabled=true
   become: true
 

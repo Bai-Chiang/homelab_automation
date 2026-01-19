@@ -57,11 +57,11 @@
   become: true
 
 - name: systemctl enable snapper-timeline.timer
-  ansible.builtin.systemd: name=snapper-timeline.timer enabled=true
+  ansible.builtin.systemd_service: name=snapper-timeline.timer enabled=true
   become: true
 
 - name: systemctl enable snapper-cleanup.timer
-  ansible.builtin.systemd: name=snapper-cleanup.timer enabled=true
+  ansible.builtin.systemd_service: name=snapper-cleanup.timer enabled=true
   become: true
 
 - name: Create /etc/pacman.d/hooks/ if it does not exist

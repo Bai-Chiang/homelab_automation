@@ -54,12 +54,12 @@
   when: homed
 
 - name: systemctl enable libvirtd.service
-  ansible.builtin.systemd: name=libvirtd.service enabled=true
+  ansible.builtin.systemd_service: name=libvirtd.service enabled=true
   register: libvirtd
   become: true
 
 - name: systemctl start libvirtd.service virtlogd.service
-  ansible.builtin.systemd: name={{ item }} state=started
+  ansible.builtin.systemd_service: name={{ item }} state=started
   when: libvirtd.changed
   become: true
   loop:
