@@ -13,8 +13,8 @@ This repository is a collection of scripts and  Ansible playbooks that I used to
   The script is designed to work on bcachefs with single drive or multiple drives setup.
   But current only single drive without encryption setup works.
 
-- [`mkarchiso.sh`](mkarchiso.sh) will create a latest Arch Linux ISO under `/tmp` directory with optionally additional kernel parameters.
-  It will also copy installation scripts to `/root` in the ISO image.
+- [`mkarchiso.sh`](mkarchiso.sh) will create a latest Arch Linux ISO under `/tmp` directory.
+  It will the copy installation scripts to `/root` in the ISO image.
   ```
   sudo bash mkarchiso.sh
   ```
@@ -22,11 +22,11 @@ This repository is a collection of scripts and  Ansible playbooks that I used to
   It will not have graphics output, only serial output to terminal.
   This requires adding kernel parameter `console=ttyS0` to ISO image.
   ```
-  sudo bash virt-install_arch.sh  vm_name
+  bash virt-install_arch.sh  vm_name
   ```
   [`virsh_undefine.sh`](virsh_undefine.sh) will remove a virtual machine and its storage.
   ```
-  sudo bash virsh_undefine.sh  vm_name
+  bash virsh_undefine.sh  vm_name
   ```
   I use these scripts to test my Arch Linux installation scripts.
 

@@ -7,6 +7,6 @@ if [[ -z $1 ]] ; then
     exit 1
 fi
 
-virsh destroy "$1"
+virsh --connect qemu:///system destroy "$1"
 sleep 1
-virsh undefine "$1" --nvram --storage "/var/lib/libvirt/images/$1.qcow2"
+virsh --connect qemu:///system undefine "$1" --nvram --storage "/var/lib/libvirt/images/$1.qcow2"

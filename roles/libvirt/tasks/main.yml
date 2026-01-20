@@ -28,6 +28,8 @@
       # libvirt
       - qemu-base
       - libvirt
+      - virt-install
+      - qemu-hw-usb-host
       # default NAT/DHCP networking support
       - iptables-nft
       - dnsmasq
