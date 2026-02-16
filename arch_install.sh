@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 UCODE_PKG="amd-ucode"
-BTRFS_MOUNT_OPTS="ssd,noatime,compress=zstd:1,space_cache=v2,autodefrag"
+BTRFS_MOUNT_OPTS="ssd,compress=zstd:1,space_cache=v2,autodefrag"
 
 # Localization
 # https://wiki.archlinux.org/title/Installation_guide#Localization
