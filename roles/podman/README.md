@@ -359,6 +359,9 @@ scrape_configs:
    static_configs:
     - targets:
       - localhost:9100
+      # If `prometheus_host_mode` is set to `true`
+      # then use host.containers.internal:9100 to connect to the node-exporter.
+      #- host.containers.internal:9100
 ```
 
 In Grafana connect to Prometheus data source with URL `http://localhost:9090`
