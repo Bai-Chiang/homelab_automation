@@ -1,3 +1,4 @@
 ---
 homed: false
 #firewalld_default_zone: public
+TZ: "UTC"
