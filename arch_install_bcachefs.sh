@@ -542,10 +542,7 @@ vfio="${vfio,,}"
 if [[ $vfio == y ]] ; then
     if [[ $(grep -e 'vendor_id.*GenuineIntel' /proc/cpuinfo | wc -l) -ge 1 ]] ; then
         # for intel cpu
-        kernel_cmd="$kernel_cmd intel_iommu=on iommu=pt"
-    else
-        # amd cpu
-        kernel_cmd="$kernel_cmd iommu=pt"
+        kernel_cmd="$kernel_cmd intel_iommu=on"
     fi
     # load vfio-pci module early
     # https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#mkinitcpio
