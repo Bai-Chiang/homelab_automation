@@ -16,6 +16,7 @@ fi
 
 # Create empty auto-update.log
 echo '' > /var/log/auto-update.log
+/usr/bin/date '+%F %T' >> /var/log/auto-update.log
 
 {% if btrfs_scrub_time is defined %}
 # systemctl is-active return 0 if at least one is active
