@@ -299,12 +299,12 @@ fi
 # mount all partitions
 echo -e "\nMounting root partition with command:"
 if [[ $cryptkey == y ]] ; then
-    echo -e "   bcachefs mount --passphrase-file /efi/rootkeyfile UUID=$root_uuid /mnt"
-    bcachefs mount --passphrase-file /efi/rootkeyfile UUID=$root_uuid /mnt
+    echo -e "   bcachefs mount -o noatime --passphrase-file /efi/rootkeyfile UUID=$root_uuid /mnt"
+    bcachefs mount -o noatime --passphrase-file /efi/rootkeyfile UUID=$root_uuid /mnt
     umount -R /efi
 else
-    echo -e "   mount.bcachefs UUID=$root_uuid /mnt"
-    mount.bcachefs UUID=$root_uuid /mnt
+    echo -e "   bcachefs mount -o noatime UUID=$root_uuid /mnt"
+    bcachefs mount -o noatime UUID=$root_uuid /mnt
 fi
 mkdir /mnt/efi
 mount -o fmask=0177,dmask=0077,noexec,nosuid,nodev "$efi_part" /mnt/efi
