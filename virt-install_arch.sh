@@ -15,7 +15,7 @@ iso_uuid="$(blkid -s UUID -o value /tmp/archlinux-$(date +'%Y.%m.%d')-x86_64.iso
 # with additional console=ttyS0
 virt-install \
     --name "$1" \
-    --memory 2048 \
+    --memory 4096 \
     --sysinfo host \
     --cpu host-passthrough,cache.mode=passthrough,topology.sockets=1,topology.cores=4,topology.threads=2 \
     --os-variant name='archlinux' \
