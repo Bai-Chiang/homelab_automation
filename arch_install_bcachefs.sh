@@ -8,7 +8,6 @@
 BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
 
 # Single drive with compression and encryption
-# !!!encryption does NOT work!!!
 #BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted"
 
 # multiple drives setup
@@ -430,21 +429,12 @@ echo "
 "
 # mkinitcpio
 echo "Editing mkinitcpio ..."
-#if [[ $BCACHEFS_FORMAT_OPTS == *"--encrypted"* ]] ; then
-#    sed -i '/^HOOKS=/ s/ keyboard//' /mnt/etc/mkinitcpio.conf
-#    sed -i '/^HOOKS=/ s/ udev//' /mnt/etc/mkinitcpio.conf
-#    sed -i '/^HOOKS=/ s/ keymap//' /mnt/etc/mkinitcpio.conf
-#    sed -i '/^HOOKS=/ s/ consolefont//' /mnt/etc/mkinitcpio.conf
-#    sed -i '/^HOOKS=/ s/base/base systemd keyboard/' /mnt/etc/mkinitcpio.conf
-#    sed -i '/^HOOKS=/ s/block/sd-vconsole block sd-encrypt/' /mnt/etc/mkinitcpio.conf
-#    if [[ $cryptkey == y ]] ; then
-#        #sed -i '/^MODULES=/ s/()/(vfat bcachefs keyboard usbhid xhci_hcd)/' /mnt/etc/mkinitcpio.conf
-#        sed -i '/^MODULES=/ s/()/(vfat bcachefs keyboard)/' /mnt/etc/mkinitcpio.conf
-#    else
-#        #sed -i '/^MODULES=/ s/()/(bcachefs keyboard usbhid xhci_hcd)/' /mnt/etc/mkinitcpio.conf
-#        sed -i '/^MODULES=/ s/()/(bcachefs keyboard)/' /mnt/etc/mkinitcpio.conf
-#    fi
-#fi
+if [[ $BCACHEFS_FORMAT_OPTS == *"--encrypted"* ]] ; then
+    # bcachefs hook is currently only supported by Busybox based initramfs.
+    # https://wiki.archlinux.org/title/Bcachefs#Encrypted_root_filesystem
+    sed -i '/^HOOKS=/ s/systemd/udev/' /mnt/etc/mkinitcpio.conf
+    sed -i '/^HOOKS=/ s/sd-vconsole/consolefont/' /mnt/etc/mkinitcpio.conf
+fi
 sed -i '/^MODULES=/ s/()/(bcachefs)/' /mnt/etc/mkinitcpio.conf
 sed -i '/^HOOKS=/ s/filesystems/bcachefs filesystems/' /mnt/etc/mkinitcpio.conf
 
