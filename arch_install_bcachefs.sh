@@ -434,6 +434,9 @@ if [[ $BCACHEFS_FORMAT_OPTS == *"--encrypted"* ]] ; then
     # https://wiki.archlinux.org/title/Bcachefs#Encrypted_root_filesystem
     sed -i '/^HOOKS=/ s/systemd/udev/' /mnt/etc/mkinitcpio.conf
     sed -i '/^HOOKS=/ s/sd-vconsole/consolefont/' /mnt/etc/mkinitcpio.conf
+    #sed -i '/^HOOKS=/ s/ keyboard//' /mnt/etc/mkinitcpio.conf
+    #sed -i '/^HOOKS=/ s/ autodetect/ keyboard autodetect/' /mnt/etc/mkinitcpio.conf
+    #sed -i '/^MODULES=/ s/()/(bcachefs keyboard usbhid xhci_hcd)/' /mnt/etc/mkinitcpio.conf
 fi
 sed -i '/^MODULES=/ s/()/(bcachefs)/' /mnt/etc/mkinitcpio.conf
 sed -i '/^HOOKS=/ s/filesystems/bcachefs filesystems/' /mnt/etc/mkinitcpio.conf
