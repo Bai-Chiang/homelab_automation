@@ -25,7 +25,7 @@ BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
 # Need to specify --label= options
 #BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --data_replicas=2 --metadata_replicas=2 --metadata_target=ssd --foreground_target=ssd --promote_target=ssd --background_target=hdd --label=hdd.hdd0 /dev/sdb --label=hdd.hdd1 /dev/sdc --durability=2 --discard --label=ssd.ssd0 /dev/sda2"
 
-UCODE_PKG="amd-ucode"
+UCODE_PKG="amd-ucode intel-ucode"
 
 # Localization
 # https://wiki.archlinux.org/title/Installation_guide#Localization
@@ -99,8 +99,7 @@ secure_boot="${secure_boot,,}"
 if [[ $secure_boot == y ]] ; then
     # bootctl status output should have
     # Secure Boot: disabled (setup)
-    setup_mode=$(bootctl status 2>&1 | grep -E "Secure Boot.*setup" | wc -l)
-    if [[ $setup_mode -ne 1 ]] ; then
+    if ! ( bootctl status 2>&1 | grep -q -E "Secure Boot.*setup" ) ; then
         echo "The firmware is not in the setup mode. Please check BIOS."
         read -p "Continue without secure boot? [y/N] " keep_going
         keep_going="${keep_going:-n}"
@@ -533,7 +532,7 @@ read -p "Do you want to enable IOMMU for vfio/PCI passthrough? [y/N] " vfio
 vfio="${vfio:-n}"
 vfio="${vfio,,}"
 if [[ $vfio == y ]] ; then
-    if [[ $(grep -e 'vendor_id.*GenuineIntel' /proc/cpuinfo | wc -l) -ge 1 ]] ; then
+    if ( grep -q -E 'vendor_id.*GenuineIntel' /proc/cpuinfo ) ; then
         # for intel cpu
         kernel_cmd="$kernel_cmd intel_iommu=on"
     fi

@@ -14,13 +14,13 @@ cp arch_install_bcachefs.sh  "$tempdir/archlive/airootfs/root/"
 cp homed.sh                  "$tempdir/archlive/airootfs/root/"
 
 # Add bcachefs packages
-if [[ $(grep '^bcachefs-tools$' $tempdir/archlive/packages.x86_64 | wc -l) == 0 ]] ; then
+if ! ( grep -q -E '^bcachefs-tools$' $tempdir/archlive/packages.x86_64 ) ; then
     echo "bcachefs-tools" >> $tempdir/archlive/packages.x86_64
 fi
-if [[ $(grep '^bcachefs-dkms$' $tempdir/archlive/packages.x86_64 | wc -l) == 0 ]] ; then
+if ! ( grep -q -E '^bcachefs-dkms$' $tempdir/archlive/packages.x86_64 ) ; then
     echo "bcachefs-dkms" >> $tempdir/archlive/packages.x86_64
 fi
-if [[ $(grep '^linux-headers$' $tempdir/archlive/packages.x86_64 | wc -l) == 0 ]] ; then
+if ! ( grep -q -E '^linux-headers$' $tempdir/archlive/packages.x86_64 ) ; then
     echo "linux-headers" >> $tempdir/archlive/packages.x86_64
 fi
 
