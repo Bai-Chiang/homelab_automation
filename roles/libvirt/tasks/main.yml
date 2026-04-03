@@ -69,7 +69,8 @@
     - virtlogd.service
 
 - name: Check default NAT is enabled or not
-  ansible.builtin.shell: virsh net-info --network default | grep '^Autostart:.*yes' | wc -l
+  ansible.builtin.shell: virsh --readonly net-info --network default | grep -q -E '^Autostart:.*yes'
+  ignore_errors: true
   become: true
   register: libvirt_default_net
   changed_when: false
@@ -82,5 +83,5 @@
     firewall-cmd --reload
     virsh net-start default
   become: true
-  when: libvirt_default_net.stdout == '0'
+  when: libvirt_default_net.rc != 0
 
