@@ -1,6 +1,10 @@
 ---
-- name: pacman -S archlinux-contrib
-  community.general.pacman: name=archlinux-contrib state=present
+- name: pacman -S archlinux-contrib fakeroot
+  community.general.pacman:
+    name:
+      - archlinux-contrib
+      - fakeroot
+    state: present
   become: true
 
 - name: auto-update.service

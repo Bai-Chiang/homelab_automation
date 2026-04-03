@@ -7,11 +7,8 @@ SUBJECT="Auto-update $HOSTNAME $(/usr/bin/date '+%F %T')"
 {% endif %}
 
 # Check need reboot
-NUM_PKG=$(/usr/bin/checkupdates | grep -E 'linux|systemd' | wc -l)
-if [[ $NUM_PKG -eq 0 ]] ; then
-    NEED_REBOOT=0
-else
-    NEED_REBOOT=1
+if ( /usr/bin/checkupdates | grep -q -E 'linux|systemd' ) ; then
+    NEED_REBOOT='y'
 fi
 
 # Create empty auto-update.log
@@ -30,7 +27,7 @@ else
     /usr/bin/pacman -Syu --noconfirm --noprogressbar &>> /var/log/auto-update.log
     echo "\n\n# checkservices -aP\n" >> /var/log/auto-update.log
     /usr/bin/checkservices -aP &>> /var/log/auto-update.log
-    if [[ $NEED_REBOOT -eq 1 ]] ; then
+    if [[ $NEED_REBOOT == y ]] ; then
         echo "\n\n# systemctl reboot" >> /var/log/auto-update.log
     fi
 fi
@@ -40,7 +37,7 @@ echo "# pacman -Syu --noconfirm --nogrogressbar\n" >> /var/log/auto-update.log
 /usr/bin/pacman -Syu --noconfirm --noprogressbar &>> /var/log/auto-update.log
 echo "\n\n# checkservices -aP\n" >> /var/log/auto-update.log
 /usr/bin/checkservices -aP &>> /var/log/auto-update.log
-if [[ $NEED_REBOOT -eq 1 ]] ; then
+if [[ $NEED_REBOOT == y ]] ; then
     echo "\n\n# systemctl reboot" >> /var/log/auto-update.log
 fi
 {% endif %}
@@ -59,12 +56,12 @@ done
 sleep 5
 
 {% if btrfs_scrub_time is defined %}
-if [[ $BTRFS_SCRUB_EXIT -ne 0 && $NEED_REBOOT -eq 1 ]] ; then
+if [[ $BTRFS_SCRUB_EXIT -ne 0 && $NEED_REBOOT == y ]] ; then
     # Reboot if necessary
     systemctl reboot
 fi
 {% else %}
-if [[ $NEED_REBOOT -eq 1 ]] ; then
+if [[ $NEED_REBOOT == y ]] ; then
     systemctl reboot
 fi
 {% endif %}
