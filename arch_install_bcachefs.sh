@@ -410,10 +410,9 @@ if [[ $networkmanager -eq 1 ]] ; then
 elif [[ "$networkmanager" -eq 2 ]] ; then
     echo "Installing NetworkManager and wpa_supplicant ..."
     arch-chroot /mnt pacman --noconfirm -S networkmanager wpa_supplicant
-    echo "Enabling systemd-resolved.service and NetworkManager.service and wpa_supplicant.service ..."
+    echo "Enabling systemd-resolved.service and NetworkManager.service ..."
     arch-chroot /mnt systemctl enable systemd-resolved.service
     arch-chroot /mnt systemctl enable NetworkManager.service
-    arch-chroot /mnt systemctl enable wpa_supplicant.service
 else
     echo "Invalid option."
     exit 1
