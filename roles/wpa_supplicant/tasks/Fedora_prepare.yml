@@ -18,3 +18,6 @@
     daemon_reload: true
   become: true
 
+- name: systemctl disable wpa_supplicant.service
+  ansible.builtin.systemd_service: name=wpa_supplicant.service enabled=false
+  become: true
