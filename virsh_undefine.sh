@@ -9,4 +9,4 @@ fi
 
 virsh --connect qemu:///system destroy "$1"
 sleep 1
-virsh --connect qemu:///system undefine "$1" --nvram --storage "/var/lib/libvirt/images/$1.qcow2"
+virsh --connect qemu:///system undefine "$1" --nvram --remove-all-storage
