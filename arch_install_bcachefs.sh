@@ -6,6 +6,7 @@
 #
 # Current only single drive and non-encryption works, like this
 BCACHEFS_FORMAT_OPTS="--compression=zstd:1"
+#BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --metadata_checksum=xxhash --data_checksum=xxhash --str_hash=siphash"
 
 # Single drive with compression and encryption
 #BCACHEFS_FORMAT_OPTS="--compression=zstd:1 --encrypted"
@@ -46,7 +47,7 @@ FS_PKGS="dosfstools bcachefs-tools bcachefs-dkms linux-headers"
 ## server example
 #KERNELS=("linux" "linux-hardened")
 #BASE_PKGS="base sudo linux-firmware python iptables-nft"
-#FS_PKGS="dosfstools bcachefs-tools bcachefs-dkms linux-headers linux-hardened linux-hardened-headers"
+#FS_PKGS="dosfstools bcachefs-tools bcachefs-dkms linux-headers linux-hardened-headers"
 #OTHER_PKGS="vim"
 
 ## desktop example
@@ -560,7 +561,7 @@ if [[ $bootx64 == y ]] ; then
 else
     arch-chroot /mnt mkdir -p /efi/EFI/Linux
 fi
-for KERNEL in $KERNELS ; do
+for KERNEL in ${KERNELS[@]} ; do
     # Edit default_uki=
     if [[ $bootx64 == y ]] ; then
         sed -i -E "s@^(#|)default_uki=.*@default_uki=\"/efi/EFI/BOOT/BOOTX64.EFI\"@" /mnt/etc/mkinitcpio.d/$KERNEL.preset
@@ -625,7 +626,7 @@ if [[ $secure_boot == y ]] ; then
     fi
 
     echo "Signing unified kernel image ..."
-    for KERNEL in $KERNELS ; do
+    for KERNEL in ${KERNELS[@]} ; do
         if [[ $bootx64 == y ]] ; then
             arch-chroot /mnt sbctl sign --save "/efi/EFI/BOOT/BOOTX64.EFI"
         else
@@ -646,7 +647,7 @@ arch-chroot /mnt pacman --noconfirm -S --needed efibootmgr
 
 bootorder=""
 echo "Creating UEFI boot entries for each unified kernel image ..."
-for KERNEL in $KERNELS ; do
+for KERNEL in ${KERNELS[@]} ; do
     # Add $KERNEL to boot loader
     if [[ $bootx64 == y ]] ; then
         arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader 'EFI\BOOT\BOOTX64.EFI' --quiet --unicode
