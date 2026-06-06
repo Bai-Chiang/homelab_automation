@@ -1,0 +1,16 @@
+---
+- name: pacman -S hdparm
+  community.general.pacman: name=hdparm state=present
+  become: true
+  when: ansible_facts["distribution"] == "Archlinux"
+
+- name: Set spindown timeout for disk
+  ansible.builtin.copy:
+    content: |
+      ACTION=="add|change", KERNEL=="sd[a-z]", ATTRS{queue/rotational}=="1", RUN+="/usr/bin/hdparm -B {{ hdparm_apm }} /dev/%k"
+    dest: /etc/udev/rules.d/69-hdparm.rules
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: hdparm_apm is defined

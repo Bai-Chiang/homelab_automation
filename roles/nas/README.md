@@ -80,12 +80,11 @@ fstab_entries:
     mode: '0700'
 
 
-# spindown timeout for the drive (optional)
+# hdparm  Advanced Power Management level (optional)
 # Skip if not defined
-# The number will pass to hdparm -S
-# 242 will set timeout to be 60 min
+# The number will pass to hdparm -B
 # https://wiki.archlinux.org/title/Hdparm#Power_management_configuration
-hdparm_spindown: 242
+hdparm_apm: 128
 ```
 
 ### btrfs scrub

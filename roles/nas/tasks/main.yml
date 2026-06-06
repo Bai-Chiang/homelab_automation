@@ -19,3 +19,6 @@
   include_tasks: samba.yml
   when: smb_share is defined
 
+- name: "include_tasks: hdparm.yml"
+  include_tasks: hdparm.yml
+  when: hdparm_apm is defined
