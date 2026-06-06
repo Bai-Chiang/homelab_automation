@@ -6,8 +6,8 @@
     line: "{{ item.line }}"
     insertafter: "{{ item.insertafter }}"
   loop:
-    - { regexp: '^NTP=', insertafter: '^#\s*NTP=', line: NTP=0.arch.pool.ntp.org 1.arch.pool.ntp.org 2.arch.pool.ntp.org 3.arch.pool.ntp.org }
-    - { regexp: '^FallbackNTP=', insertafter: '^#\s*FallbackNTP=', line: FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.fr.pool.ntp.org }
+    - { regexp: '^NTP=', insertafter: '^#\s*NTP=', line: NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org }
+    - { regexp: '^FallbackNTP=', insertafter: '^#\s*FallbackNTP=', line: FallbackNTP=0.arch.pool.ntp.org 1.arch.pool.ntp.org 2.arch.pool.ntp.org 3.arch.pool.ntp.org }
   become: true
 
 - name: systemctl enable --now systemd-timesyncd.service
