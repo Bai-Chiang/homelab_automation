@@ -70,6 +70,33 @@
     mode: '0700'
   become: true
 
+- name: Create override directory for nut-driver@.service to prevent disconnecting/reconnecting
+  ansible.builtin.file:
+    path: /etc/systemd/system/nut-driver@.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+
+- name: Create override file for nut-driver@.service to prevent disconnecting/reconnecting
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/nut-driver@.service.d/override.conf
+    content: |
+      [Unit]
+      StopWhenUnneeded=no
+
+      [Service]
+      PIDFile=/run/nut/usbhid-ups-%i.pid
+      Group=nut
+      User=nut
+      RestartSec=10s
+  become: true
+
+- name: systemctl daemon-reload
+  ansible.builtin.systemd_service: daemon_reload=true
+  become: true
+
 - name: systemctl enable nut-driver-enumerator.service nut-server.service nut-monitor.service nut.target nut-driver.target
   ansible.builtin.systemd_service: name={{ item }} enabled=true
   loop:
