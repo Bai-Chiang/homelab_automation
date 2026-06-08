@@ -6,7 +6,7 @@ Requires=gluetun.service
 
 [Container]
 ContainerName=qbittorrent
-Image=lscr.io/linuxserver/qbittorrent:latest
+Image=ghcr.io/qbittorrent/docker-qbittorrent-nox:latest
 AutoUpdate=registry
 Timezone={{ TZ }}
 
@@ -16,14 +16,13 @@ Volume={{ podman_user.qbittorrent_downloads_dir }}:/downloads:Z
 HostName=qbittorrent
 Network=container:gluetun
 
-Environment=PUID=1000
-Environment=PGID=1000
 Environment=TZ={{ TZ }}
-Environment=WEBUI_PORT={{ podman_user.qbittorrent_webui_port }}
+Environment=QBT_WEBUI_PORT={{ podman_user.qbittorrent_webui_port }}
+Environment=QBT_LEGAL_NOTICE=confirm
 
-UIDMap=1000:0:1
-UIDMap=0:1:1000
-UIDMap=1001:1001:64536
+UserNS=keep-id
+
+StopTimeout=60
 
 
 [Service]
