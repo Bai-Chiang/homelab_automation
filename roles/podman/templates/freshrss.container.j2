@@ -1,0 +1,39 @@
+[Unit]
+Description=Syncthing container
+
+[Container]
+ContainerName=freshrss
+Image=docker.io/freshrss/freshrss:latest
+AutoUpdate=registry
+Timezone={{ TZ }}
+
+Volume={{ podman_user.freshrss_config_dir }}/data:/var/www/FreshRSS/data:Z
+Volume={{ podman_user.freshrss_config_dir }}/extensions:/var/www/FreshRSS/extensions:Z
+
+HostName=freshrss
+PublishPort=127.0.0.1:{{ podman_user.freshrss_webui_port }}:80/tcp
+
+Environment=TZ={{ TZ }}
+{% if podman_user.freshrss_cron_min is defined %}
+Environment=CRON_MIN={{ podman_user.freshrss_cron_min }}
+{% endif %}
+{% if podman_user.freshrss_server_dns is defined %}
+Environment=SERVER_DNS={{ podman_user.freshrss_server_dns }}
+{% endif %}
+
+UIDMap=33:0:1
+UIDMap=0:1:33
+UIDMap=34:34:65503
+
+
+[Service]
+Restart=on-failure
+RestartSec=5
+RestartMaxDelaySec=1h
+RestartSteps=10
+
+# Extend Timeout to allow time to pull the image
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

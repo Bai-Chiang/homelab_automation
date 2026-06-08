@@ -1,0 +1,76 @@
+---
+# # Time zone
+# TZ: "UTC"
+#
+# # Run podman under this users.
+# # If the user does not exist it will create a new user.
+# # To manage systemd services under different users add `-M username@` to `systemctl` command,
+# # for example:
+# #     sudo systemctl --user -M tux@ status freshrss.service
+# # To view journal under different user with UID 10000
+# #     sudo journalctl _UID=10000 _SYSTEMD_USER_UNIT=freshrss.service
+# podman_users:
+#
+#   # Run Syncthing under user `tux`
+#   - name: tux
+#
+#     # UID of the user
+#     uid: 10000
+#
+#     # Enable lingering or not
+#     enable_lingering: true
+#
+#     # How often to clean up old podman images/containers.
+#     # This is the OnCalendar= option in podman-system-prune.timer
+#     podman_system_prune_timer: daily
+#
+#     # List of containers that will run under user `tux`
+#     containers:
+#       - freshrss
+#
+#     # freshrss Web UI port
+#     freshrss_webui_port: 8082
+#
+#     # Path to store freshrss container config
+#     freshrss_config_dir: "/path/to/container/config/freshrss"
+#
+#     # (optional) freshrss CRON_MIN env (a valid cron minute definition)
+#     # https://freshrss.github.io/FreshRSS/en/admins/08_FeedUpdates.html#cron-inside-the-freshrss-docker-image
+#     freshrss_cron_min: '*/30'
+#
+#     # (optional) freshrss SERVER_DNS env (freshrss subdomain)
+#     # https://hub.docker.com/r/freshrss/freshrss/#run-in-production
+#     freshrss_server_dns: freshrss.mydomain.example
+
+- name: freshrss container config direcoty
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0700'
+  become: true
+  loop:
+    - "{{ podman_user.freshrss_config_dir }}/data"
+    - "{{ podman_user.freshrss_config_dir }}/extensions"
+
+- name: freshrss.container
+  ansible.builtin.template:
+    src: freshrss.container.j2
+    dest: "/home/{{ podman_user.name }}/.config/containers/systemd/freshrss.container"
+    owner: "{{ podman_user.name}}"
+    group: "{{ podman_user.name }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user daemon-reload
+  ansible.builtin.systemd_service: daemon_reload=true scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+
+- name: systemctl --user enable --now freshrss.service
+  ansible.builtin.systemd_service: name=freshrss enabled=true state=started scope=user
+  become: true
+  become_user: "{{ podman_user.name }}"
+  ignore_errors: "{{ ansible_check_mode }}"
