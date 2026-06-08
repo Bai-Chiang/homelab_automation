@@ -21,6 +21,7 @@
     path: "/srv/smb/{{ item.name }}"
     state: directory
   become: true
+  when: ( smb_share_bind_mount is not defined ) or smb_share_bind_mount 
   loop: "{{ smb_share }}"
 
 - name: Add bind mount to /etc/fstab
@@ -30,6 +31,7 @@
     line: "{{ item.path }}  /srv/smb/{{item.name }}  none  bind  0 0"
     state: present
   become: true
+  when: ( smb_share_bind_mount is not defined ) or smb_share_bind_mount 
   loop: "{{ smb_share }}"
 
 #- name: Add custom Samba rule to UFW
@@ -52,7 +54,7 @@
 #    comment: "Allow SMB/CIFS from {{ item }}"
 #  loop: "{{ CIFS_allow_ip }}"
 
-- name: Create samba user
+- name: Create samba OS user
   ansible.builtin.user:
     name: "{{ item.name }}"
     password: '!'
@@ -66,11 +68,22 @@
     - item.name != "root"
   loop: "{{ smb_users }}"
 
-- name: Add samba user
-  shell: (echo {{ item.passwd }}; echo {{ item.passwd }}) | smbpasswd -s -a {{ item.name }}
+- name: Current smb users
+  ansible.builtin.command: /usr/bin/pdbedit -L
+  changed_when: false
+  register: samba_users
   become: true
-  register: samba_user
-  changed_when: "'Added user' in samba_user.stdout"
+
+- name: Add samba user
+  ansible.builtin.command:
+    cmd: smbpasswd -s -a {{ item.name }}
+    stdin: |
+      {{ item.passwd }}
+      {{ item.passwd }}
+  become: true
+  register: samba_user_status
+  changed_when: "'Added user' in samba_user_status.stdout"
+  when: samba_users.stdout.find(":item.name:") == -1
   loop: "{{ smb_users }}"
 
 - name: Modify samba firewalld service file samba.xml

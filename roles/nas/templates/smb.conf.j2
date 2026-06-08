@@ -237,17 +237,22 @@
 {% for item in smb_share %}
 [{{ item.name }}]
    comment = {{ item.comment }}
+{% if ( smb_share_bind_mount is not defined ) or smb_share_bind_mount %}
    path = /srv/smb/{{ item.name }}
+{% else %}
+   path = {{ item.path }}
+{% endif %}
    valid users = {{ item.valid_users }}
    public = no
    browseable = no
    printable = no
    read only = {{ item.read_only }}
 {% if item.read_only == 'no' %}
-   create mask = 0664
-   directory mask = 2755
-   force create mode = 0644
-   force directory mode = 2755
+   create mask = 0600
+   directory mask = 0700
+   force create mode = 0600
+   force directory mode = 0700
+   acl map full control = no
 {% endif %}
 {% endfor %}
 
