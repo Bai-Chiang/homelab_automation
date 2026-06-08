@@ -280,7 +280,7 @@ http:
       loadBalancer:
         passHostHeader: true
         servers:
-          - url: "http://localhost:11000"
+          - url: "http://127.0.0.1:11000"
 
   middlewares:
     secureHeader:

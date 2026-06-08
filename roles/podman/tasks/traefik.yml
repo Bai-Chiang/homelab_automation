@@ -163,7 +163,7 @@
   ansible.builtin.copy:
     content: |
       [Unit]
-      Description=Copy SSL certificates to Caddy
+      Description=Copy SSL certificates to Traefik
 
       [Timer]
       OnCalendar=00:10:00
