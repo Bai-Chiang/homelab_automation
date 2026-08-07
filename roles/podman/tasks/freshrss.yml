@@ -44,15 +44,16 @@
 
 - name: freshrss container config direcoty
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     state: directory
     owner: "{{ podman_user.name}}"
     group: "{{ podman_user.name }}"
-    mode: '0700'
+    mode: "{{ item.mode }}"
   become: true
   loop:
-    - "{{ podman_user.freshrss_config_dir }}/data"
-    - "{{ podman_user.freshrss_config_dir }}/extensions"
+    - { path: "{{ podman_user.freshrss_config_dir }}", mode: '0700' }
+    - { path: "{{ podman_user.freshrss_config_dir }}/data", mode: '0770' }
+    - { path: "{{ podman_user.freshrss_config_dir }}/extensions", mode: '0750' }
 
 - name: freshrss.container
   ansible.builtin.template:
