@@ -122,6 +122,10 @@
 # Use native SMB transport encryption
    server smb encrypt = required
 
+# Mapping reserved Windows characters
+   vfs objects = catia fruit streams_xattr
+   fruit:encoding = native
+
 
 #============================ Share Definitions ==============================
 ;[homes]
@@ -242,9 +246,15 @@
 {% else %}
    path = {{ item.path }}
 {% endif %}
+{% if ( item.guest_only is defined ) and item.guest_only=='yes' %}
+   guest ok = yes
+   guest only = yes
+   browseable = yes
+{% else %}
    valid users = {{ item.valid_users }}
-   public = no
+   guest ok = no
    browseable = no
+{% endif %}
    printable = no
    read only = {{ item.read_only }}
 {% if item.read_only == 'no' %}
