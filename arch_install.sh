@@ -348,8 +348,8 @@ echo "
 ######################################################
 "
 echo -e "Setting time zone ..."
-arch-chroot /mnt ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
-arch-chroot /mnt hwclock --systohc
+arch-chroot -S /mnt ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+arch-chroot -S /mnt hwclock --systohc
 
 echo "
 ######################################################
@@ -359,12 +359,12 @@ echo "
 "
 echo -e "Setting locale ..."
 # uncomment en_US.UTF-8 UTF-8
-arch-chroot /mnt sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+arch-chroot -S /mnt sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 # uncomment other UTF-8 locales
 if [[ $LANG != 'en_US.UTF-8' ]] ; then
-    arch-chroot /mnt sed -i "s/^#$LANG UTF-8/$LANG UTF-8/" /etc/locale.gen
+    arch-chroot -S /mnt sed -i "s/^#$LANG UTF-8/$LANG UTF-8/" /etc/locale.gen
 fi
-arch-chroot /mnt locale-gen
+arch-chroot -S /mnt locale-gen
 echo "LANG=$LANG" > /mnt/etc/locale.conf
 echo "KEYMAP=$KEYMAP" > /mnt/etc/vconsole.conf
 
@@ -385,21 +385,21 @@ if [[ $networkmanager -eq 1 ]] ; then
     echo -e "Copying iso network configuration ..."
     cp /etc/systemd/network/20-ethernet.network /mnt/etc/systemd/network/20-ethernet.network
     echo "Enabling systemd-resolved.service and systemd-networkd.service ..."
-    arch-chroot /mnt systemctl enable systemd-resolved.service
-    arch-chroot /mnt systemctl enable systemd-networkd.service
+    arch-chroot -S /mnt systemctl enable systemd-resolved.service
+    arch-chroot -S /mnt systemctl enable systemd-networkd.service
     read -p "Install and enable iwd (for WiFi) ? [y/N] " install_iwd
     install_iwd="${install_iwd:-n}"
     INSTALL_IWD="${install_iwd,,}"
     if [[ $install_iwd == y ]] ; then
-        arch-chroot /mnt pacman --noconfirm -S iwd
-        arch-chroot /mnt systemctl enable iwd.service
+        arch-chroot -S /mnt pacman --noconfirm -S iwd
+        arch-chroot -S /mnt systemctl enable iwd.service
     fi
 elif [[ "$networkmanager" -eq 2 ]] ; then
     echo "Installing NetworkManager and wpa_supplicant ..."
-    arch-chroot /mnt pacman --noconfirm -S networkmanager wpa_supplicant
+    arch-chroot -S /mnt pacman --noconfirm -S networkmanager wpa_supplicant
     echo "Enabling systemd-resolved.service and NetworkManager.service ..."
-    arch-chroot /mnt systemctl enable systemd-resolved.service
-    arch-chroot /mnt systemctl enable NetworkManager.service
+    arch-chroot -S /mnt systemctl enable systemd-resolved.service
+    arch-chroot -S /mnt systemctl enable NetworkManager.service
 else
     echo "Invalid option."
     exit 1
@@ -484,7 +484,7 @@ if [[ $zram == y ]] ; then
     # disable zswap
     kernel_cmd="$kernel_cmd zswap.enabled=0"
     # install zram-generator
-    arch-chroot /mnt pacman --noconfirm -S zram-generator
+    arch-chroot -S /mnt pacman --noconfirm -S zram-generator
     # Create /etc/systemd/zram-generator.conf
     if [[ -z $ZRAM_SIZE ]] ; then
         ZRAM_SIZE='min(ram / 2, 4096)'
@@ -557,9 +557,9 @@ else
     bootx64="n"
 fi
 if [[ $bootx64 == y ]] ; then
-    arch-chroot /mnt mkdir -p /efi/EFI/BOOT
+    arch-chroot -S /mnt mkdir -p /efi/EFI/BOOT
 else
-    arch-chroot /mnt mkdir -p /efi/EFI/Linux
+    arch-chroot -S /mnt mkdir -p /efi/EFI/Linux
 fi
 for KERNEL in ${KERNELS[@]} ; do
     # Edit default_uki=
@@ -580,7 +580,7 @@ rm /mnt/boot/initramfs-*.img 2>/dev/null
 
 echo "$kernel_cmd" > /mnt/etc/kernel/cmdline
 echo "Regenerating the initramfs ..."
-arch-chroot /mnt mkinitcpio -P
+arch-chroot -S /mnt mkinitcpio -P
 
 
 if [[ $secure_boot == y ]] ; then
@@ -590,19 +590,19 @@ if [[ $secure_boot == y ]] ; then
 # https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot
 ######################################################
 "
-    arch-chroot /mnt pacman --noconfirm -S sbctl
+    arch-chroot -S /mnt pacman --noconfirm -S sbctl
     echo "Creating keys ..."
-    arch-chroot /mnt sbctl create-keys
-    arch-chroot /mnt chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}*
+    arch-chroot -S /mnt sbctl create-keys
+    arch-chroot -S /mnt chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}*
 
     echo "Enroll keys ..."
     read -p "Do you want to add Microsoft's UEFI drivers certificates to the database? [Y/n] " ms_cert
     ms_cert="${ms_cert:-y}"
     ms_cert="${ms_cert,,}"
     if [[ $ms_cert == n ]] ; then
-        arch-chroot /mnt sbctl enroll-keys 2>&1
+        arch-chroot -S /mnt sbctl enroll-keys 2>&1
     else
-        arch-chroot /mnt sbctl enroll-keys --microsoft 2>&1
+        arch-chroot -S /mnt sbctl enroll-keys --microsoft 2>&1
     fi
     # Ignore any error and force enroll keys
     # I need --yes-this-might-brick-my-machine for libvirt virtual machines
@@ -612,25 +612,25 @@ if [[ $secure_boot == y ]] ; then
         force_enroll="${force_enroll,,}"
         if [[ $force_enroll == y ]] ; then
             if [[ $ms_cert == n ]] ; then
-                arch-chroot /mnt sbctl enroll-keys --yes-this-might-brick-my-machine
+                arch-chroot -S /mnt sbctl enroll-keys --yes-this-might-brick-my-machine
             else
-                arch-chroot /mnt sbctl enroll-keys --microsoft --yes-this-might-brick-my-machine
+                arch-chroot -S /mnt sbctl enroll-keys --microsoft --yes-this-might-brick-my-machine
             fi
         else
             echo "Did not enroll any keys"
             echo "Now chroot into new system and enroll keys manully with"
             echo "sbctl enroll-keys"
             echo "exit the chroot to continue installation"
-            arch-chroot /mnt
+            arch-chroot -S /mnt
         fi
     fi
 
     echo "Signing unified kernel image ..."
     for KERNEL in ${KERNELS[@]} ; do
         if [[ $bootx64 == y ]] ; then
-            arch-chroot /mnt sbctl sign --save "/efi/EFI/BOOT/BOOTX64.EFI"
+            arch-chroot -S /mnt sbctl sign --save "/efi/EFI/BOOT/BOOTX64.EFI"
         else
-            arch-chroot /mnt sbctl sign --save "/efi/EFI/Linux/arch-$KERNEL.efi"
+            arch-chroot -S /mnt sbctl sign --save "/efi/EFI/Linux/arch-$KERNEL.efi"
         fi
     done
 fi
@@ -643,16 +643,16 @@ echo "
 "
 efi_dev=$(lsblk --noheadings --output PKNAME $efi_part)
 efi_part_num=$(echo $efi_part | grep -Eo '[0-9]+$')
-arch-chroot /mnt pacman --noconfirm -S --needed efibootmgr
+arch-chroot -S /mnt pacman --noconfirm -S --needed efibootmgr
 
 bootorder=""
 echo "Creating UEFI boot entries for each unified kernel image ..."
 for KERNEL in ${KERNELS[@]} ; do
     # Add $KERNEL to boot loader
     if [[ $bootx64 == y ]] ; then
-        arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader 'EFI\BOOT\BOOTX64.EFI' --quiet --unicode
+        arch-chroot -S /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader 'EFI\BOOT\BOOTX64.EFI' --quiet --unicode
     else
-        arch-chroot /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\arch-$KERNEL.efi" --quiet --unicode
+        arch-chroot -S /mnt efibootmgr --create --disk /dev/${efi_dev} --part ${efi_part_num} --label "ArchLinux-$KERNEL" --loader "EFI\\Linux\\arch-$KERNEL.efi" --quiet --unicode
     fi
     # Get new added boot entry BootXXXX*
     bootnum=$(efibootmgr --unicode | awk "/\sArchLinux-$KERNEL\s/ { print \$1}")
@@ -665,15 +665,15 @@ for KERNEL in ${KERNELS[@]} ; do
         bootorder="$bootorder,$bootnum"
     fi
 done
-arch-chroot /mnt efibootmgr --bootorder ${bootorder} --quiet --unicode
+arch-chroot -S /mnt efibootmgr --bootorder ${bootorder} --quiet --unicode
 
 echo -e "\n\n"
-arch-chroot /mnt efibootmgr --unicode
+arch-chroot -S /mnt efibootmgr --unicode
 echo -e "\n\nDo you want to change boot order?: "
 read -p "Enter boot order (empty to skip): " boot_order
 if [[ -n $boot_order ]] ; then
     echo -e "\n"
-    arch-chroot /mnt efibootmgr --bootorder ${boot_order} --unicode
+    arch-chroot -S /mnt efibootmgr --bootorder ${boot_order} --unicode
     echo -e "\n"
 fi
 
@@ -705,11 +705,11 @@ enable_ssh="${enable_ssh:-n}"
 enable_ssh="${enable_ssh,,}"
 if [[ $enable_ssh == y ]] ; then
     if [[ $selinux == n ]] ; then
-        arch-chroot /mnt pacman --noconfirm -S --needed openssh
+        arch-chroot -S /mnt pacman --noconfirm -S --needed openssh
     else
-        arch-chroot /mnt pacman --noconfirm -S --needed openssh-selinux
+        arch-chroot -S /mnt pacman --noconfirm -S --needed openssh-selinux
     fi
-    arch-chroot /mnt systemctl enable sshd.service
+    arch-chroot -S /mnt systemctl enable sshd.service
     echo " Enabled sshd.service"
     echo "ssh port? (22)"
     read ssh_port
@@ -726,10 +726,10 @@ echo "
 # https://wiki.archlinux.org/title/firewalld
 ######################################################
 "
-arch-chroot /mnt pacman --noconfirm -S --needed firewalld
-arch-chroot /mnt systemctl enable firewalld.service
+arch-chroot -S /mnt pacman --noconfirm -S --needed firewalld
+arch-chroot -S /mnt systemctl enable firewalld.service
 echo "Set default firewall zone to drop."
-arch-chroot /mnt firewall-offline-cmd --set-default-zone=drop
+arch-chroot -S /mnt firewall-offline-cmd --set-default-zone=drop
 if [[ $enable_ssh == y ]] ; then
     if [[ $ssh_port != 22 ]] ; then
         echo "modify default ssh service with new port."
@@ -738,9 +738,9 @@ if [[ $enable_ssh == y ]] ; then
     echo -e "\nssh allow source ip address (example 192.168.1.0/24) empty to allow all"
     read ssh_source
     if [[ -n $ssh_source ]] ; then
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ssh_source}' service name='ssh' accept"
+        arch-chroot -S /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ssh_source}' service name='ssh' accept"
     else
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-service ssh
+        arch-chroot -S /mnt firewall-offline-cmd --zone=drop --add-service ssh
     fi
 fi
 echo -e "\n"
@@ -748,15 +748,15 @@ read -p "Allow ICMP echo-request and echo-reply (respond ping)? [Y/n] " allow_pi
 allow_ping="${allow_ping:-y}"
 allow_ping="${allow_ping,,}"
 if [[ $allow_ping == y ]] ; then
-    arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block-inversion
+    arch-chroot -S /mnt firewall-offline-cmd --zone=drop --add-icmp-block-inversion
     echo -e "\nallow ping source ip address (example 192.168.1.0/24) empty to allow all"
     read ping_source
     if [[ -n $ping_source ]] ; then
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-request' accept"
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-reply' accept"
+        arch-chroot -S /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-request' accept"
+        arch-chroot -S /mnt firewall-offline-cmd --zone=drop --add-rich-rule="rule family='ipv4' source address='${ping_source}' icmp-type name='echo-reply' accept"
     else
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-request
-        arch-chroot /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-reply
+        arch-chroot -S /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-request
+        arch-chroot -S /mnt firewall-offline-cmd --zone=drop --add-icmp-block=echo-reply
     fi
 fi
 
@@ -777,12 +777,12 @@ if [[ $homed == y ]] ; then
     cp "$(pwd)/homed.sh" /mnt/root/homed.sh
     echo "Created /root/homed.sh Run it after reboot to create systemd-homed user, which can't be done in chroot environment."
     echo "Enter root password (/root/homed.sh can disable root account after you setup systemd-homed user)"
-    arch-chroot /mnt passwd
+    arch-chroot -S /mnt passwd
 
 else
     read -p "Tell me your username: " username
-    arch-chroot /mnt useradd -m -G wheel "$username"
-    arch-chroot /mnt passwd "$username"
+    arch-chroot -S /mnt useradd -m -G wheel "$username"
+    arch-chroot -S /mnt passwd "$username"
 
     read -p "Do you want to disable root account? [Y/n] " disable_root
     disable_root="${disable_root:-y}"
@@ -790,11 +790,11 @@ else
     if [[ $disable_root == y ]] ; then
         # https://wiki.archlinux.org/title/Sudo#Disable_root_login
         echo "Disabling root ..."
-        arch-chroot /mnt passwd -d root
-        arch-chroot /mnt passwd -l root
+        arch-chroot -S /mnt passwd -d root
+        arch-chroot -S /mnt passwd -l root
     else
         echo "Enter root password"
-        arch-chroot /mnt passwd
+        arch-chroot -S /mnt passwd
 
     fi
 fi
