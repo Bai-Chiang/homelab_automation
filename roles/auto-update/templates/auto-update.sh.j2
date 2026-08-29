@@ -46,11 +46,11 @@ fi
 # send email
 update_msg="$(cat /var/log/auto-update.log)"
 echo -e "To: ${TO}\nFrom: ${FROM}\nSubject: ${SUBJECT}\n${update_msg}" | msmtp --read-recipients --read-envelope-from
-while [[ $? -ne 0 ]]; do
+if [[ $? -ne 0 ]] ; then
     # if failed try resend 5min later
     sleep 300
     echo -e "To: ${TO}\nFrom: ${FROM}\nSubject: ${SUBJECT}\n${update_msg}" | msmtp --read-recipients --read-envelope-from
-done
+fi
 {% endif %}
 
 sleep 5
