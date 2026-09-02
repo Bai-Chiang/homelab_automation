@@ -3,28 +3,14 @@
   ansible.builtin.dnf: name=dnf-automatic state=present
   become: true
 
-- name: Check file /etc/dnf/automatic.conf
-  ansible.builtin.stat:
-    path: /etc/dnf/automatic.conf
-  register: etc_dnf_automatic_conf
-
-- name: Copy /usr/share/dnf5/dnf5-plugins/automatic.conf to /etc/dnf/automatic.conf
+- name: /etc/dnf/automatic.conf
   ansible.builtin.copy:
-    src: /usr/share/dnf5/dnf5-plugins/automatic.conf
+    content: |
+      [commands]
+      apply_updates=True
+      reboot=when-needed
     dest: /etc/dnf/automatic.conf
-    remote_src: true
   become: true
-  when: not etc_dnf_automatic_conf.stat.exists
-
-- name: Edit /etc/dnf/automatic.conf
-  ansible.builtin.lineinfile:
-    path: /etc/dnf/automatic.conf
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  become: true
-  loop:
-    - { regexp: '^apply_updates =', line: "apply_updates = yes" }
-    - { regexp: '^reboot =', line: "reboot = when-needed" }
 
 - name: Create /etc/systemd/system/dnf5-automatic.timer.d/ directory
   ansible.builtin.file:
